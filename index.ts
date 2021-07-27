@@ -4,7 +4,7 @@ import { exec, execSync } from 'child_process'
 // import deployToStag from './deploy-pr-staging'
 // import deployToProd from './deploy-main'
 // import cleanDeployments from './pr-close-cleanup'
-import createServices from './create-services'
+// import createServices from './create-services'
 
 const { context } = github
 const { payload } = context
@@ -23,7 +23,7 @@ const run = async () => {
 	})
 
 	// Ensure instances
-	await createServices()
+	// await createServices()
 
 	// in api pkgjson id, resourceGroup, storageAccount
 	// app excludes storageAccount
