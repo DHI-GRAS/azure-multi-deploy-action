@@ -3,7 +3,13 @@
     "**/.yarn": true,
     "**/.pnp.*": true
   },
-  "eslint.nodePath": ".yarn/sdks",
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "eslint.nodePath": ".yarn/sdks",
+	"eslint.packageManager": "yarn",
+	"eslint.format.enable": true,
+	"eslint.lintTask.enable": true,
+	"eslint.debug": true,
+	"editor.defaultFormatter": "dbaeumer.vscode-eslint",
+	"eslint.lintTask.options": "--ext ts,tsx . --cache",
 }
