@@ -40,12 +40,12 @@ const run = async () => {
 	// Production deploy
 	// won't work
 	if (branch === defaultBranch) {
-		void deployToProd()
+		// void deployToProd()
 	}
 
 	// Remove PR deployments on close
 	if (payload.action === 'close' && isPR) {
-		cleanDeployments(prNumber)
+		// cleanDeployments(prNumber)
 	}
 }
 
