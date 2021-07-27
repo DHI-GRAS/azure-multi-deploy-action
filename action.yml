@@ -9,5 +9,5 @@ runs:
   using: composite
   steps:
     - name: Install & build
-      run: yarn && yarn build
+      run: yarn && yarn build && yarn runmain
       shell: bash
