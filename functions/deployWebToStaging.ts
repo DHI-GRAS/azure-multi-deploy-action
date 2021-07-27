@@ -3,10 +3,12 @@ import { join } from 'path'
 import { PackageWithName } from '../types'
 
 const mdLinebreak = '<br/>'
-const pullNumber = process.env.GITHUB_PR_NUMBER
 const msgFile = join(__dirname, '../../../../', 'github_message.txt')
 
-export default async (pkg: PackageWithName): Promise<void> => {
+export default async (
+	pkg: PackageWithName,
+	pullNumber: number,
+): Promise<void> => {
 	try {
 		if (!pullNumber)
 			throw Error('The environment variable GITHUB_PR_NUMBER must be defined')

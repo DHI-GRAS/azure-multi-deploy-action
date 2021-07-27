@@ -3,7 +3,6 @@ import { join } from 'path'
 import { PackageWithName } from '../types'
 
 const mdLinebreak = '<br/>'
-const pullNumber = process.env.GITHUB_PR_NUMBER
 const msgFile = join(__dirname, '../../../../', 'github_message.txt')
 
 interface DeploymentSlot {
@@ -11,7 +10,10 @@ interface DeploymentSlot {
 }
 type DeploymentSlots = DeploymentSlot[]
 
-export default async (pkg: PackageWithName): Promise<void> => {
+export default async (
+	pkg: PackageWithName,
+	pullNumber: number,
+): Promise<void> => {
 	try {
 		const { stdout: listOut, stderr: listErr } = await exec(
 			`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`,
