@@ -20,7 +20,7 @@ if (
 	payload.pull_request?.state === 'open'
 ) {
 	const prNumber = payload.pull_request?.number ?? 0
-	void deployToStag(prNumber)
+	// void deployToStag(prNumber)
 }
 
 console.log(context)
