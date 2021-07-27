@@ -5,7 +5,7 @@ import deployToStag from './deploy-pr-staging'
 const { context } = github
 const { payload } = context
 
-const branch = payload.head.ref
+const branch = payload.pull_request?.ref
 const defaultBranch = payload.repository?.default_branch
 
 console.log(branch, defaultBranch, context.eventName, payload.action)
