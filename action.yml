@@ -1,0 +1,10 @@
+name: Azure multi-deploy
+description: Creates instances, builds, deploys web & function apps to azure. Supports staging deployments in PRs
+author: DHI-GRAS
+inputs:
+  azureCredentials:
+    description: Azure credentials in JSON format
+    required: true
+runs:
+  using: composite
+  

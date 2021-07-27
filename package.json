@@ -1,0 +1,27 @@
+{
+  "name": "deploy-config",
+  "scripts": {
+    "prepublish": "yarn build",
+    "run:create": "yarn build ; node ./dist/create-services.js",
+    "run:deploy-main": "yarn build ; node ./dist/deploy-main.js",
+    "run:deploy-stag": "yarn build ; node ./dist/deploy-pr-staging.js",
+    "run:clean-stag": "yarn build ; node ./dist/pr-close-cleanup.js",
+    "build": "tsc",
+    "deploy-config:build": "yarn build",
+    "build:watch": "tsc -w"
+  },
+  "devDependencies": {
+    "@types/child-process-promise": "^2",
+    "@types/node": "^15.12.3",
+    "@types/util.promisify": "^1.0.4",
+    "@types/watch": "^1.0.1",
+    "@types/yaml": "^1.9.7",
+    "@yarnpkg/sdks": "^2.4.1-rc.4",
+    "eslint": "^7.31.0",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "child-process-promise": "^2.2.1",
+    "yaml": "^1.10.2"
+  }
+}
