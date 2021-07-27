@@ -1,10 +1,14 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { PushEvent } from '@octokit/webhooks-definitions/schema'
 import deployToStag from './deploy-pr-staging'
 
 const { context } = github
 const { payload } = context
+
+const branch = payload.head.ref
+const defaultBranch = payload.repository?.default_branch
+
+console.log(branch, defaultBranch, context.eventName, payload.action)
 
 console.log(JSON.stringify(context))
 
@@ -23,4 +27,4 @@ if (
 	// void deployToStag(prNumber)
 }
 
-console.log(context)
+if (branch === defaultBranch) console.log('is main')
