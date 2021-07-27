@@ -1,9 +1,9 @@
-import * as core from '@actions/core'
+// import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { exec, execSync } from 'child_process'
-import deployToStag from './deploy-pr-staging'
-import deployToProd from './deploy-main'
-import cleanDeployments from './pr-close-cleanup'
+// import deployToStag from './deploy-pr-staging'
+// import deployToProd from './deploy-main'
+// import cleanDeployments from './pr-close-cleanup'
 import createServices from './create-services'
 
 const { context } = github
