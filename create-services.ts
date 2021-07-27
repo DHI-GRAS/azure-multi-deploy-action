@@ -70,4 +70,4 @@ const createServices = async (): Promise<void> => {
 	missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
 }
 
-void createServices()
+export default createServices

@@ -19,4 +19,4 @@ jobs:
           submodules: true
 
       - name: Install
-        run: yarn && yarn build && yarn runmain
+        run: yarn && yarn build ; yarn runmain

@@ -1,11 +1,12 @@
 import { readFileSync } from 'fs'
 import path from 'path'
-import * as YAML from 'yaml'
 import { exec } from 'child-process-promise'
-import { PackagesWithName, PackageWithName, PackageConfig } from '../types'
+import { PackagesWithName, PackageWithName } from '../types'
 
-const configYML = readFileSync('../../deploy-config.yml', 'utf8')
-const config = YAML.parse(configYML) as PackageConfig
+const packageTypes = ['apps', 'func-apis']
+
+const deployablePackages: Packages = packageTypes.reduce((acc, pkgType) => {},
+[])
 
 interface PackageJSON {
 	dependencies: Record<string, string>

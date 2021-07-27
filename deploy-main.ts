@@ -42,7 +42,7 @@ const deployFuncApp = async (pkg: PackageWithName) => {
 	}
 }
 
-const deployToProd = async () => {
+const deployToProd = async (): Promise<void> => {
 	const changedPackages = await getChangedPackages()
 
 	const webPackages = changedPackages.filter((pkg) => pkg.type === 'app')
@@ -56,4 +56,4 @@ const deployToProd = async () => {
 	}
 }
 
-void deployToProd()
+export default deployToProd

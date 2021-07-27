@@ -10,20 +10,11 @@ export default async (
 	pullNumber: number,
 ): Promise<void> => {
 	try {
-		if (!pullNumber)
-			throw Error('The environment variable GITHUB_PR_NUMBER must be defined')
+		if (!pullNumber) throw Error('PR number is undefined')
 		const slotName = pullNumber
 		const stagName = `${pkg.id}stag`
 
-		const path = join(
-			__dirname,
-			'../',
-			'../',
-			'../',
-			'../',
-			`${pkg.type}s`,
-			pkg.name,
-		)
+		const path = join(__dirname, `${pkg.type}s`, pkg.name)
 
 		console.log(`Building webapp: ${pkg.name}`)
 		const { stdout, stderr } = await exec(

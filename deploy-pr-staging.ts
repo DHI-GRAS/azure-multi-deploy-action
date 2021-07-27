@@ -4,7 +4,7 @@ import getChangedPackages from './functions/getChangedPackages'
 import deployWebApp from './functions/deployWebToStaging'
 import deployFuncApp from './functions/deployFuncToStaging'
 
-const msgFile = join(__dirname, '../../../', 'github_message.txt')
+const msgFile = join(__dirname, 'github_message.txt')
 
 const deployToStag = async (prNumber: number): Promise<void> => {
 	const changedPackages = await getChangedPackages()
