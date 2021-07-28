@@ -1,9 +1,9 @@
 import { exec } from 'child-process-promise'
-import { join } from 'path'
+import path from 'path'
 import { Package } from '../types'
 
 const mdLinebreak = '<br/>'
-const msgFile = join(__dirname, '../../../../', 'github_message.txt')
+const msgFile = path.join('github_message.txt')
 
 export default async (pkg: Package, pullNumber: number): Promise<void> => {
 	try {
@@ -11,11 +11,9 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const slotName = pullNumber
 		const stagName = `${pkg.id}stag`
 
-		const path = join(__dirname, `${pkg.type}s`, pkg.name)
-
 		console.log(`Building webapp: ${pkg.name}`)
 		const { stdout, stderr } = await exec(
-			`cd ${path} && STAG_SLOT=${slotName} yarn ${pkg.name}:build`,
+			`cd ${pkg.path} && STAG_SLOT=${slotName} yarn ${pkg.name}:build`,
 		)
 		if (stderr) console.log(stderr)
 
@@ -24,7 +22,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 
 		await exec('az extension add --name storage-preview').catch()
 		const { stdout: uploadOut } = await exec(
-			`cd ${path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`,
+			`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`,
 		).catch((err) => {
 			throw Error(err)
 		})

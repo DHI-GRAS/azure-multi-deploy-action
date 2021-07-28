@@ -7,14 +7,10 @@ const packageTypes = ['apps', 'func-apis'] as const
 const appRequiredFields = ['name', 'id', 'resourceGroup']
 const apiRequiredFields = [...appRequiredFields, 'storageAccount']
 
-const isMonorepo = packageTypes
-	.map((pkg) => fs.existsSync(path.join(pkg)))
-	.includes(true)
-
 const getPackageObject = (
 	pkgDir: string,
 	pkgType: typeof packageTypes[number],
-) => {
+): Package => {
 	const packageFile = fs.readFileSync(path.join(pkgDir, 'package.json'), 'utf8')
 	const pkgObj = JSON.parse(packageFile) as PackageJSON
 	if (pkgObj?.private === true)
@@ -31,18 +27,16 @@ const getPackageObject = (
 		return { ...fieldAcc, [field]: fieldValue }
 	}, {}) as Omit<Package, 'type'>
 
-	const lowercaseRe = /[a-z]/
-	if (lowercaseRe.exec(pkgObj.id)?.length !== pkgObj.id?.length)
+	const lowercaseRe = /^[a-z]+$/
+	if (lowercaseRe.exec(pkgObj.id)?.[0].length !== pkgObj.id?.length)
 		throw Error(
 			`"id" field in ${pkgType}/package.json must be all lowercase, only letters`,
 		)
-
-	return [
-		{
-			type: pkgType.substring(0, pkgType.length - 1) as Package['type'],
-			...propertiesFromPkgJson,
-		},
-	]
+	return {
+		...propertiesFromPkgJson,
+		type: pkgType.substring(0, pkgType.length - 1) as Package['type'],
+		path: path.resolve(pkgDir),
+	}
 }
 
 const getMonorepoPackages = () =>
@@ -53,11 +47,15 @@ const getMonorepoPackages = () =>
 			.filter((item) => item.isDirectory())
 			.map((item) => item.name)
 
-		const packagesByType: Packages[] = pkgDirs.map((pkgDir) =>
+		const packagesByType: Packages = pkgDirs.map((pkgDir) =>
 			getPackageObject(pkgDir, pkgType),
 		)
-		return [...acc, ...packagesByType.join()] as unknown as Packages
+		return [...acc, ...packagesByType]
 	}, [])
+
+const isMonorepo = packageTypes
+	.map((pkg) => fs.existsSync(path.join(pkg)))
+	.includes(true)
 
 console.log(
 	isMonorepo ? 'Repository is monorepo' : 'Repository is single web app',

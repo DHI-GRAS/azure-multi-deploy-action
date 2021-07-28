@@ -4,6 +4,7 @@ export interface Package {
 	resourceGroup: string
 	type: 'app' | 'func-api' | 'lib'
 	storageAccount?: string
+	path: string
 }
 
 export type Packages = Package[]

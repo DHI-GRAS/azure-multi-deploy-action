@@ -4,10 +4,10 @@ import { Package } from './types'
 import getChangedPackages from './functions/getChangedPackages'
 
 const deployWebApp = async (pkg: Package) => {
-	const path = join(__dirname, '../', '../', '../', `${pkg.type}s`, pkg.name)
-
 	console.log(`Building webapp: ${pkg.name}`)
-	const { stdout, stderr } = await exec(`cd ${path} && yarn ${pkg.name}:build`)
+	const { stdout, stderr } = await exec(
+		`cd ${pkg.path} && yarn ${pkg.name}:build`,
+	)
 	if (stderr) console.log(stderr)
 
 	console.log(stdout)
@@ -15,7 +15,7 @@ const deployWebApp = async (pkg: Package) => {
 
 	await exec('az extension add --name storage-preview').catch()
 	const { stdout: uploadOut } = await exec(
-		`cd ${path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${pkg.id} --source ./\\* --auth-mode key`,
+		`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${pkg.id} --source ./\\* --auth-mode key`,
 	).catch((err) => {
 		throw Error(err)
 	})
@@ -24,13 +24,11 @@ const deployWebApp = async (pkg: Package) => {
 
 const deployFuncApp = async (pkg: Package) => {
 	try {
-		const path = join(__dirname, '../', '../', '../', `${pkg.type}s`, pkg.name)
-
 		console.log(`Deploying functionapp: ${pkg.name}`)
-		await exec(`cd ${path} && yarn build && zip -r dist.zip *`)
+		await exec(`cd ${pkg.path} && yarn build && zip -r dist.zip *`)
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
-			`cd ${path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`,
+			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`,
 		)
 
 		if (uploadErr) console.log(uploadErr)

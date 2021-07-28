@@ -34,19 +34,10 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 
 		console.log('func', slotExists, slots)
 
-		const path = join(
-			__dirname,
-			'../',
-			'../',
-			'../',
-			'../',
-			`${pkg.type}s`,
-			pkg.name,
-		)
-		await exec(`cd ${path} && yarn build ; zip -r dist.zip *`)
+		await exec(`cd ${pkg.path} && yarn build ; zip -r dist.zip *`)
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
-			`cd ${path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`,
+			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`,
 		)
 		if (uploadErr) console.log(uploadErr)
 

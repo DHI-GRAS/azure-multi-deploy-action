@@ -22,10 +22,7 @@ export default async (): Promise<Packages> => {
 		const checkChanged = async (pkg: Package) => {
 			const { stdout: diffOut, stdout: diffErr } = await exec(
 				`git diff --quiet origin/main HEAD -- ${path.join(
-					'..',
-					'..',
-					`${pkg.type}s`,
-					pkg.name,
+					pkg.path,
 				)} || echo changed`,
 			)
 			if (diffErr) console.log(diffErr)
@@ -45,7 +42,7 @@ export default async (): Promise<Packages> => {
 		const libDepPackages = packagesWithName.filter((pkg) => pkg.type === 'app')
 		const changedPackagesWithLibDeps = libDepPackages.filter((pkg) => {
 			const pkgPackageFile = fs.readFileSync(
-				path.join('..', '..', `${pkg.type}s`, pkg.name, 'package.json'),
+				path.join(pkg.path, 'package.json'),
 				'utf8',
 			)
 
