@@ -4,7 +4,7 @@
     "prepublish": "yarn build",
     "runmain": "node ./dist/index.js",
     "build": "tsc",
-    "package": "ncc build dist --source-map",
+    "package": "ncc build dist/index.js --source-map",
     "deploy-config:build": "yarn build",
     "build:watch": "tsc -w",
     "lint": "eslint --ext ts,tsx . --cache"
