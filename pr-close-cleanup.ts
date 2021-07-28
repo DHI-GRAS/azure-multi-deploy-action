@@ -1,9 +1,6 @@
 import { exec } from 'child-process-promise'
-import * as YAML from 'yaml'
-import { readFileSync } from 'fs'
-import { PackageConfig, Package } from './types'
-
-const config = readFileSync('../../deploy-config.yml', 'utf8')
+import { Package } from './types'
+import packages from './functions/get-packages'
 
 const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 	try {
@@ -41,11 +38,8 @@ const removeFuncAppStagingDeployment = async (
 }
 
 const cleanDeployments = (prNumber: number): void => {
-	const configObj = YAML.parse(config) as PackageConfig
-	const configArr = Object.values(configObj)
-
-	const webPackages = configArr.filter((pkg) => pkg.type === 'app')
-	const funcPackages = configArr.filter((pkg) => pkg.type === 'func-api')
+	const webPackages = packages.filter((pkg) => pkg.type === 'app')
+	const funcPackages = packages.filter((pkg) => pkg.type === 'func-api')
 
 	void Promise.all(webPackages.map(removeWebStagingDeployment, prNumber))
 	void Promise.all(funcPackages.map(removeFuncAppStagingDeployment, prNumber))

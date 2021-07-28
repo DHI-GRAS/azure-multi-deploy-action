@@ -7,7 +7,6 @@ export interface Package {
 }
 
 export type Packages = Package[]
-export type PackageConfig = Record<string, Package>
 
 export interface FunctionApp {
 	name: string
@@ -25,3 +24,12 @@ export interface StorageAccount {
 }
 
 export type StorageAccounts = StorageAccount[]
+
+export interface PackageJSON {
+	dependencies: Record<string, string>
+	devDependencies: Record<string, string>
+	private: boolean
+	id: string
+	resourceGroup: string
+	storageAccount: string
+}

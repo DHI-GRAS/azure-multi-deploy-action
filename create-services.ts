@@ -1,73 +1,76 @@
-// import { exec } from 'child-process-promise'
-// import { readFileSync } from 'fs'
-// import * as YAML from 'yaml'
-// import { Packages, PackageConfig, StorageAccounts, FunctionApps } from './types'
-// import createFunctionApp from './functions/createFunctionApp'
-// import createStorageAccount from './functions/createStorageAccount'
+import { exec } from 'child-process-promise'
+import { Packages, StorageAccounts, FunctionApps } from './types'
+import createFunctionApp from './functions/createFunctionApp'
+import createStorageAccount from './functions/createStorageAccount'
+import config from './functions/get-packages'
 
-// const config = readFileSync('../../deploy-config.yml', 'utf8')
+const getMissingStorageAccounts = async (
+	packages: Packages,
+): Promise<Packages> => {
+	const webAppPackages = packages.filter((item) => item.type === 'app')
+	if (webAppPackages.length === 0) {
+		console.log('No web app packages in project')
+		return []
+	}
 
-// const getMissingStorageAccounts = async (
-// 	packages: Packages,
-// ): Promise<Packages> => {
-// 	const webAppPackages = packages.filter((item) => item.type === 'app')
+	const { stdout, stderr } = await exec('az storage account list')
 
-// 	const { stdout, stderr } = await exec('az storage account list')
+	if (stderr) {
+		throw Error(stderr)
+	}
 
-// 	if (stderr) {
-// 		throw Error(stderr)
-// 	}
+	const accounts = JSON.parse(stdout) as StorageAccounts
+	console.log(`Retrieved ${accounts.length} storage accounts`)
 
-// 	const accounts = JSON.parse(stdout) as StorageAccounts
-// 	console.log(`Retrieved ${accounts.length} storage accounts`)
+	return webAppPackages.filter(
+		(item) => !accounts.map((account) => account.name).includes(item.id),
+	)
+}
 
-// 	return webAppPackages.filter(
-// 		(item) => !accounts.map((account) => account.name).includes(item.id),
-// 	)
-// }
+const getMissingFunctionApps = async (
+	packages: Packages,
+): Promise<Packages> => {
+	const configFuncApps = packages.filter((item) => item.type === 'func-api')
 
-// const getMissingFunctionApps = async (
-// 	packages: Packages,
-// ): Promise<Packages> => {
-// 	const configFuncApps = packages.filter((item) => item.type === 'func-api')
+	if (configFuncApps.length === 0) {
+		console.log('No function app packages in project')
+		return []
+	}
 
-// 	const { stdout, stderr } = await exec('az functionapp list')
-// 	if (stderr) {
-// 		throw Error(stderr)
-// 	}
+	const { stdout, stderr } = await exec('az functionapp list')
+	if (stderr) {
+		throw Error(stderr)
+	}
 
-// 	const apps = JSON.parse(stdout) as FunctionApps
-// 	console.log(`Retrieved ${apps.length} function apps`)
+	const apps = JSON.parse(stdout) as FunctionApps
+	console.log(`Retrieved ${apps.length} function apps`)
 
-// 	return configFuncApps.filter((configApp) => {
-// 		const appIds = apps.map((app) => app.name)
-// 		return !appIds.includes(configApp.id)
-// 	})
-// }
-// const createServices = async (): Promise<void> => {
-// 	const configObj = YAML.parse(config) as PackageConfig
-// 	const configArr = Object.values(configObj)
+	return configFuncApps.filter((configApp) => {
+		const appIds = apps.map((app) => app.name)
+		return !appIds.includes(configApp.id)
+	})
+}
+const createServices = async (): Promise<void> => {
+	const missingStorageAccounts = await getMissingStorageAccounts(config)
+	const missingFunctionApps = await getMissingFunctionApps(config)
 
-// 	const missingStorageAccounts = await getMissingStorageAccounts(configArr)
-// 	const missingFunctionApps = await getMissingFunctionApps(configArr)
+	console.log(
+		missingStorageAccounts.length > 0
+			? `Creating storage accounts: ${missingStorageAccounts
+					.map((pkg) => pkg.id)
+					.join()}`
+			: 'No storage accounts to create',
+	)
 
-// 	console.log(
-// 		missingStorageAccounts.length > 0
-// 			? `Creating storage accounts: ${missingStorageAccounts
-// 					.map((pkg) => pkg.id)
-// 					.join()}`
-// 			: 'No storage accounts to create',
-// 	)
+	console.log(
+		missingFunctionApps.length > 0
+			? `Creating function apps: ${missingFunctionApps
+					.map((pkg) => pkg.id)
+					.join()}`
+			: 'No function apps to create',
+	)
+	missingStorageAccounts.forEach((pkg) => createStorageAccount(pkg))
+	missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
+}
 
-// 	console.log(
-// 		missingFunctionApps.length > 0
-// 			? `Creating function apps: ${missingFunctionApps
-// 					.map((pkg) => pkg.id)
-// 					.join()}`
-// 			: 'No function apps to create',
-// 	)
-// 	missingStorageAccounts.forEach((pkg) => createStorageAccount(pkg))
-// 	missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
-// }
-
-// export default createServices
+export default createServices
