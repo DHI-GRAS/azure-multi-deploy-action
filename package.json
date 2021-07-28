@@ -4,6 +4,7 @@
     "prepublish": "yarn build",
     "runmain": "node ./dist/index.js",
     "build": "tsc",
+    "package": "ncc build dist --source-map",
     "deploy-config:build": "yarn build",
     "build:watch": "tsc -w",
     "lint": "eslint --ext ts,tsx . --cache"
@@ -18,6 +19,7 @@
     "@types/yaml": "^1.9.7",
     "@typescript-eslint/eslint-plugin": "^4.28.5",
     "@typescript-eslint/parser": "^4.28.5",
+    "@vercel/ncc": "^0.29.0",
     "@yarnpkg/sdks": "^2.4.1-rc.4",
     "eslint": "^7.31.0",
     "eslint-plugin-eslint-comments": "^3.2.0",

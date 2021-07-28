@@ -6,8 +6,5 @@ inputs:
     description: Azure credentials in JSON format
     required: true
 runs:
-  using: composite
-  steps:
-    - name: Install deps, build, run action
-      run: yarn && yarn build && yarn runmain
-      shell: bash
+  using: 'node12'
+  main: dist/index.js

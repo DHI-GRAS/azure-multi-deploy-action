@@ -8,7 +8,8 @@ node_modules
 
 # production
 /build
-dist
+dist/*
+!dist/index.js
 dist.zip
 
 # misc

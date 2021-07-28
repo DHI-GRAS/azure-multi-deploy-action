@@ -1,6 +1,7 @@
 {
 	"types": ["node"],
 	"compilerOptions": {
+		"rootDir": "./src",
 		"outDir": "dist",
 		"module": "CommonJS",
 		"lib": ["ESNext", "DOM"],
