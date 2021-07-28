@@ -1,16 +1,17 @@
 import { exec } from 'child-process-promise'
-import { readFileSync } from 'fs'
-import * as YAML from 'yaml'
-import { Packages, PackageConfig, StorageAccounts, FunctionApps } from './types'
+import { Packages, StorageAccounts, FunctionApps } from './types'
 import createFunctionApp from './functions/createFunctionApp'
 import createStorageAccount from './functions/createStorageAccount'
-
-const config = readFileSync('../../deploy-config.yml', 'utf8')
+import config from './functions/get-packages'
 
 const getMissingStorageAccounts = async (
 	packages: Packages,
 ): Promise<Packages> => {
 	const webAppPackages = packages.filter((item) => item.type === 'app')
+	if (webAppPackages.length === 0) {
+		console.log('No web app packages in project')
+		return []
+	}
 
 	const { stdout, stderr } = await exec('az storage account list')
 
@@ -31,6 +32,11 @@ const getMissingFunctionApps = async (
 ): Promise<Packages> => {
 	const configFuncApps = packages.filter((item) => item.type === 'func-api')
 
+	if (configFuncApps.length === 0) {
+		console.log('No function app packages in project')
+		return []
+	}
+
 	const { stdout, stderr } = await exec('az functionapp list')
 	if (stderr) {
 		throw Error(stderr)
@@ -45,11 +51,8 @@ const getMissingFunctionApps = async (
 	})
 }
 const createServices = async (): Promise<void> => {
-	const configObj = YAML.parse(config) as PackageConfig
-	const configArr = Object.values(configObj)
-
-	const missingStorageAccounts = await getMissingStorageAccounts(configArr)
-	const missingFunctionApps = await getMissingFunctionApps(configArr)
+	const missingStorageAccounts = await getMissingStorageAccounts(config)
+	const missingFunctionApps = await getMissingFunctionApps(config)
 
 	console.log(
 		missingStorageAccounts.length > 0
@@ -70,4 +73,4 @@ const createServices = async (): Promise<void> => {
 	missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
 }
 
-void createServices()
+export default createServices

@@ -1,9 +1,8 @@
 import { exec } from 'child-process-promise'
 import { join } from 'path'
-import { PackageWithName } from '../types'
+import { Package } from '../types'
 
 const mdLinebreak = '<br/>'
-const pullNumber = process.env.GITHUB_PR_NUMBER
 const msgFile = join(__dirname, '../../../../', 'github_message.txt')
 
 interface DeploymentSlot {
@@ -11,7 +10,7 @@ interface DeploymentSlot {
 }
 type DeploymentSlots = DeploymentSlot[]
 
-export default async (pkg: PackageWithName): Promise<void> => {
+export default async (pkg: Package, pullNumber: number): Promise<void> => {
 	try {
 		const { stdout: listOut, stderr: listErr } = await exec(
 			`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`,
@@ -35,19 +34,10 @@ export default async (pkg: PackageWithName): Promise<void> => {
 
 		console.log('func', slotExists, slots)
 
-		const path = join(
-			__dirname,
-			'../',
-			'../',
-			'../',
-			'../',
-			`${pkg.type}s`,
-			pkg.name,
-		)
-		await exec(`cd ${path} && yarn build ; zip -r dist.zip *`)
+		await exec(`cd ${pkg.path} && yarn build ; zip -r dist.zip *`)
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
-			`cd ${path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`,
+			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`,
 		)
 		if (uploadErr) console.log(uploadErr)
 

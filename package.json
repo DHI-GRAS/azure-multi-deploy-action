@@ -2,10 +2,7 @@
   "name": "deploy-config",
   "scripts": {
     "prepublish": "yarn build",
-    "run:create": "yarn build ; node ./dist/create-services.js",
-    "run:deploy-main": "yarn build ; node ./dist/deploy-main.js",
-    "run:deploy-stag": "yarn build ; node ./dist/deploy-pr-staging.js",
-    "run:clean-stag": "yarn build ; node ./dist/pr-close-cleanup.js",
+    "runmain": "node ./dist/index.js",
     "build": "tsc",
     "deploy-config:build": "yarn build",
     "build:watch": "tsc -w",

@@ -1,24 +1,13 @@
-import { readFileSync } from 'fs'
+import fs from 'fs'
 import path from 'path'
-import * as YAML from 'yaml'
 import { exec } from 'child-process-promise'
-import { PackagesWithName, PackageWithName, PackageConfig } from '../types'
+import { Packages, Package, PackageJSON } from '../types'
+import deployablePackages from './get-packages'
 
-const configYML = readFileSync('../../deploy-config.yml', 'utf8')
-const config = YAML.parse(configYML) as PackageConfig
-
-interface PackageJSON {
-	dependencies: Record<string, string>
-	devDependencies: Record<string, string>
-}
-
-export default async (): Promise<PackagesWithName> => {
+export default async (): Promise<Packages> => {
 	try {
-		const packagesWithName = Object.keys(config).map((packageName) => ({
-			name: packageName,
-			...config[packageName],
-		}))
-
+		console.log(deployablePackages)
+		const packagesWithName = deployablePackages
 		const { stdout: branchName, stderr: branchErr } = await exec(
 			`git branch --show-current`,
 		)
@@ -30,13 +19,10 @@ export default async (): Promise<PackagesWithName> => {
 		)
 		if (branchName.trim() === 'main') return deployablePkgs
 
-		const checkChanged = async (pkg: PackageWithName) => {
+		const checkChanged = async (pkg: Package) => {
 			const { stdout: diffOut, stdout: diffErr } = await exec(
 				`git diff --quiet origin/main HEAD -- ${path.join(
-					'..',
-					'..',
-					`${pkg.type}s`,
-					pkg.name,
+					pkg.path,
 				)} || echo changed`,
 			)
 			if (diffErr) console.log(diffErr)
@@ -47,7 +33,7 @@ export default async (): Promise<PackagesWithName> => {
 		const changedPromises = packagesWithName.map(checkChanged)
 		const changedDiffPackages = (await Promise.all(changedPromises)).filter(
 			(item) => item,
-		) as PackagesWithName
+		) as Packages
 
 		const changedLibPackeges = changedDiffPackages.filter(
 			(pkg) => pkg.type === 'lib',
@@ -55,8 +41,8 @@ export default async (): Promise<PackagesWithName> => {
 
 		const libDepPackages = packagesWithName.filter((pkg) => pkg.type === 'app')
 		const changedPackagesWithLibDeps = libDepPackages.filter((pkg) => {
-			const pkgPackageFile = readFileSync(
-				path.join('..', '..', `${pkg.type}s`, pkg.name, 'package.json'),
+			const pkgPackageFile = fs.readFileSync(
+				path.join(pkg.path, 'package.json'),
 				'utf8',
 			)
 
@@ -72,7 +58,7 @@ export default async (): Promise<PackagesWithName> => {
 
 		const changedPackages = [
 			...new Set([...changedPackagesWithLibDeps, ...changedDiffPackages]),
-		] as PackagesWithName
+		] as Packages
 
 		const changedPackageIdString = changedPackages
 			.map((pkg) => pkg.id)

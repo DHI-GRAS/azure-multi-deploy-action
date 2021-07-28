@@ -1,18 +1,13 @@
 export interface Package {
-	label: string
+	name: string
 	id: string
 	resourceGroup: string
 	type: 'app' | 'func-api' | 'lib'
 	storageAccount?: string
+	path: string
 }
 
 export type Packages = Package[]
-export type PackageConfig = Record<string, Package>
-
-export interface PackageWithName extends Package {
-	name: string
-}
-export type PackagesWithName = PackageWithName[]
 
 export interface FunctionApp {
 	name: string
@@ -30,3 +25,12 @@ export interface StorageAccount {
 }
 
 export type StorageAccounts = StorageAccount[]
+
+export interface PackageJSON {
+	dependencies: Record<string, string>
+	devDependencies: Record<string, string>
+	private: boolean
+	id: string
+	resourceGroup: string
+	storageAccount: string
+}

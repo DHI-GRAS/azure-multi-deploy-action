@@ -4,9 +4,9 @@ import getChangedPackages from './functions/getChangedPackages'
 import deployWebApp from './functions/deployWebToStaging'
 import deployFuncApp from './functions/deployFuncToStaging'
 
-const msgFile = join(__dirname, '../../../', 'github_message.txt')
+const msgFile = join(__dirname, 'github_message.txt')
 
-const deployToStag = async () => {
+const deployToStag = async (prNumber: number): Promise<void> => {
 	const changedPackages = await getChangedPackages()
 
 	const webPackages = changedPackages.filter((pkg) => pkg.type === 'app')
@@ -18,8 +18,8 @@ const deployToStag = async () => {
 		await exec(`echo "${deployMsg} <br />" >> ${msgFile}`)
 	}
 
-	for (const webApp of webPackages) await deployWebApp(webApp)
-	for (const funcApp of funcPackages) await deployFuncApp(funcApp)
+	for (const webApp of webPackages) await deployWebApp(webApp, prNumber)
+	for (const funcApp of funcPackages) await deployFuncApp(funcApp, prNumber)
 }
 
-void deployToStag()
+export default deployToStag

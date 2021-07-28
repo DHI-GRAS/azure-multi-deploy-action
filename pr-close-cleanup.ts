@@ -1,15 +1,10 @@
 import { exec } from 'child-process-promise'
-import * as YAML from 'yaml'
-import { readFileSync } from 'fs'
-import { PackageConfig, Package } from './types'
+import { Package } from './types'
+import packages from './functions/get-packages'
 
-const config = readFileSync('../../deploy-config.yml', 'utf8')
-const pullNumber = process.env.GITHUB_PR_NUMBER
-
-const removeWebStagingDeployment = async (pkg: Package) => {
+const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 	try {
-		if (!pullNumber)
-			throw Error('The environment variable GITHUB_PR_NUMBER must be defined')
+		if (!pullNumber) throw Error('No PR number')
 		const slotName = pullNumber
 		const stagName = `${pkg.id}stag`
 
@@ -24,10 +19,12 @@ const removeWebStagingDeployment = async (pkg: Package) => {
 	}
 }
 
-const removeFuncAppStagingDeployment = async (pkg: Package) => {
+const removeFuncAppStagingDeployment = async (
+	pkg: Package,
+	pullNumber: number,
+) => {
 	try {
-		if (!pullNumber)
-			throw Error('The environment variable GITHUB_PR_NUMBER must be defined')
+		if (!pullNumber) throw Error('No PR number')
 		const slotName = `stag-${pullNumber}`
 
 		const { stdout: deleteOut, stderr: deleteErr } = await exec(
@@ -40,15 +37,12 @@ const removeFuncAppStagingDeployment = async (pkg: Package) => {
 	}
 }
 
-const cleanDeployments = () => {
-	const configObj = YAML.parse(config) as PackageConfig
-	const configArr = Object.values(configObj)
+const cleanDeployments = (prNumber: number): void => {
+	const webPackages = packages.filter((pkg) => pkg.type === 'app')
+	const funcPackages = packages.filter((pkg) => pkg.type === 'func-api')
 
-	const webPackages = configArr.filter((pkg) => pkg.type === 'app')
-	const funcPackages = configArr.filter((pkg) => pkg.type === 'func-api')
-
-	void Promise.all(webPackages.map(removeWebStagingDeployment))
-	void Promise.all(funcPackages.map(removeFuncAppStagingDeployment))
+	void Promise.all(webPackages.map(removeWebStagingDeployment, prNumber))
+	void Promise.all(funcPackages.map(removeFuncAppStagingDeployment, prNumber))
 }
 
-cleanDeployments()
+export default cleanDeployments
