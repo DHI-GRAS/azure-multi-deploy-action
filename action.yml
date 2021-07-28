@@ -8,6 +8,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install & build
+    - name: Install deps, build, run action
       run: yarn && yarn build && yarn runmain
       shell: bash
