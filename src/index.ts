@@ -18,10 +18,6 @@ const prNumber = payload.pull_request?.number ?? 0
 console.log(branch, defaultBranch, context.eventName, payload.action)
 
 const run = async () => {
-	exec('ls', (err, out) => {
-		console.log(err, out)
-	})
-
 	await createServices()
 
 	if (

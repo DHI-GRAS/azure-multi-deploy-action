@@ -8473,23 +8473,24 @@ const appRequiredFields = ['name', 'id', 'resourceGroup'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
-    const packageFile = fs_1.default.readFileSync(path_1.default.join(pkgType, pkgDir, 'package.json'), 'utf8');
+    const fullPath = path_1.default.resolve(path_1.default.join(pkgType, pkgDir));
+    const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
     const pkgObj = JSON.parse(packageFile);
     const propertiesFromPkgJson = (pkgType === 'apps' ? appRequiredFields : apiRequiredFields).reduce((fieldAcc, field) => {
         const fieldValue = pkgObj[field];
         if (!fieldValue)
-            throw Error(`"${field}" is required in ${pkgDir}/package.json`);
+            throw Error(`"${field}" is required in ${fullPath}/package.json`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
     // Enforce only lowecase letters for storage account syntax
     const lowercaseRe = /^[a-z]+$/;
     if (pkgType === 'apps' &&
         ((_a = lowercaseRe.exec(pkgObj.id)) === null || _a === void 0 ? void 0 : _a[0].length) !== ((_b = pkgObj.id) === null || _b === void 0 ? void 0 : _b.length))
-        throw Error(`"id" field in ${pkgDir}/package.json must be all lowercase, only letters`);
+        throw Error(`"id" field in ${fullPath}/package.json must be all lowercase, only letters`);
     return {
         ...propertiesFromPkgJson,
         type: pkgType.substring(0, pkgType.length - 1),
-        path: path_1.default.resolve(pkgDir),
+        path: fullPath,
     };
 };
 const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
@@ -8607,7 +8608,6 @@ var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 // import * as core from '@actions/core'
 const github = __importStar(__nccwpck_require__(4435));
-const child_process_1 = __nccwpck_require__(3129);
 const deploy_pr_staging_1 = __importDefault(__nccwpck_require__(9824));
 const deploy_main_1 = __importDefault(__nccwpck_require__(2028));
 const pr_close_cleanup_1 = __importDefault(__nccwpck_require__(5518));
@@ -8621,9 +8621,6 @@ const prNumber = (_d = (_c = payload.pull_request) === null || _c === void 0 ? v
 console.log(branch, defaultBranch, context.eventName, payload.action);
 const run = async () => {
     var _a;
-    child_process_1.exec('ls', (err, out) => {
-        console.log(err, out);
-    });
     await create_services_1.default();
     if (isPR &&
         payload.action === 'synchronize' &&

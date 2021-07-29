@@ -11,8 +11,10 @@ const getPackageObject = (
 	pkgDir: string,
 	pkgType: typeof packageTypes[number],
 ): Package => {
+	const fullPath = path.resolve(path.join(pkgType, pkgDir))
+
 	const packageFile = fs.readFileSync(
-		path.join(pkgType, pkgDir, 'package.json'),
+		path.join(fullPath, 'package.json'),
 		'utf8',
 	)
 	const pkgObj = JSON.parse(packageFile) as PackageJSON
@@ -22,7 +24,7 @@ const getPackageObject = (
 	).reduce((fieldAcc, field) => {
 		const fieldValue = pkgObj[field]
 		if (!fieldValue)
-			throw Error(`"${field}" is required in ${pkgDir}/package.json`)
+			throw Error(`"${field}" is required in ${fullPath}/package.json`)
 		return { ...fieldAcc, [field]: fieldValue }
 	}, {}) as Omit<Package, 'type'>
 
@@ -33,12 +35,12 @@ const getPackageObject = (
 		lowercaseRe.exec(pkgObj.id)?.[0].length !== pkgObj.id?.length
 	)
 		throw Error(
-			`"id" field in ${pkgDir}/package.json must be all lowercase, only letters`,
+			`"id" field in ${fullPath}/package.json must be all lowercase, only letters`,
 		)
 	return {
 		...propertiesFromPkgJson,
 		type: pkgType.substring(0, pkgType.length - 1) as Package['type'],
-		path: path.resolve(pkgDir),
+		path: fullPath,
 	}
 }
 
