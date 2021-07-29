@@ -8193,6 +8193,7 @@ const getMissingFunctionApps = async (packages) => {
     });
 };
 const createServices = async () => {
+    console.log('Creating missing services');
     const missingStorageAccounts = await getMissingStorageAccounts(get_packages_1.default);
     const missingFunctionApps = await getMissingFunctionApps(get_packages_1.default);
     console.log(missingStorageAccounts.length > 0
@@ -8472,7 +8473,7 @@ const appRequiredFields = ['name', 'id', 'resourceGroup'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
-    const packageFile = fs_1.default.readFileSync(path_1.default.join(pkgDir, 'package.json'), 'utf8');
+    const packageFile = fs_1.default.readFileSync(path_1.default.join(pkgType, pkgDir, 'package.json'), 'utf8');
     const pkgObj = JSON.parse(packageFile);
     if ((pkgObj === null || pkgObj === void 0 ? void 0 : pkgObj.private) === true)
         throw Error('Excluding publishable packages with the "private" field is not yet supported. Remove it to run the action.');
@@ -8497,7 +8498,7 @@ const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
     const pkgDirs = fs_1.default
         .readdirSync(path_1.default.join(pkgType), { withFileTypes: true })
         .filter((item) => item.isDirectory())
-        .map((item) => item.name);
+        .map((item) => item.name); // needs to be absolute - currently is app dir name like altimetry-app
     const packagesByType = pkgDirs.map((pkgDir) => getPackageObject(pkgDir, pkgType));
     return [...acc, ...packagesByType];
 }, []);
