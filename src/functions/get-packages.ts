@@ -11,7 +11,10 @@ const getPackageObject = (
 	pkgDir: string,
 	pkgType: typeof packageTypes[number],
 ): Package => {
-	const packageFile = fs.readFileSync(path.join(pkgDir, 'package.json'), 'utf8')
+	const packageFile = fs.readFileSync(
+		path.join(pkgType, pkgDir, 'package.json'),
+		'utf8',
+	)
 	const pkgObj = JSON.parse(packageFile) as PackageJSON
 	if (pkgObj?.private === true)
 		throw Error(
@@ -45,7 +48,7 @@ const getMonorepoPackages = () =>
 		const pkgDirs = fs
 			.readdirSync(path.join(pkgType), { withFileTypes: true })
 			.filter((item) => item.isDirectory())
-			.map((item) => item.name)
+			.map((item) => item.name) // needs to be absolute - currently is app dir name like altimetry-app
 
 		const packagesByType: Packages = pkgDirs.map((pkgDir) =>
 			getPackageObject(pkgDir, pkgType),

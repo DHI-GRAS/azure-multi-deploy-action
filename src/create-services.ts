@@ -51,6 +51,7 @@ const getMissingFunctionApps = async (
 	})
 }
 const createServices = async (): Promise<void> => {
+	console.log('Creating missing services')
 	const missingStorageAccounts = await getMissingStorageAccounts(config)
 	const missingFunctionApps = await getMissingFunctionApps(config)
 
