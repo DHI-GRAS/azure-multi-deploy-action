@@ -16,7 +16,7 @@ const getPackageObject = (
 		'utf8',
 	)
 	const pkgObj = JSON.parse(packageFile) as PackageJSON
-	if (pkgObj?.private === true)
+	if (pkgObj.private !== undefined && pkgObj.private === true)
 		throw Error(
 			'Excluding publishable packages with the "private" field is not yet supported. Remove it to run the action.',
 		)

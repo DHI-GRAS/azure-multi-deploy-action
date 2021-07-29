@@ -12,7 +12,7 @@ const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
     const packageFile = fs_1.default.readFileSync(path_1.default.join(pkgType, pkgDir, 'package.json'), 'utf8');
     const pkgObj = JSON.parse(packageFile);
-    if ((pkgObj === null || pkgObj === void 0 ? void 0 : pkgObj.private) === true)
+    if (pkgObj.private !== undefined && pkgObj.private === true)
         throw Error('Excluding publishable packages with the "private" field is not yet supported. Remove it to run the action.');
     const propertiesFromPkgJson = (pkgType === 'apps' ? appRequiredFields : apiRequiredFields).reduce((fieldAcc, field) => {
         const fieldValue = pkgObj[field];
