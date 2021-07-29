@@ -16,10 +16,12 @@ const getPackageObject = (
 		'utf8',
 	)
 	const pkgObj = JSON.parse(packageFile) as PackageJSON
-	if (pkgObj.private !== undefined && pkgObj.private === true)
+	if (pkgObj.private !== undefined && pkgObj.private === true) {
+		console.log(pkgObj, pkgObj.private)
 		throw Error(
 			'Excluding publishable packages with the "private" field is not yet supported. Remove it to run the action.',
 		)
+	}
 
 	const propertiesFromPkgJson = (
 		pkgType === 'apps' ? appRequiredFields : apiRequiredFields
