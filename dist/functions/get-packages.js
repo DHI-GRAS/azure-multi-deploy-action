@@ -18,9 +18,11 @@ const getPackageObject = (pkgDir, pkgType) => {
             throw Error(`"${field}" is required in ${pkgDir}/package.json`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
+    // Enforce only lowecase letters for storage account syntax
     const lowercaseRe = /^[a-z]+$/;
-    if (((_a = lowercaseRe.exec(pkgObj.id)) === null || _a === void 0 ? void 0 : _a[0].length) !== ((_b = pkgObj.id) === null || _b === void 0 ? void 0 : _b.length))
-        throw Error(`"id" field in ${pkgType}/package.json must be all lowercase, only letters`);
+    if (pkgType === 'apps' &&
+        ((_a = lowercaseRe.exec(pkgObj.id)) === null || _a === void 0 ? void 0 : _a[0].length) !== ((_b = pkgObj.id) === null || _b === void 0 ? void 0 : _b.length))
+        throw Error(`"id" field in ${pkgDir}/package.json must be all lowercase, only letters`);
     return {
         ...propertiesFromPkgJson,
         type: pkgType.substring(0, pkgType.length - 1),

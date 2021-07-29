@@ -26,10 +26,14 @@ const getPackageObject = (
 		return { ...fieldAcc, [field]: fieldValue }
 	}, {}) as Omit<Package, 'type'>
 
+	// Enforce only lowecase letters for storage account syntax
 	const lowercaseRe = /^[a-z]+$/
-	if (lowercaseRe.exec(pkgObj.id)?.[0].length !== pkgObj.id?.length)
+	if (
+		pkgType === 'apps' &&
+		lowercaseRe.exec(pkgObj.id)?.[0].length !== pkgObj.id?.length
+	)
 		throw Error(
-			`"id" field in ${pkgType}/package.json must be all lowercase, only letters`,
+			`"id" field in ${pkgDir}/package.json must be all lowercase, only letters`,
 		)
 	return {
 		...propertiesFromPkgJson,
