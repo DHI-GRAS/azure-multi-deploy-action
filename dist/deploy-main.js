@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
-const getChangedPackages_1 = __importDefault(require("./functions/getChangedPackages"));
+const get_changed_packages_1 = __importDefault(require("./functions/get-changed-packages"));
 const deployWebApp = async (pkg) => {
     console.log(`Building webapp: ${pkg.name}`);
     const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && yarn ${pkg.name}:build`);
@@ -33,7 +33,7 @@ const deployFuncApp = async (pkg) => {
     }
 };
 const deployToProd = async () => {
-    const changedPackages = await getChangedPackages_1.default();
+    const changedPackages = await get_changed_packages_1.default();
     const webPackages = changedPackages.filter((pkg) => pkg.type === 'app');
     const funcPackages = changedPackages.filter((pkg) => pkg.type === 'func-api');
     const allPackages = [...webPackages, ...funcPackages];

@@ -4,8 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
-const createFunctionApp_1 = __importDefault(require("./functions/createFunctionApp"));
-const createStorageAccount_1 = __importDefault(require("./functions/createStorageAccount"));
+const create_function_app_1 = __importDefault(require("./functions/create-function-app"));
+const create_storage_account_1 = __importDefault(require("./functions/create-storage-account"));
 const get_packages_1 = __importDefault(require("./functions/get-packages"));
 const getMissingStorageAccounts = async (packages) => {
     const webAppPackages = packages.filter((item) => item.type === 'app');
@@ -52,7 +52,7 @@ const createServices = async () => {
             .map((pkg) => pkg.id)
             .join()}`
         : 'No function apps to create');
-    missingStorageAccounts.forEach((pkg) => createStorageAccount_1.default(pkg));
-    missingFunctionApps.forEach((pkg) => createFunctionApp_1.default(pkg));
+    missingStorageAccounts.forEach((pkg) => create_storage_account_1.default(pkg));
+    missingFunctionApps.forEach((pkg) => create_function_app_1.default(pkg));
 };
 exports.default = createServices;

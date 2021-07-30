@@ -1492,6 +1492,482 @@ exports.restEndpointMethods = restEndpointMethods;
 
 /***/ }),
 
+/***/ 9638:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.issue = exports.issueCommand = void 0;
+const os = __importStar(__nccwpck_require__(2087));
+const utils_1 = __nccwpck_require__(1097);
+/**
+ * Commands
+ *
+ * Command Format:
+ *   ::name key=value,key=value::message
+ *
+ * Examples:
+ *   ::warning::This is the message
+ *   ::set-env name=MY_VAR::some value
+ */
+function issueCommand(command, properties, message) {
+    const cmd = new Command(command, properties, message);
+    process.stdout.write(cmd.toString() + os.EOL);
+}
+exports.issueCommand = issueCommand;
+function issue(name, message = '') {
+    issueCommand(name, {}, message);
+}
+exports.issue = issue;
+const CMD_STRING = '::';
+class Command {
+    constructor(command, properties, message) {
+        if (!command) {
+            command = 'missing.command';
+        }
+        this.command = command;
+        this.properties = properties;
+        this.message = message;
+    }
+    toString() {
+        let cmdStr = CMD_STRING + this.command;
+        if (this.properties && Object.keys(this.properties).length > 0) {
+            cmdStr += ' ';
+            let first = true;
+            for (const key in this.properties) {
+                if (this.properties.hasOwnProperty(key)) {
+                    const val = this.properties[key];
+                    if (val) {
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            cmdStr += ',';
+                        }
+                        cmdStr += `${key}=${escapeProperty(val)}`;
+                    }
+                }
+            }
+        }
+        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+        return cmdStr;
+    }
+}
+function escapeData(s) {
+    return utils_1.toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A');
+}
+function escapeProperty(s) {
+    return utils_1.toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A')
+        .replace(/:/g, '%3A')
+        .replace(/,/g, '%2C');
+}
+//# sourceMappingURL=command.js.map
+
+/***/ }),
+
+/***/ 7817:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
+const command_1 = __nccwpck_require__(9638);
+const file_command_1 = __nccwpck_require__(496);
+const utils_1 = __nccwpck_require__(1097);
+const os = __importStar(__nccwpck_require__(2087));
+const path = __importStar(__nccwpck_require__(5622));
+/**
+ * The code to exit an action
+ */
+var ExitCode;
+(function (ExitCode) {
+    /**
+     * A code indicating that the action was successful
+     */
+    ExitCode[ExitCode["Success"] = 0] = "Success";
+    /**
+     * A code indicating that the action was a failure
+     */
+    ExitCode[ExitCode["Failure"] = 1] = "Failure";
+})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
+//-----------------------------------------------------------------------
+// Variables
+//-----------------------------------------------------------------------
+/**
+ * Sets env variable for this action and future actions in the job
+ * @param name the name of the variable to set
+ * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function exportVariable(name, val) {
+    const convertedVal = utils_1.toCommandValue(val);
+    process.env[name] = convertedVal;
+    const filePath = process.env['GITHUB_ENV'] || '';
+    if (filePath) {
+        const delimiter = '_GitHubActionsFileCommandDelimeter_';
+        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
+        file_command_1.issueCommand('ENV', commandValue);
+    }
+    else {
+        command_1.issueCommand('set-env', { name }, convertedVal);
+    }
+}
+exports.exportVariable = exportVariable;
+/**
+ * Registers a secret which will get masked from logs
+ * @param secret value of the secret
+ */
+function setSecret(secret) {
+    command_1.issueCommand('add-mask', {}, secret);
+}
+exports.setSecret = setSecret;
+/**
+ * Prepends inputPath to the PATH (for this action and future actions)
+ * @param inputPath
+ */
+function addPath(inputPath) {
+    const filePath = process.env['GITHUB_PATH'] || '';
+    if (filePath) {
+        file_command_1.issueCommand('PATH', inputPath);
+    }
+    else {
+        command_1.issueCommand('add-path', {}, inputPath);
+    }
+    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
+}
+exports.addPath = addPath;
+/**
+ * Gets the value of an input.
+ * Unless trimWhitespace is set to false in InputOptions, the value is also trimmed.
+ * Returns an empty string if the value is not defined.
+ *
+ * @param     name     name of the input to get
+ * @param     options  optional. See InputOptions.
+ * @returns   string
+ */
+function getInput(name, options) {
+    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
+    if (options && options.required && !val) {
+        throw new Error(`Input required and not supplied: ${name}`);
+    }
+    if (options && options.trimWhitespace === false) {
+        return val;
+    }
+    return val.trim();
+}
+exports.getInput = getInput;
+/**
+ * Gets the values of an multiline input.  Each value is also trimmed.
+ *
+ * @param     name     name of the input to get
+ * @param     options  optional. See InputOptions.
+ * @returns   string[]
+ *
+ */
+function getMultilineInput(name, options) {
+    const inputs = getInput(name, options)
+        .split('\n')
+        .filter(x => x !== '');
+    return inputs;
+}
+exports.getMultilineInput = getMultilineInput;
+/**
+ * Gets the input value of the boolean type in the YAML 1.2 "core schema" specification.
+ * Support boolean input list: `true | True | TRUE | false | False | FALSE` .
+ * The return value is also in boolean type.
+ * ref: https://yaml.org/spec/1.2/spec.html#id2804923
+ *
+ * @param     name     name of the input to get
+ * @param     options  optional. See InputOptions.
+ * @returns   boolean
+ */
+function getBooleanInput(name, options) {
+    const trueValue = ['true', 'True', 'TRUE'];
+    const falseValue = ['false', 'False', 'FALSE'];
+    const val = getInput(name, options);
+    if (trueValue.includes(val))
+        return true;
+    if (falseValue.includes(val))
+        return false;
+    throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}\n` +
+        `Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
+}
+exports.getBooleanInput = getBooleanInput;
+/**
+ * Sets the value of an output.
+ *
+ * @param     name     name of the output to set
+ * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function setOutput(name, value) {
+    process.stdout.write(os.EOL);
+    command_1.issueCommand('set-output', { name }, value);
+}
+exports.setOutput = setOutput;
+/**
+ * Enables or disables the echoing of commands into stdout for the rest of the step.
+ * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
+ *
+ */
+function setCommandEcho(enabled) {
+    command_1.issue('echo', enabled ? 'on' : 'off');
+}
+exports.setCommandEcho = setCommandEcho;
+//-----------------------------------------------------------------------
+// Results
+//-----------------------------------------------------------------------
+/**
+ * Sets the action status to failed.
+ * When the action exits it will be with an exit code of 1
+ * @param message add error issue message
+ */
+function setFailed(message) {
+    process.exitCode = ExitCode.Failure;
+    error(message);
+}
+exports.setFailed = setFailed;
+//-----------------------------------------------------------------------
+// Logging Commands
+//-----------------------------------------------------------------------
+/**
+ * Gets whether Actions Step Debug is on or not
+ */
+function isDebug() {
+    return process.env['RUNNER_DEBUG'] === '1';
+}
+exports.isDebug = isDebug;
+/**
+ * Writes debug message to user log
+ * @param message debug message
+ */
+function debug(message) {
+    command_1.issueCommand('debug', {}, message);
+}
+exports.debug = debug;
+/**
+ * Adds an error issue
+ * @param message error issue message. Errors will be converted to string via toString()
+ */
+function error(message) {
+    command_1.issue('error', message instanceof Error ? message.toString() : message);
+}
+exports.error = error;
+/**
+ * Adds an warning issue
+ * @param message warning issue message. Errors will be converted to string via toString()
+ */
+function warning(message) {
+    command_1.issue('warning', message instanceof Error ? message.toString() : message);
+}
+exports.warning = warning;
+/**
+ * Writes info to log with console.log.
+ * @param message info message
+ */
+function info(message) {
+    process.stdout.write(message + os.EOL);
+}
+exports.info = info;
+/**
+ * Begin an output group.
+ *
+ * Output until the next `groupEnd` will be foldable in this group
+ *
+ * @param name The name of the output group
+ */
+function startGroup(name) {
+    command_1.issue('group', name);
+}
+exports.startGroup = startGroup;
+/**
+ * End an output group.
+ */
+function endGroup() {
+    command_1.issue('endgroup');
+}
+exports.endGroup = endGroup;
+/**
+ * Wrap an asynchronous function call in a group.
+ *
+ * Returns the same type as the function itself.
+ *
+ * @param name The name of the group
+ * @param fn The function to wrap in the group
+ */
+function group(name, fn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        startGroup(name);
+        let result;
+        try {
+            result = yield fn();
+        }
+        finally {
+            endGroup();
+        }
+        return result;
+    });
+}
+exports.group = group;
+//-----------------------------------------------------------------------
+// Wrapper action state
+//-----------------------------------------------------------------------
+/**
+ * Saves state for current action, the state can only be retrieved by this action's post job execution.
+ *
+ * @param     name     name of the state to store
+ * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function saveState(name, value) {
+    command_1.issueCommand('save-state', { name }, value);
+}
+exports.saveState = saveState;
+/**
+ * Gets the value of an state set by this action's main execution.
+ *
+ * @param     name     name of the state to get
+ * @returns   string
+ */
+function getState(name) {
+    return process.env[`STATE_${name}`] || '';
+}
+exports.getState = getState;
+//# sourceMappingURL=core.js.map
+
+/***/ }),
+
+/***/ 496:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+// For internal use, subject to change.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.issueCommand = void 0;
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const fs = __importStar(__nccwpck_require__(5747));
+const os = __importStar(__nccwpck_require__(2087));
+const utils_1 = __nccwpck_require__(1097);
+function issueCommand(command, message) {
+    const filePath = process.env[`GITHUB_${command}`];
+    if (!filePath) {
+        throw new Error(`Unable to find environment variable for file command ${command}`);
+    }
+    if (!fs.existsSync(filePath)) {
+        throw new Error(`Missing file at path: ${filePath}`);
+    }
+    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
+        encoding: 'utf8'
+    });
+}
+exports.issueCommand = issueCommand;
+//# sourceMappingURL=file-command.js.map
+
+/***/ }),
+
+/***/ 1097:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.toCommandValue = void 0;
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+exports.toCommandValue = toCommandValue;
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
+
 /***/ 8524:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -8158,8 +8634,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(3723);
-const createFunctionApp_1 = __importDefault(__nccwpck_require__(8424));
-const createStorageAccount_1 = __importDefault(__nccwpck_require__(3156));
+const create_function_app_1 = __importDefault(__nccwpck_require__(893));
+const create_storage_account_1 = __importDefault(__nccwpck_require__(6568));
 const get_packages_1 = __importDefault(__nccwpck_require__(5928));
 const getMissingStorageAccounts = async (packages) => {
     const webAppPackages = packages.filter((item) => item.type === 'app');
@@ -8206,8 +8682,8 @@ const createServices = async () => {
             .map((pkg) => pkg.id)
             .join()}`
         : 'No function apps to create');
-    missingStorageAccounts.forEach((pkg) => createStorageAccount_1.default(pkg));
-    missingFunctionApps.forEach((pkg) => createFunctionApp_1.default(pkg));
+    missingStorageAccounts.forEach((pkg) => create_storage_account_1.default(pkg));
+    missingFunctionApps.forEach((pkg) => create_function_app_1.default(pkg));
 };
 exports.default = createServices;
 
@@ -8224,7 +8700,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(3723);
-const getChangedPackages_1 = __importDefault(__nccwpck_require__(5027));
+const get_changed_packages_1 = __importDefault(__nccwpck_require__(9999));
 const deployWebApp = async (pkg) => {
     console.log(`Building webapp: ${pkg.name}`);
     const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && yarn ${pkg.name}:build`);
@@ -8253,7 +8729,7 @@ const deployFuncApp = async (pkg) => {
     }
 };
 const deployToProd = async () => {
-    const changedPackages = await getChangedPackages_1.default();
+    const changedPackages = await get_changed_packages_1.default();
     const webPackages = changedPackages.filter((pkg) => pkg.type === 'app');
     const funcPackages = changedPackages.filter((pkg) => pkg.type === 'func-api');
     const allPackages = [...webPackages, ...funcPackages];
@@ -8280,12 +8756,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const path_1 = __nccwpck_require__(5622);
 const child_process_promise_1 = __nccwpck_require__(3723);
-const getChangedPackages_1 = __importDefault(__nccwpck_require__(5027));
-const deployWebToStaging_1 = __importDefault(__nccwpck_require__(8927));
-const deployFuncToStaging_1 = __importDefault(__nccwpck_require__(5561));
+const get_changed_packages_1 = __importDefault(__nccwpck_require__(9999));
+const deplpu_web_to_staging_1 = __importDefault(__nccwpck_require__(9399));
+const deploy_func_to_staging_1 = __importDefault(__nccwpck_require__(8124));
 const msgFile = path_1.join(__dirname, 'github_message.txt');
 const deployToStag = async (prNumber) => {
-    const changedPackages = await getChangedPackages_1.default();
+    const changedPackages = await get_changed_packages_1.default();
     const webPackages = changedPackages.filter((pkg) => pkg.type === 'app');
     const funcPackages = changedPackages.filter((pkg) => pkg.type === 'func-api');
     if (webPackages.length + funcPackages.length === 0) {
@@ -8294,16 +8770,58 @@ const deployToStag = async (prNumber) => {
         await child_process_promise_1.exec(`echo "${deployMsg} <br />" >> ${msgFile}`);
     }
     for (const webApp of webPackages)
-        await deployWebToStaging_1.default(webApp, prNumber);
+        await deplpu_web_to_staging_1.default(webApp, prNumber);
     for (const funcApp of funcPackages)
-        await deployFuncToStaging_1.default(funcApp, prNumber);
+        await deploy_func_to_staging_1.default(funcApp, prNumber);
 };
 exports.default = deployToStag;
 
 
 /***/ }),
 
-/***/ 8424:
+/***/ 3981:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(7817));
+const child_process_promise_1 = __nccwpck_require__(3723);
+exports.default = async () => {
+    console.log('Logging into Azure CLI...');
+    const azureCredentialsInput = core.getInput('azureCredentials', {
+        required: true,
+    });
+    const azureCredentials = JSON.parse(azureCredentialsInput);
+    Object.keys(azureCredentials).forEach((key) => core.setSecret(azureCredentials[key]));
+    const { clientId, tenantId, clientSecret, subscriptionId } = azureCredentials;
+    await child_process_promise_1.exec(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
+    await child_process_promise_1.exec(`az account set --subscription ${subscriptionId}`);
+};
+
+
+/***/ }),
+
+/***/ 893:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8332,7 +8850,7 @@ exports.default = (pkg) => {
 
 /***/ }),
 
-/***/ 3156:
+/***/ 6568:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8366,7 +8884,7 @@ exports.default = (pkg) => {
 
 /***/ }),
 
-/***/ 5561:
+/***/ 8124:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8412,7 +8930,7 @@ exports.default = async (pkg, pullNumber) => {
 
 /***/ }),
 
-/***/ 8927:
+/***/ 9399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8457,65 +8975,7 @@ exports.default = async (pkg, pullNumber) => {
 
 /***/ }),
 
-/***/ 5928:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const fs_1 = __importDefault(__nccwpck_require__(5747));
-const path_1 = __importDefault(__nccwpck_require__(5622));
-const packageTypes = ['apps', 'func-apis'];
-const appRequiredFields = ['name', 'id', 'resourceGroup'];
-const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
-const getPackageObject = (pkgDir, pkgType) => {
-    var _a, _b;
-    const fullPath = path_1.default.resolve(path_1.default.join(pkgType, pkgDir));
-    const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
-    const pkgObj = JSON.parse(packageFile);
-    const propertiesFromPkgJson = (pkgType === 'apps' ? appRequiredFields : apiRequiredFields).reduce((fieldAcc, field) => {
-        const fieldValue = pkgObj[field];
-        if (!fieldValue)
-            throw Error(`"${field}" is required in ${fullPath}/package.json`);
-        return { ...fieldAcc, [field]: fieldValue };
-    }, {});
-    // Enforce only lowecase letters for storage account syntax
-    const lowercaseRe = /^[a-z]+$/;
-    if (pkgType === 'apps' &&
-        ((_a = lowercaseRe.exec(pkgObj.id)) === null || _a === void 0 ? void 0 : _a[0].length) !== ((_b = pkgObj.id) === null || _b === void 0 ? void 0 : _b.length))
-        throw Error(`"id" field in ${fullPath}/package.json must be all lowercase, only letters`);
-    return {
-        ...propertiesFromPkgJson,
-        type: pkgType.substring(0, pkgType.length - 1),
-        path: fullPath,
-    };
-};
-const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
-    if (!fs_1.default.existsSync(path_1.default.join(pkgType)))
-        return acc;
-    const pkgDirs = fs_1.default
-        .readdirSync(path_1.default.join(pkgType), { withFileTypes: true })
-        .filter((item) => item.isDirectory())
-        .map((item) => item.name); // needs to be absolute - currently is app dir name like altimetry-app
-    const packagesByType = pkgDirs.map((pkgDir) => getPackageObject(pkgDir, pkgType));
-    return [...acc, ...packagesByType];
-}, []);
-const isMonorepo = packageTypes
-    .map((pkg) => fs_1.default.existsSync(path_1.default.join(pkg)))
-    .includes(true);
-console.log(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app');
-const packages = isMonorepo
-    ? getMonorepoPackages()
-    : [getPackageObject('.', 'apps')];
-exports.default = packages;
-
-
-/***/ }),
-
-/***/ 5027:
+/***/ 9999:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8577,6 +9037,64 @@ exports.default = async () => {
 
 /***/ }),
 
+/***/ 5928:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const fs_1 = __importDefault(__nccwpck_require__(5747));
+const path_1 = __importDefault(__nccwpck_require__(5622));
+const packageTypes = ['apps', 'func-apis'];
+const appRequiredFields = ['name', 'id', 'resourceGroup'];
+const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
+const getPackageObject = (pkgDir, pkgType) => {
+    var _a, _b;
+    const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '.' : pkgType, pkgDir));
+    const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
+    const pkgObj = JSON.parse(packageFile);
+    const propertiesFromPkgJson = (pkgType === 'apps' ? appRequiredFields : apiRequiredFields).reduce((fieldAcc, field) => {
+        const fieldValue = pkgObj[field];
+        if (!fieldValue)
+            throw Error(`"${field}" is required in ${fullPath}/package.json`);
+        return { ...fieldAcc, [field]: fieldValue };
+    }, {});
+    // Enforce only lowecase letters for storage account syntax
+    const lowercaseRe = /^[a-z]+$/;
+    if (pkgType === 'apps' &&
+        ((_a = lowercaseRe.exec(pkgObj.id)) === null || _a === void 0 ? void 0 : _a[0].length) !== ((_b = pkgObj.id) === null || _b === void 0 ? void 0 : _b.length))
+        throw Error(`"id" field in ${fullPath}/package.json must be all lowercase, only letters`);
+    return {
+        ...propertiesFromPkgJson,
+        type: pkgType.substring(0, pkgType.length - 1),
+        path: fullPath,
+    };
+};
+const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
+    if (!fs_1.default.existsSync(path_1.default.join(pkgType)))
+        return acc;
+    const pkgDirs = fs_1.default
+        .readdirSync(path_1.default.join(pkgType), { withFileTypes: true })
+        .filter((item) => item.isDirectory())
+        .map((item) => item.name); // needs to be absolute - currently is app dir name like altimetry-app
+    const packagesByType = pkgDirs.map((pkgDir) => getPackageObject(pkgDir, pkgType));
+    return [...acc, ...packagesByType];
+}, []);
+const isMonorepo = packageTypes
+    .map((pkg) => fs_1.default.existsSync(path_1.default.join(pkg)))
+    .includes(true);
+console.log(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app');
+const packages = isMonorepo
+    ? getMonorepoPackages()
+    : [getPackageObject('.', 'apps')];
+exports.default = packages;
+
+
+/***/ }),
+
 /***/ 214:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -8608,10 +9126,12 @@ var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 // import * as core from '@actions/core'
 const github = __importStar(__nccwpck_require__(4435));
+const child_process_promise_1 = __nccwpck_require__(3723);
 const deploy_pr_staging_1 = __importDefault(__nccwpck_require__(9824));
 const deploy_main_1 = __importDefault(__nccwpck_require__(2028));
 const pr_close_cleanup_1 = __importDefault(__nccwpck_require__(5518));
 const create_services_1 = __importDefault(__nccwpck_require__(911));
+const az_login_1 = __importDefault(__nccwpck_require__(3981));
 const { context } = github;
 const { payload } = context;
 const branch = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.ref;
@@ -8621,19 +9141,22 @@ const prNumber = (_d = (_c = payload.pull_request) === null || _c === void 0 ? v
 console.log(branch, defaultBranch, context.eventName, payload.action);
 const run = async () => {
     var _a;
+    console.log('Installing azure CLI...');
+    await child_process_promise_1.exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
+    await az_login_1.default();
     await create_services_1.default();
     if (isPR &&
         payload.action === 'synchronize' &&
         ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
-        console.log('Deploying to staging');
+        console.log('Deploying to staging...');
         void deploy_pr_staging_1.default(prNumber);
     }
     if (branch === defaultBranch) {
-        console.log('Deploying to production');
+        console.log('Deploying to production...');
         void deploy_main_1.default();
     }
     if (payload.action === 'close' && isPR) {
-        console.log('PR closed. Cleaning up deployments');
+        console.log('PR closed. Cleaning up deployments...');
         pr_close_cleanup_1.default(prNumber);
     }
 };

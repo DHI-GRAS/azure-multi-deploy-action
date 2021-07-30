@@ -1,8 +1,8 @@
 import { join } from 'path'
 import { exec } from 'child-process-promise'
-import getChangedPackages from './functions/getChangedPackages'
-import deployWebApp from './functions/deployWebToStaging'
-import deployFuncApp from './functions/deployFuncToStaging'
+import getChangedPackages from './functions/get-changed-packages'
+import deployWebApp from './functions/deplpu-web-to-staging'
+import deployFuncApp from './functions/deploy-func-to-staging'
 
 const msgFile = join(__dirname, 'github_message.txt')
 

@@ -1,7 +1,6 @@
 import { exec } from 'child-process-promise'
-import { join } from 'path'
 import { Package } from './types'
-import getChangedPackages from './functions/getChangedPackages'
+import getChangedPackages from './functions/get-changed-packages'
 
 const deployWebApp = async (pkg: Package) => {
 	console.log(`Building webapp: ${pkg.name}`)

@@ -10,7 +10,7 @@ const appRequiredFields = ['name', 'id', 'resourceGroup'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
-    const fullPath = path_1.default.resolve(path_1.default.join(pkgType, pkgDir));
+    const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '.' : pkgType, pkgDir));
     const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
     const pkgObj = JSON.parse(packageFile);
     const propertiesFromPkgJson = (pkgType === 'apps' ? appRequiredFields : apiRequiredFields).reduce((fieldAcc, field) => {

@@ -11,7 +11,9 @@ const getPackageObject = (
 	pkgDir: string,
 	pkgType: typeof packageTypes[number],
 ): Package => {
-	const fullPath = path.resolve(path.join(pkgType, pkgDir))
+	const fullPath = path.resolve(
+		path.join(pkgDir === '.' ? '.' : pkgType, pkgDir),
+	)
 
 	const packageFile = fs.readFileSync(
 		path.join(fullPath, 'package.json'),

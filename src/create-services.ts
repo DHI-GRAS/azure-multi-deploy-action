@@ -1,7 +1,7 @@
 import { exec } from 'child-process-promise'
 import { Packages, StorageAccounts, FunctionApps } from './types'
-import createFunctionApp from './functions/createFunctionApp'
-import createStorageAccount from './functions/createStorageAccount'
+import createFunctionApp from './functions/create-function-app'
+import createStorageAccount from './functions/create-storage-account'
 import config from './functions/get-packages'
 
 const getMissingStorageAccounts = async (
