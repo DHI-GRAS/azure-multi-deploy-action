@@ -51,7 +51,7 @@ const run = async () => {
 		start,
 		end,
 	})
-	const durationMessage = `\n---  \n🕐 Took ${String(minutes)}m${String(
+	const durationMessage = `\n#### Stats  \n🕐 Took ${String(minutes)}m${String(
 		seconds,
 	)}s`
 	console.log(durationMessage)
