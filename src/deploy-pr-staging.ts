@@ -1,10 +1,8 @@
-import { join } from 'path'
-import { exec } from 'child-process-promise'
+import path from 'path'
+import fs from 'fs'
 import getChangedPackages from './functions/get-changed-packages'
 import deployWebApp from './functions/deploy-web-to-staging'
 import deployFuncApp from './functions/deploy-func-to-staging'
-
-const msgFile = join(__dirname, 'github_message.txt')
 
 const deployToStag = async (prNumber: number): Promise<void> => {
 	const changedPackages = await getChangedPackages()
@@ -15,7 +13,8 @@ const deployToStag = async (prNumber: number): Promise<void> => {
 	if (webPackages.length + funcPackages.length === 0) {
 		const deployMsg = `ℹ️ No changed packages were detected`
 		console.log(deployMsg)
-		await exec(`echo "${deployMsg} <br />" >> ${msgFile}`)
+		const msgFile = path.join('github_message.txt')
+		fs.appendFileSync(msgFile, `\n${deployMsg}  `)
 	}
 
 	for (const webApp of webPackages) await deployWebApp(webApp, prNumber)

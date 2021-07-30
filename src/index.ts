@@ -1,6 +1,9 @@
 // import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { exec } from 'child-process-promise'
+import fs from 'fs'
+import path from 'path'
+import { intervalToDuration } from 'date-fns'
 import deployToStag from './deploy-pr-staging'
 import deployToProd from './deploy-main'
 import cleanDeployments from './pr-close-cleanup'
@@ -20,6 +23,8 @@ const prNumber = payload.pull_request?.number ?? 0
 console.log(branch, defaultBranch, context.eventName, payload.action)
 
 const run = async () => {
+	const start = new Date()
+
 	console.log('Installing azure CLI...')
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 
@@ -39,6 +44,19 @@ const run = async () => {
 		console.log('Deploying to production...')
 		await deployToProd()
 	}
+
+	// Append run stats to comment file
+	const end = new Date()
+	const { minutes, seconds } = intervalToDuration({
+		start,
+		end,
+	})
+	const durationMessage = `\n---  \n🕐 Took ${String(minutes)}.${String(
+		seconds,
+	)} minutes`
+	console.log(durationMessage)
+
+	fs.appendFileSync(path.join('github_message.txt'), durationMessage)
 
 	if (isPR) await postComment()
 

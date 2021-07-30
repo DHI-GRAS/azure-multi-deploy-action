@@ -49,6 +49,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@vercel/ncc", "npm:0.29.0"],
             ["@yarnpkg/sdks", "npm:2.4.1-rc.4"],
             ["child-process-promise", "npm:2.2.1"],
+            ["date-fns", "npm:2.23.0"],
             ["eslint", "npm:7.31.0"],
             ["eslint-import-resolver-typescript", "virtual:51ec0485f45938e3a978d6bfda888e97496c57aa845d20026109ad159ef0a5d056050a86e9578cb4961b264db894c8f13db79eca348e968991d612e329b1cab7#npm:2.4.0"],
             ["eslint-plugin-eslint-comments", "virtual:51ec0485f45938e3a978d6bfda888e97496c57aa845d20026109ad159ef0a5d056050a86e9578cb4961b264db894c8f13db79eca348e968991d612e329b1cab7#npm:3.2.0"],
@@ -1589,6 +1590,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["date-fns", [
+        ["npm:2.23.0", {
+          "packageLocation": "./.yarn/cache/date-fns-npm-2.23.0-fa1182c861-485216d550.zip/node_modules/date-fns/",
+          "packageDependencies": [
+            ["date-fns", "npm:2.23.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["debug", [
         ["npm:2.6.9", {
           "packageLocation": "./.yarn/cache/debug-npm-2.6.9-7d4cb597dc-d2f51589ca.zip/node_modules/debug/",
@@ -1723,6 +1733,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@vercel/ncc", "npm:0.29.0"],
             ["@yarnpkg/sdks", "npm:2.4.1-rc.4"],
             ["child-process-promise", "npm:2.2.1"],
+            ["date-fns", "npm:2.23.0"],
             ["eslint", "npm:7.31.0"],
             ["eslint-import-resolver-typescript", "virtual:51ec0485f45938e3a978d6bfda888e97496c57aa845d20026109ad159ef0a5d056050a86e9578cb4961b264db894c8f13db79eca348e968991d612e329b1cab7#npm:2.4.0"],
             ["eslint-plugin-eslint-comments", "virtual:51ec0485f45938e3a978d6bfda888e97496c57aa845d20026109ad159ef0a5d056050a86e9578cb4961b264db894c8f13db79eca348e968991d612e329b1cab7#npm:3.2.0"],

@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
 const path_1 = __importDefault(require("path"));
-const mdLinebreak = '<br/>';
+const fs_1 = __importDefault(require("fs"));
 const msgFile = path_1.default.join('github_message.txt');
 exports.default = async (pkg, pullNumber) => {
     try {
@@ -25,13 +25,13 @@ exports.default = async (pkg, pullNumber) => {
         });
         console.log(uploadOut);
         // Don't think the deployment url gets returned from upload - hopefully this stays static?
-        const deployMsg = `✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName} ${mdLinebreak}`;
-        await child_process_promise_1.exec(`echo "${deployMsg}" >> ${msgFile}`);
+        const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName}  `;
+        fs_1.default.appendFileSync(msgFile, deployMsg);
         console.log(deployMsg);
     }
     catch (err) {
-        const deployMsg = `❌ Deployment of web app **${pkg.id}** failed. See CI output for details ${mdLinebreak}`;
-        await child_process_promise_1.exec(`echo "${deployMsg}" >> ${msgFile}`);
-        console.log(err);
+        const deployMsg = `\n❌ Deployment of web app **${pkg.id}** failed. See CI output for details  `;
+        fs_1.default.appendFileSync(msgFile, deployMsg);
+        console.log(deployMsg, err);
     }
 };

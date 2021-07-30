@@ -1,9 +1,9 @@
 import { exec } from 'child-process-promise'
-import { join } from 'path'
+import path from 'path'
+import fs from 'fs'
 import { Package } from '../types'
 
-const mdLinebreak = '<br/>'
-const msgFile = join(__dirname, '../../../../', 'github_message.txt')
+const msgFile = path.join('github_message.txt')
 
 interface DeploymentSlot {
 	name: string
@@ -45,12 +45,12 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		console.log(`Deployed functionapp ${pkg.id}-${slotName}`)
 
 		// Don't think the deployment url gets returned from upload - hopefully this stays static?
-		const deployMsg = `✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/ ${mdLinebreak}`
-		console.log(msgFile)
-		await exec(`echo "${deployMsg}" >> ${msgFile}`)
+		const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`
+		console.log(deployMsg)
+		fs.appendFileSync(msgFile, deployMsg)
 	} catch (err) {
-		const deployMsg = `❌ Deployment of functions app **${pkg.id}** failed. See CI output for details ${mdLinebreak}`
-		await exec(`echo "${deployMsg}" >> ${msgFile}`)
+		const deployMsg = `\n❌ Deployment of functions app **${pkg.id}** failed. See CI output for details  `
+		fs.appendFileSync(msgFile, deployMsg)
 		console.error(err)
 	}
 }

@@ -1,8 +1,8 @@
 import { exec } from 'child-process-promise'
 import path from 'path'
+import fs from 'fs'
 import { Package } from '../types'
 
-const mdLinebreak = '<br/>'
 const msgFile = path.join('github_message.txt')
 
 export default async (pkg: Package, pullNumber: number): Promise<void> => {
@@ -29,13 +29,13 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		console.log(uploadOut)
 
 		// Don't think the deployment url gets returned from upload - hopefully this stays static?
-		const deployMsg = `✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName} ${mdLinebreak}`
-		await exec(`echo "${deployMsg}" >> ${msgFile}`)
+		const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName}  `
+		fs.appendFileSync(msgFile, deployMsg)
 
 		console.log(deployMsg)
 	} catch (err) {
-		const deployMsg = `❌ Deployment of web app **${pkg.id}** failed. See CI output for details ${mdLinebreak}`
-		await exec(`echo "${deployMsg}" >> ${msgFile}`)
-		console.log(err)
+		const deployMsg = `\n❌ Deployment of web app **${pkg.id}** failed. See CI output for details  `
+		fs.appendFileSync(msgFile, deployMsg)
+		console.log(deployMsg, err)
 	}
 }

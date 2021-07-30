@@ -1238,6 +1238,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"date-fns@npm:^2.23.0":
+  version: 2.23.0
+  resolution: "date-fns@npm:2.23.0"
+  checksum: 485216d550255a548552db16379e7a5cd440e262b90fbdc0362f63ee71d0e74bd00ce29ca8d76b343f6df36c1ecb6f22edba0b72848a4c32674e755619695c1f
+  languageName: node
+  linkType: hard
+
 "debug@npm:4, debug@npm:^4.0.1, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1":
   version: 4.3.2
   resolution: "debug@npm:4.3.2"
@@ -1332,6 +1339,7 @@ __metadata:
     "@vercel/ncc": ^0.29.0
     "@yarnpkg/sdks": ^2.4.1-rc.4
     child-process-promise: ^2.2.1
+    date-fns: ^2.23.0
     eslint: ^7.31.0
     eslint-import-resolver-typescript: ^2.4.0
     eslint-plugin-eslint-comments: ^3.2.0
