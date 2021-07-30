@@ -51,9 +51,9 @@ const run = async () => {
 		start,
 		end,
 	})
-	const durationMessage = `\n---  \n🕐 Took ${String(minutes)}.${String(
+	const durationMessage = `\n---  \n🕐 Took ${String(minutes)}m${String(
 		seconds,
-	)} minutes`
+	)}s`
 	console.log(durationMessage)
 
 	fs.appendFileSync(path.join('github_message.txt'), durationMessage)
