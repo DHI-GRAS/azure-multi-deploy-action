@@ -6,6 +6,7 @@ import deployToProd from './deploy-main'
 import cleanDeployments from './pr-close-cleanup'
 import createServices from './create-services'
 import azLogin from './functions/az-login'
+import postComment from './functions/post-comment'
 
 const { context } = github
 const { payload } = context
@@ -31,14 +32,15 @@ const run = async () => {
 		payload.pull_request?.state === 'open'
 	) {
 		console.log('Deploying to staging...')
-
-		void deployToStag(prNumber)
+		await deployToStag(prNumber)
 	}
 
 	if (branch === defaultBranch) {
 		console.log('Deploying to production...')
-		void deployToProd()
+		await deployToProd()
 	}
+
+	if (isPR) await postComment()
 
 	if (payload.action === 'close' && isPR) {
 		console.log('PR closed. Cleaning up deployments...')

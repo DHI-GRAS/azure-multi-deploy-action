@@ -8669,7 +8669,7 @@ const getMissingFunctionApps = async (packages) => {
     });
 };
 const createServices = async () => {
-    console.log('Creating missing services');
+    console.log('Creating missing Azure services...');
     const missingStorageAccounts = await getMissingStorageAccounts(get_packages_1.default);
     const missingFunctionApps = await getMissingFunctionApps(get_packages_1.default);
     console.log(missingStorageAccounts.length > 0
@@ -8757,7 +8757,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const path_1 = __nccwpck_require__(5622);
 const child_process_promise_1 = __nccwpck_require__(3723);
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(9999));
-const deplpu_web_to_staging_1 = __importDefault(__nccwpck_require__(9399));
+const deploy_web_to_staging_1 = __importDefault(__nccwpck_require__(9122));
 const deploy_func_to_staging_1 = __importDefault(__nccwpck_require__(8124));
 const msgFile = path_1.join(__dirname, 'github_message.txt');
 const deployToStag = async (prNumber) => {
@@ -8770,7 +8770,7 @@ const deployToStag = async (prNumber) => {
         await child_process_promise_1.exec(`echo "${deployMsg} <br />" >> ${msgFile}`);
     }
     for (const webApp of webPackages)
-        await deplpu_web_to_staging_1.default(webApp, prNumber);
+        await deploy_web_to_staging_1.default(webApp, prNumber);
     for (const funcApp of funcPackages)
         await deploy_func_to_staging_1.default(funcApp, prNumber);
 };
@@ -8930,7 +8930,7 @@ exports.default = async (pkg, pullNumber) => {
 
 /***/ }),
 
-/***/ 9399:
+/***/ 9122:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -9095,6 +9095,62 @@ exports.default = packages;
 
 /***/ }),
 
+/***/ 4345:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(7817));
+const github = __importStar(__nccwpck_require__(4435));
+const fs_1 = __importDefault(__nccwpck_require__(5747));
+const path_1 = __importDefault(__nccwpck_require__(5622));
+const { context } = github;
+const { payload } = context;
+exports.default = async () => {
+    var _a, _b, _c;
+    const token = core.getInput('githubToken', { required: true });
+    const octokit = github.getOctokit(token);
+    const prNumber = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+    const repo = (_b = payload.repository) === null || _b === void 0 ? void 0 : _b.full_name;
+    const owner = (_c = payload.repository) === null || _c === void 0 ? void 0 : _c.owner.name;
+    if (!prNumber || !repo || !owner)
+        return;
+    // Writing to text file was a workaround, could now be done better (eventually)
+    const body = String(fs_1.default.readFileSync(path_1.default.join('github_message.txt')));
+    await octokit.rest.issues.createComment({
+        issue_number: prNumber,
+        repo,
+        owner,
+        body,
+    });
+};
+
+
+/***/ }),
+
 /***/ 214:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -9132,6 +9188,7 @@ const deploy_main_1 = __importDefault(__nccwpck_require__(2028));
 const pr_close_cleanup_1 = __importDefault(__nccwpck_require__(5518));
 const create_services_1 = __importDefault(__nccwpck_require__(911));
 const az_login_1 = __importDefault(__nccwpck_require__(3981));
+const post_comment_1 = __importDefault(__nccwpck_require__(4345));
 const { context } = github;
 const { payload } = context;
 const branch = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.ref;
@@ -9149,12 +9206,14 @@ const run = async () => {
         payload.action === 'synchronize' &&
         ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
         console.log('Deploying to staging...');
-        void deploy_pr_staging_1.default(prNumber);
+        await deploy_pr_staging_1.default(prNumber);
     }
     if (branch === defaultBranch) {
         console.log('Deploying to production...');
-        void deploy_main_1.default();
+        await deploy_main_1.default();
     }
+    if (isPR)
+        await post_comment_1.default();
     if (payload.action === 'close' && isPR) {
         console.log('PR closed. Cleaning up deployments...');
         pr_close_cleanup_1.default(prNumber);

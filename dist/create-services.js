@@ -39,7 +39,7 @@ const getMissingFunctionApps = async (packages) => {
     });
 };
 const createServices = async () => {
-    console.log('Creating missing services');
+    console.log('Creating missing Azure services...');
     const missingStorageAccounts = await getMissingStorageAccounts(get_packages_1.default);
     const missingFunctionApps = await getMissingFunctionApps(get_packages_1.default);
     console.log(missingStorageAccounts.length > 0
