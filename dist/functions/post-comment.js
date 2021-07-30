@@ -26,21 +26,14 @@ const core = __importStar(require("@actions/core"));
 const github = __importStar(require("@actions/github"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const { context } = github;
-const { payload } = context;
+const { context: { issue: { number }, repo: { repo, owner }, }, } = github;
 exports.default = async () => {
-    var _a, _b, _c;
     const token = core.getInput('githubToken', { required: true });
     const octokit = github.getOctokit(token);
-    const prNumber = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
-    const repo = (_b = payload.repository) === null || _b === void 0 ? void 0 : _b.full_name;
-    const owner = (_c = payload.repository) === null || _c === void 0 ? void 0 : _c.owner.name;
-    if (!prNumber || !repo || !owner)
-        return;
     // Writing to text file was a workaround, could now be done better (eventually)
     const body = String(fs_1.default.readFileSync(path_1.default.join('github_message.txt')));
     await octokit.rest.issues.createComment({
-        issue_number: prNumber,
+        issue_number: number,
         repo,
         owner,
         body,
