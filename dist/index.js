@@ -31301,7 +31301,7 @@ const run = async () => {
         start,
         end,
     });
-    const durationMessage = `\n---  \n🕐 Took ${String(minutes)}.${String(seconds)} minutes`;
+    const durationMessage = `\n#### Stats  \n🕐 Took ${String(minutes)}m${String(seconds)}s`;
     console.log(durationMessage);
     fs_1.default.appendFileSync(path_1.default.join('github_message.txt'), durationMessage);
     if (isPR)
