@@ -31308,8 +31308,9 @@ const run = async () => {
     if (preventProdDeploy && currentBranch === defaultBranch) {
         console.error('Production deployment skipped! Code quality checks have failed');
     }
-    console.log(context.ref, defaultBranch, preventProdDeploy, isPR, payload.action);
-    if (currentBranch === defaultBranch && !preventProdDeploy) {
+    if (payload.action !== 'close' &&
+        currentBranch === defaultBranch &&
+        !preventProdDeploy) {
         console.log('Deploying to production...');
         await deploy_main_1.default();
     }

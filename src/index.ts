@@ -45,15 +45,11 @@ const run = async () => {
 		)
 	}
 
-	console.log(
-		context.ref,
-		defaultBranch,
-		preventProdDeploy,
-		isPR,
-		payload.action,
-	)
-
-	if (currentBranch === defaultBranch && !preventProdDeploy) {
+	if (
+		payload.action !== 'close' &&
+		currentBranch === defaultBranch &&
+		!preventProdDeploy
+	) {
 		console.log('Deploying to production...')
 		await deployToProd()
 	}
