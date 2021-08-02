@@ -26,13 +26,11 @@ const deployFuncApp = async (pkg: Package) => {
 		console.log(`Deploying functionapp: ${pkg.name}`)
 		await exec(`cd ${pkg.path} && yarn build && zip -r dist.zip *`)
 
-		const { stdout: uploadOut, stderr: uploadErr } = await exec(
+		const { stderr: uploadErr } = await exec(
 			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`,
 		)
 
 		if (uploadErr) console.log(uploadErr)
-		console.log(uploadOut)
-
 		console.log(`Deployed functionapp: ${pkg.id}`)
 	} catch (err) {
 		console.log(`ERROR: could not deploy ${pkg.id} - ${String(err)}`)

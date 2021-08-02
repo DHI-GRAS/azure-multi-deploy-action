@@ -22,10 +22,9 @@ const deployFuncApp = async (pkg) => {
     try {
         console.log(`Deploying functionapp: ${pkg.name}`);
         await child_process_promise_1.exec(`cd ${pkg.path} && yarn build && zip -r dist.zip *`);
-        const { stdout: uploadOut, stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
+        const { stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
         if (uploadErr)
             console.log(uploadErr);
-        console.log(uploadOut);
         console.log(`Deployed functionapp: ${pkg.id}`);
     }
     catch (err) {

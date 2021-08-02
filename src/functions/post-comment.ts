@@ -17,16 +17,14 @@ export default async (startTime: Date): Promise<void> => {
 	try {
 		const token = core.getInput('githubToken', { required: true })
 		const octokit = github.getOctokit(token)
-
 		// Append run stats to comment file
+		fs.appendFileSync(path.join(messageFile), '\n##### Stats')
 		const endTime = new Date()
 		const { minutes, seconds } = intervalToDuration({
 			start: startTime,
 			end: endTime,
 		})
-		const durationMessage = `\n#### Stats  \n🕐 Took ${String(
-			minutes,
-		)}m${String(seconds)}s`
+		const durationMessage = `\n🕐 Took ${String(minutes)}m${String(seconds)}s`
 		console.log(durationMessage)
 
 		const preventProdDeploy = core.getInput('preventProdDeploy')

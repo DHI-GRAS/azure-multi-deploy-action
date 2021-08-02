@@ -15,9 +15,8 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const { stdout, stderr } = await exec(
 			`cd ${pkg.path} && STAG_SLOT=${slotName} yarn ${pkg.name}:build`,
 		)
-		if (stderr) console.log(stderr)
+		if (stderr) console.log(stderr, stdout)
 
-		console.log(stdout)
 		console.log(`Build finished, uploading webapp: ${pkg.name}`)
 
 		await exec('az extension add --name storage-preview').catch()

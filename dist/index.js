@@ -30801,10 +30801,9 @@ const deployFuncApp = async (pkg) => {
     try {
         console.log(`Deploying functionapp: ${pkg.name}`);
         await child_process_promise_1.exec(`cd ${pkg.path} && yarn build && zip -r dist.zip *`);
-        const { stdout: uploadOut, stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
+        const { stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
         if (uploadErr)
             console.log(uploadErr);
-        console.log(uploadOut);
         console.log(`Deployed functionapp: ${pkg.id}`);
     }
     catch (err) {
@@ -31038,8 +31037,7 @@ exports.default = async (pkg, pullNumber) => {
         console.log(`Building webapp: ${pkg.name}`);
         const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && STAG_SLOT=${slotName} yarn ${pkg.name}:build`);
         if (stderr)
-            console.log(stderr);
-        console.log(stdout);
+            console.log(stderr, stdout);
         console.log(`Build finished, uploading webapp: ${pkg.name}`);
         await child_process_promise_1.exec('az extension add --name storage-preview').catch();
         const { stdout: uploadOut } = await child_process_promise_1.exec(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`).catch((err) => {
@@ -31221,12 +31219,13 @@ exports.default = async (startTime) => {
         const token = core.getInput('githubToken', { required: true });
         const octokit = github.getOctokit(token);
         // Append run stats to comment file
+        fs_1.default.appendFileSync(path_1.default.join(messageFile), '\n##### Stats');
         const endTime = new Date();
         const { minutes, seconds } = date_fns_1.intervalToDuration({
             start: startTime,
             end: endTime,
         });
-        const durationMessage = `\n#### Stats  \n🕐 Took ${String(minutes)}m${String(seconds)}s`;
+        const durationMessage = `\n🕐 Took ${String(minutes)}m${String(seconds)}s`;
         console.log(durationMessage);
         const preventProdDeploy = core.getInput('preventProdDeploy');
         if (preventProdDeploy)

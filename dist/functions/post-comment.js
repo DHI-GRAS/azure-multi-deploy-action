@@ -34,12 +34,13 @@ exports.default = async (startTime) => {
         const token = core.getInput('githubToken', { required: true });
         const octokit = github.getOctokit(token);
         // Append run stats to comment file
+        fs_1.default.appendFileSync(path_1.default.join(messageFile), '\n##### Stats');
         const endTime = new Date();
         const { minutes, seconds } = date_fns_1.intervalToDuration({
             start: startTime,
             end: endTime,
         });
-        const durationMessage = `\n#### Stats  \n🕐 Took ${String(minutes)}m${String(seconds)}s`;
+        const durationMessage = `\n🕐 Took ${String(minutes)}m${String(seconds)}s`;
         console.log(durationMessage);
         const preventProdDeploy = core.getInput('preventProdDeploy');
         if (preventProdDeploy)
