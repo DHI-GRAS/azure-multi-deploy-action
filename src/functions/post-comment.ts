@@ -18,7 +18,7 @@ export default async (startTime: Date): Promise<void> => {
 		const token = core.getInput('githubToken', { required: true })
 		const octokit = github.getOctokit(token)
 		// Append run stats to comment file
-		fs.appendFileSync(path.join(messageFile), '\n##### Stats')
+		fs.appendFileSync(path.join(messageFile), '\n#### Stats')
 		const endTime = new Date()
 		const { minutes, seconds } = intervalToDuration({
 			start: startTime,
@@ -31,7 +31,7 @@ export default async (startTime: Date): Promise<void> => {
 		if (preventProdDeploy)
 			fs.appendFileSync(
 				messageFile,
-				'\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped.',
+				'\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped',
 			)
 		fs.appendFileSync(path.join(messageFile), durationMessage)
 

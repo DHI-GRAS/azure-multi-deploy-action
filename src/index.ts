@@ -17,8 +17,6 @@ const defaultBranch = payload.repository?.default_branch
 const isPR = context.eventName === 'pull_request'
 const prNumber = payload.pull_request?.number ?? 0
 
-console.log(branch, defaultBranch, context.eventName, payload.action)
-
 const run = async () => {
 	const startTime = new Date()
 
@@ -51,6 +49,15 @@ const run = async () => {
 	}
 
 	if (isPR) await postComment(startTime)
+
+	if (preventProdDeploy)
+		core.setFailed(
+			`Code quality checks have failed, ${
+				isPR
+					? 'but staging deployments were made'
+					: 'no apps have been deployed'
+			}`,
+		)
 
 	if (payload.action === 'close' && isPR) {
 		console.log('PR closed. Cleaning up deployments...')

@@ -30788,14 +30788,12 @@ const deployWebApp = async (pkg) => {
     console.log(`Building webapp: ${pkg.name}`);
     const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && yarn ${pkg.name}:build`);
     if (stderr)
-        console.log(stderr);
-    console.log(stdout);
+        console.log(stderr, stdout);
     console.log(`Build finished, uploading webapp: ${pkg.name}`);
     await child_process_promise_1.exec('az extension add --name storage-preview').catch();
-    const { stdout: uploadOut } = await child_process_promise_1.exec(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${pkg.id} --source ./\\* --auth-mode key`).catch((err) => {
+    await child_process_promise_1.exec(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${pkg.id} --source ./\\* --auth-mode key`).catch((err) => {
         throw Error(err);
     });
-    console.log(uploadOut);
 };
 const deployFuncApp = async (pkg) => {
     try {
@@ -30993,12 +30991,10 @@ exports.default = async (pkg, pullNumber) => {
         if (!slotExists) {
             await child_process_promise_1.exec(`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         }
-        console.log('func', slotExists, slots);
         await child_process_promise_1.exec(`cd ${pkg.path} && yarn build ; zip -r dist.zip *`);
         const { stdout: uploadOut, stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
-            console.log(uploadErr);
-        console.log(uploadOut);
+            console.log(uploadErr, uploadOut);
         console.log(`Deployed functionapp ${pkg.id}-${slotName}`);
         // Don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`;
@@ -31040,10 +31036,11 @@ exports.default = async (pkg, pullNumber) => {
             console.log(stderr, stdout);
         console.log(`Build finished, uploading webapp: ${pkg.name}`);
         await child_process_promise_1.exec('az extension add --name storage-preview').catch();
-        const { stdout: uploadOut } = await child_process_promise_1.exec(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`).catch((err) => {
+        const { stdout: uploadOut, stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`).catch((err) => {
             throw Error(err);
         });
-        console.log(uploadOut);
+        if (stdout)
+            console.log(uploadOut, uploadErr);
         // Don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName}  `;
         fs_1.default.appendFileSync(msgFile, deployMsg);
@@ -31074,7 +31071,6 @@ const child_process_promise_1 = __nccwpck_require__(3723);
 const get_packages_1 = __importDefault(__nccwpck_require__(5928));
 exports.default = async () => {
     try {
-        console.log(get_packages_1.default);
         const packagesWithName = get_packages_1.default;
         const { stdout: branchName, stderr: branchErr } = await child_process_promise_1.exec(`git branch --show-current`);
         if (branchErr)
@@ -31219,7 +31215,7 @@ exports.default = async (startTime) => {
         const token = core.getInput('githubToken', { required: true });
         const octokit = github.getOctokit(token);
         // Append run stats to comment file
-        fs_1.default.appendFileSync(path_1.default.join(messageFile), '\n##### Stats');
+        fs_1.default.appendFileSync(path_1.default.join(messageFile), '\n#### Stats');
         const endTime = new Date();
         const { minutes, seconds } = date_fns_1.intervalToDuration({
             start: startTime,
@@ -31229,7 +31225,7 @@ exports.default = async (startTime) => {
         console.log(durationMessage);
         const preventProdDeploy = core.getInput('preventProdDeploy');
         if (preventProdDeploy)
-            fs_1.default.appendFileSync(messageFile, '\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped.');
+            fs_1.default.appendFileSync(messageFile, '\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped');
         fs_1.default.appendFileSync(path_1.default.join(messageFile), durationMessage);
         // Writing to text file was a workaround, could now be done better (eventually)
         const body = String(fs_1.default.readFileSync(path_1.default.join(messageFile)));
@@ -31292,7 +31288,6 @@ const branch = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : 
 const defaultBranch = (_b = payload.repository) === null || _b === void 0 ? void 0 : _b.default_branch;
 const isPR = context.eventName === 'pull_request';
 const prNumber = (_d = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.number) !== null && _d !== void 0 ? _d : 0;
-console.log(branch, defaultBranch, context.eventName, payload.action);
 const run = async () => {
     var _a;
     const startTime = new Date();
@@ -31318,6 +31313,10 @@ const run = async () => {
     }
     if (isPR)
         await post_comment_1.default(startTime);
+    if (preventProdDeploy)
+        core.setFailed(`Code quality checks have failed, ${isPR
+            ? 'but staging deployments were made'
+            : 'no apps have been deployed'}`);
     if (payload.action === 'close' && isPR) {
         console.log('PR closed. Cleaning up deployments...');
         pr_close_cleanup_1.default(prNumber);
@@ -31346,8 +31345,7 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
         await child_process_promise_1.exec('az extension add --name storage-preview').catch();
-        const { stdout: deleteOut } = await child_process_promise_1.exec(`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`);
-        console.log(deleteOut);
+        await child_process_promise_1.exec(`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`);
         console.log(`Deleted web app: ${stagName}-${slotName}`);
     }
     catch (err) {
@@ -31360,7 +31358,8 @@ const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
             throw Error('No PR number');
         const slotName = `stag-${pullNumber}`;
         const { stdout: deleteOut, stderr: deleteErr } = await child_process_promise_1.exec(`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
-        console.log(deleteOut, deleteErr);
+        if (deleteErr)
+            console.log(deleteOut, deleteErr);
         console.log(`Deleted function app: ${pkg.id}-${slotName}`);
     }
     catch (err) {

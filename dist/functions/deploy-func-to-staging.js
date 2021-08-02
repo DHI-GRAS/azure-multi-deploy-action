@@ -21,12 +21,10 @@ exports.default = async (pkg, pullNumber) => {
         if (!slotExists) {
             await child_process_promise_1.exec(`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         }
-        console.log('func', slotExists, slots);
         await child_process_promise_1.exec(`cd ${pkg.path} && yarn build ; zip -r dist.zip *`);
         const { stdout: uploadOut, stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
-            console.log(uploadErr);
-        console.log(uploadOut);
+            console.log(uploadErr, uploadOut);
         console.log(`Deployed functionapp ${pkg.id}-${slotName}`);
         // Don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`;

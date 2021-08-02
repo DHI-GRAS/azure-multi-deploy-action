@@ -20,12 +20,12 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		console.log(`Build finished, uploading webapp: ${pkg.name}`)
 
 		await exec('az extension add --name storage-preview').catch()
-		const { stdout: uploadOut } = await exec(
+		const { stdout: uploadOut, stderr: uploadErr } = await exec(
 			`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`,
 		).catch((err) => {
 			throw Error(err)
 		})
-		console.log(uploadOut)
+		if (stdout) console.log(uploadOut, uploadErr)
 
 		// Don't think the deployment url gets returned from upload - hopefully this stays static?
 		const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName}  `

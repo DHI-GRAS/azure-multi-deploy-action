@@ -6,7 +6,6 @@ import deployablePackages from './get-packages'
 
 export default async (): Promise<Packages> => {
 	try {
-		console.log(deployablePackages)
 		const packagesWithName = deployablePackages
 		const { stdout: branchName, stderr: branchErr } = await exec(
 			`git branch --show-current`,

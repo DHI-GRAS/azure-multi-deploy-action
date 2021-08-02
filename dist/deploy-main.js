@@ -9,14 +9,12 @@ const deployWebApp = async (pkg) => {
     console.log(`Building webapp: ${pkg.name}`);
     const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && yarn ${pkg.name}:build`);
     if (stderr)
-        console.log(stderr);
-    console.log(stdout);
+        console.log(stderr, stdout);
     console.log(`Build finished, uploading webapp: ${pkg.name}`);
     await child_process_promise_1.exec('az extension add --name storage-preview').catch();
-    const { stdout: uploadOut } = await child_process_promise_1.exec(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${pkg.id} --source ./\\* --auth-mode key`).catch((err) => {
+    await child_process_promise_1.exec(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${pkg.id} --source ./\\* --auth-mode key`).catch((err) => {
         throw Error(err);
     });
-    console.log(uploadOut);
 };
 const deployFuncApp = async (pkg) => {
     try {

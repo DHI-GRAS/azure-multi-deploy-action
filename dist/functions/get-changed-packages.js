@@ -9,7 +9,6 @@ const child_process_promise_1 = require("child-process-promise");
 const get_packages_1 = __importDefault(require("./get-packages"));
 exports.default = async () => {
     try {
-        console.log(get_packages_1.default);
         const packagesWithName = get_packages_1.default;
         const { stdout: branchName, stderr: branchErr } = await child_process_promise_1.exec(`git branch --show-current`);
         if (branchErr)

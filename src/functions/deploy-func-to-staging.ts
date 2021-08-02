@@ -32,16 +32,13 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 			)
 		}
 
-		console.log('func', slotExists, slots)
-
 		await exec(`cd ${pkg.path} && yarn build ; zip -r dist.zip *`)
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
 			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`,
 		)
-		if (uploadErr) console.log(uploadErr)
+		if (uploadErr) console.log(uploadErr, uploadOut)
 
-		console.log(uploadOut)
 		console.log(`Deployed functionapp ${pkg.id}-${slotName}`)
 
 		// Don't think the deployment url gets returned from upload - hopefully this stays static?

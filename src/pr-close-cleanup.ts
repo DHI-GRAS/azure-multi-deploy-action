@@ -9,10 +9,9 @@ const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 		const stagName = `${pkg.id}stag`
 
 		await exec('az extension add --name storage-preview').catch()
-		const { stdout: deleteOut } = await exec(
+		await exec(
 			`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`,
 		)
-		console.log(deleteOut)
 		console.log(`Deleted web app: ${stagName}-${slotName}`)
 	} catch (err) {
 		throw Error(err)
@@ -30,7 +29,7 @@ const removeFuncAppStagingDeployment = async (
 		const { stdout: deleteOut, stderr: deleteErr } = await exec(
 			`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`,
 		)
-		console.log(deleteOut, deleteErr)
+		if (deleteErr) console.log(deleteOut, deleteErr)
 		console.log(`Deleted function app: ${pkg.id}-${slotName}`)
 	} catch (err) {
 		throw Error(err)

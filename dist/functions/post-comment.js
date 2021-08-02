@@ -34,7 +34,7 @@ exports.default = async (startTime) => {
         const token = core.getInput('githubToken', { required: true });
         const octokit = github.getOctokit(token);
         // Append run stats to comment file
-        fs_1.default.appendFileSync(path_1.default.join(messageFile), '\n##### Stats');
+        fs_1.default.appendFileSync(path_1.default.join(messageFile), '\n#### Stats');
         const endTime = new Date();
         const { minutes, seconds } = date_fns_1.intervalToDuration({
             start: startTime,
@@ -44,7 +44,7 @@ exports.default = async (startTime) => {
         console.log(durationMessage);
         const preventProdDeploy = core.getInput('preventProdDeploy');
         if (preventProdDeploy)
-            fs_1.default.appendFileSync(messageFile, '\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped.');
+            fs_1.default.appendFileSync(messageFile, '\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped');
         fs_1.default.appendFileSync(path_1.default.join(messageFile), durationMessage);
         // Writing to text file was a workaround, could now be done better (eventually)
         const body = String(fs_1.default.readFileSync(path_1.default.join(messageFile)));
