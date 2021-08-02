@@ -31285,6 +31285,8 @@ const post_comment_1 = __importDefault(__nccwpck_require__(4345));
 const { context } = github;
 const { payload } = context;
 const defaultBranch = (_a = payload.repository) === null || _a === void 0 ? void 0 : _a.default_branch;
+const splitRef = context.ref.split('/');
+const currentBranch = splitRef[splitRef.length - 1];
 const isPR = context.eventName === 'pull_request';
 const prNumber = (_c = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.number) !== null && _c !== void 0 ? _c : 0;
 const run = async () => {
@@ -31303,11 +31305,11 @@ const run = async () => {
     }
     // Deploy to prod
     const preventProdDeploy = core.getInput('preventProdDeploy');
-    if (preventProdDeploy && context.ref === defaultBranch) {
+    if (preventProdDeploy && currentBranch === defaultBranch) {
         console.error('Production deployment skipped! Code quality checks have failed');
     }
     console.log(context.ref, defaultBranch, preventProdDeploy, isPR, payload.action);
-    if (context.ref === defaultBranch && !preventProdDeploy) {
+    if (currentBranch === defaultBranch && !preventProdDeploy) {
         console.log('Deploying to production...');
         await deploy_main_1.default();
     }

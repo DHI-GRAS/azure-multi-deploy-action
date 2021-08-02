@@ -12,6 +12,8 @@ const { context } = github
 const { payload } = context
 
 const defaultBranch = payload.repository?.default_branch
+const splitRef = context.ref.split('/')
+const currentBranch = splitRef[splitRef.length - 1]
 
 const isPR = context.eventName === 'pull_request'
 const prNumber = payload.pull_request?.number ?? 0
@@ -37,7 +39,7 @@ const run = async () => {
 
 	// Deploy to prod
 	const preventProdDeploy = core.getInput('preventProdDeploy')
-	if (preventProdDeploy && context.ref === defaultBranch) {
+	if (preventProdDeploy && currentBranch === defaultBranch) {
 		console.error(
 			'Production deployment skipped! Code quality checks have failed',
 		)
@@ -51,7 +53,7 @@ const run = async () => {
 		payload.action,
 	)
 
-	if (context.ref === defaultBranch && !preventProdDeploy) {
+	if (currentBranch === defaultBranch && !preventProdDeploy) {
 		console.log('Deploying to production...')
 		await deployToProd()
 	}
