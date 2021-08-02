@@ -31213,18 +31213,37 @@ const core = __importStar(__nccwpck_require__(7817));
 const github = __importStar(__nccwpck_require__(4435));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
+const date_fns_1 = __nccwpck_require__(7364);
 const { context: { issue: { number }, repo: { repo, owner }, }, } = github;
-exports.default = async () => {
-    const token = core.getInput('githubToken', { required: true });
-    const octokit = github.getOctokit(token);
-    // Writing to text file was a workaround, could now be done better (eventually)
-    const body = String(fs_1.default.readFileSync(path_1.default.join('github_message.txt')));
-    await octokit.rest.issues.createComment({
-        issue_number: number,
-        repo,
-        owner,
-        body,
-    });
+const messageFile = 'github_message.txt';
+exports.default = async (startTime) => {
+    try {
+        const token = core.getInput('githubToken', { required: true });
+        const octokit = github.getOctokit(token);
+        // Append run stats to comment file
+        const endTime = new Date();
+        const { minutes, seconds } = date_fns_1.intervalToDuration({
+            start: startTime,
+            end: endTime,
+        });
+        const durationMessage = `\n#### Stats  \n🕐 Took ${String(minutes)}m${String(seconds)}s`;
+        console.log(durationMessage);
+        const preventProdDeploy = core.getInput('preventProdDeploy');
+        if (preventProdDeploy)
+            fs_1.default.appendFileSync(messageFile, '\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped.');
+        fs_1.default.appendFileSync(path_1.default.join(messageFile), durationMessage);
+        // Writing to text file was a workaround, could now be done better (eventually)
+        const body = String(fs_1.default.readFileSync(path_1.default.join(messageFile)));
+        await octokit.rest.issues.createComment({
+            issue_number: number,
+            repo,
+            owner,
+            body,
+        });
+    }
+    catch (err) {
+        throw Error(err);
+    }
 };
 
 
@@ -31259,12 +31278,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-// import * as core from '@actions/core'
+const core = __importStar(__nccwpck_require__(7817));
 const github = __importStar(__nccwpck_require__(4435));
 const child_process_promise_1 = __nccwpck_require__(3723);
-const fs_1 = __importDefault(__nccwpck_require__(5747));
-const path_1 = __importDefault(__nccwpck_require__(5622));
-const date_fns_1 = __nccwpck_require__(7364);
 const deploy_pr_staging_1 = __importDefault(__nccwpck_require__(9824));
 const deploy_main_1 = __importDefault(__nccwpck_require__(2028));
 const pr_close_cleanup_1 = __importDefault(__nccwpck_require__(5518));
@@ -31280,32 +31296,29 @@ const prNumber = (_d = (_c = payload.pull_request) === null || _c === void 0 ? v
 console.log(branch, defaultBranch, context.eventName, payload.action);
 const run = async () => {
     var _a;
-    const start = new Date();
+    const startTime = new Date();
     console.log('Installing azure CLI...');
     await child_process_promise_1.exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
     await az_login_1.default();
     await create_services_1.default();
+    // Deploy to stag
     if (isPR &&
         payload.action === 'synchronize' &&
         ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
         console.log('Deploying to staging...');
         await deploy_pr_staging_1.default(prNumber);
     }
-    if (branch === defaultBranch) {
+    // Deploy to prod
+    const preventProdDeploy = core.getInput('preventProdDeploy');
+    if (preventProdDeploy && branch === defaultBranch) {
+        console.error('Production deployment skipped! Code quality checks have failed');
+    }
+    if (branch === defaultBranch && !preventProdDeploy) {
         console.log('Deploying to production...');
         await deploy_main_1.default();
     }
-    // Append run stats to comment file
-    const end = new Date();
-    const { minutes, seconds } = date_fns_1.intervalToDuration({
-        start,
-        end,
-    });
-    const durationMessage = `\n#### Stats  \n🕐 Took ${String(minutes)}m${String(seconds)}s`;
-    console.log(durationMessage);
-    fs_1.default.appendFileSync(path_1.default.join('github_message.txt'), durationMessage);
     if (isPR)
-        await post_comment_1.default();
+        await post_comment_1.default(startTime);
     if (payload.action === 'close' && isPR) {
         console.log('PR closed. Cleaning up deployments...');
         pr_close_cleanup_1.default(prNumber);

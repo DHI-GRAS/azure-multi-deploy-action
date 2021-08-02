@@ -26,16 +26,35 @@ const core = __importStar(require("@actions/core"));
 const github = __importStar(require("@actions/github"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const date_fns_1 = require("date-fns");
 const { context: { issue: { number }, repo: { repo, owner }, }, } = github;
-exports.default = async () => {
-    const token = core.getInput('githubToken', { required: true });
-    const octokit = github.getOctokit(token);
-    // Writing to text file was a workaround, could now be done better (eventually)
-    const body = String(fs_1.default.readFileSync(path_1.default.join('github_message.txt')));
-    await octokit.rest.issues.createComment({
-        issue_number: number,
-        repo,
-        owner,
-        body,
-    });
+const messageFile = 'github_message.txt';
+exports.default = async (startTime) => {
+    try {
+        const token = core.getInput('githubToken', { required: true });
+        const octokit = github.getOctokit(token);
+        // Append run stats to comment file
+        const endTime = new Date();
+        const { minutes, seconds } = date_fns_1.intervalToDuration({
+            start: startTime,
+            end: endTime,
+        });
+        const durationMessage = `\n#### Stats  \n🕐 Took ${String(minutes)}m${String(seconds)}s`;
+        console.log(durationMessage);
+        const preventProdDeploy = core.getInput('preventProdDeploy');
+        if (preventProdDeploy)
+            fs_1.default.appendFileSync(messageFile, '\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped.');
+        fs_1.default.appendFileSync(path_1.default.join(messageFile), durationMessage);
+        // Writing to text file was a workaround, could now be done better (eventually)
+        const body = String(fs_1.default.readFileSync(path_1.default.join(messageFile)));
+        await octokit.rest.issues.createComment({
+            issue_number: number,
+            repo,
+            owner,
+            body,
+        });
+    }
+    catch (err) {
+        throw Error(err);
+    }
 };
