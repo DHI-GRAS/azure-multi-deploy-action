@@ -11,7 +11,6 @@ import postComment from './functions/post-comment'
 const { context } = github
 const { payload } = context
 
-const branch = payload.pull_request?.head.ref
 const defaultBranch = payload.repository?.default_branch
 
 const isPR = context.eventName === 'pull_request'
@@ -38,15 +37,21 @@ const run = async () => {
 
 	// Deploy to prod
 	const preventProdDeploy = core.getInput('preventProdDeploy')
-	if (preventProdDeploy && branch === defaultBranch) {
+	if (preventProdDeploy && context.ref === defaultBranch) {
 		console.error(
 			'Production deployment skipped! Code quality checks have failed',
 		)
 	}
 
-	console.log(branch, defaultBranch, preventProdDeploy, isPR, payload.action)
+	console.log(
+		context.ref,
+		defaultBranch,
+		preventProdDeploy,
+		isPR,
+		payload.action,
+	)
 
-	if (branch === defaultBranch && !preventProdDeploy) {
+	if (context.ref === defaultBranch && !preventProdDeploy) {
 		console.log('Deploying to production...')
 		await deployToProd()
 	}

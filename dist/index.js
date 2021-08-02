@@ -31271,7 +31271,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a, _b, _c, _d;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7817));
 const github = __importStar(__nccwpck_require__(4435));
@@ -31284,10 +31284,9 @@ const az_login_1 = __importDefault(__nccwpck_require__(3981));
 const post_comment_1 = __importDefault(__nccwpck_require__(4345));
 const { context } = github;
 const { payload } = context;
-const branch = (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.ref;
-const defaultBranch = (_b = payload.repository) === null || _b === void 0 ? void 0 : _b.default_branch;
+const defaultBranch = (_a = payload.repository) === null || _a === void 0 ? void 0 : _a.default_branch;
 const isPR = context.eventName === 'pull_request';
-const prNumber = (_d = (_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.number) !== null && _d !== void 0 ? _d : 0;
+const prNumber = (_c = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.number) !== null && _c !== void 0 ? _c : 0;
 const run = async () => {
     var _a;
     const startTime = new Date();
@@ -31304,11 +31303,11 @@ const run = async () => {
     }
     // Deploy to prod
     const preventProdDeploy = core.getInput('preventProdDeploy');
-    if (preventProdDeploy && branch === defaultBranch) {
+    if (preventProdDeploy && context.ref === defaultBranch) {
         console.error('Production deployment skipped! Code quality checks have failed');
     }
-    console.log(branch, defaultBranch, preventProdDeploy, isPR, payload.action);
-    if (branch === defaultBranch && !preventProdDeploy) {
+    console.log(context.ref, defaultBranch, preventProdDeploy, isPR, payload.action);
+    if (context.ref === defaultBranch && !preventProdDeploy) {
         console.log('Deploying to production...');
         await deploy_main_1.default();
     }
