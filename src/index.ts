@@ -1,9 +1,6 @@
-// import * as core from '@actions/core'
+import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { exec } from 'child-process-promise'
-import fs from 'fs'
-import path from 'path'
-import { intervalToDuration } from 'date-fns'
 import deployToStag from './deploy-pr-staging'
 import deployToProd from './deploy-main'
 import cleanDeployments from './pr-close-cleanup'
@@ -23,7 +20,7 @@ const prNumber = payload.pull_request?.number ?? 0
 console.log(branch, defaultBranch, context.eventName, payload.action)
 
 const run = async () => {
-	const start = new Date()
+	const startTime = new Date()
 
 	console.log('Installing azure CLI...')
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
@@ -31,6 +28,7 @@ const run = async () => {
 	await azLogin()
 	await createServices()
 
+	// Deploy to stag
 	if (
 		isPR &&
 		payload.action === 'synchronize' &&
@@ -40,25 +38,19 @@ const run = async () => {
 		await deployToStag(prNumber)
 	}
 
-	if (branch === defaultBranch) {
+	// Deploy to prod
+	const preventProdDeploy = core.getInput('preventProdDeploy')
+	if (preventProdDeploy && branch === defaultBranch) {
+		console.error(
+			'Production deployment skipped! Code quality checks have failed',
+		)
+	}
+	if (branch === defaultBranch && !preventProdDeploy) {
 		console.log('Deploying to production...')
 		await deployToProd()
 	}
 
-	// Append run stats to comment file
-	const end = new Date()
-	const { minutes, seconds } = intervalToDuration({
-		start,
-		end,
-	})
-	const durationMessage = `\n#### Stats  \n🕐 Took ${String(minutes)}m${String(
-		seconds,
-	)}s`
-	console.log(durationMessage)
-
-	fs.appendFileSync(path.join('github_message.txt'), durationMessage)
-
-	if (isPR) await postComment()
+	if (isPR) await postComment(startTime)
 
 	if (payload.action === 'close' && isPR) {
 		console.log('PR closed. Cleaning up deployments...')

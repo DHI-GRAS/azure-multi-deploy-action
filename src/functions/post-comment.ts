@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import fs from 'fs'
 import path from 'path'
+import { intervalToDuration } from 'date-fns'
 
 const {
 	context: {
@@ -10,18 +11,42 @@ const {
 	},
 } = github
 
-export default async (): Promise<void> => {
-	const token = core.getInput('githubToken', { required: true })
+const messageFile = 'github_message.txt'
 
-	const octokit = github.getOctokit(token)
+export default async (startTime: Date): Promise<void> => {
+	try {
+		const token = core.getInput('githubToken', { required: true })
+		const octokit = github.getOctokit(token)
 
-	// Writing to text file was a workaround, could now be done better (eventually)
-	const body = String(fs.readFileSync(path.join('github_message.txt')))
+		// Append run stats to comment file
+		const endTime = new Date()
+		const { minutes, seconds } = intervalToDuration({
+			start: startTime,
+			end: endTime,
+		})
+		const durationMessage = `\n#### Stats  \n🕐 Took ${String(
+			minutes,
+		)}m${String(seconds)}s`
+		console.log(durationMessage)
 
-	await octokit.rest.issues.createComment({
-		issue_number: number,
-		repo,
-		owner,
-		body,
-	})
+		const preventProdDeploy = core.getInput('preventProdDeploy')
+		if (preventProdDeploy)
+			fs.appendFileSync(
+				messageFile,
+				'\n⚠️ Code quality checks have failed - see CI for details. Production deployment may be skipped.',
+			)
+		fs.appendFileSync(path.join(messageFile), durationMessage)
+
+		// Writing to text file was a workaround, could now be done better (eventually)
+		const body = String(fs.readFileSync(path.join(messageFile)))
+
+		await octokit.rest.issues.createComment({
+			issue_number: number,
+			repo,
+			owner,
+			body,
+		})
+	} catch (err) {
+		throw Error(err)
+	}
 }

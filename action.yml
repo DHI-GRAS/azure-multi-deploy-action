@@ -5,6 +5,11 @@ inputs:
   azureCredentials:
     description: Azure credentials in JSON format
     required: true
+  githubToken:
+    description: Token used for getting PR info and posting deployment stats comment, recommended to use GITHUB_TOKEN var
+    required: true
+  preventProdDeploy:
+    description: If defined, skips production deployment. If in PR, appends line to comment that code quality checks have failed and will not deploy to production if merged.
 runs:
   using: 'node12'
   main: dist/index.js
