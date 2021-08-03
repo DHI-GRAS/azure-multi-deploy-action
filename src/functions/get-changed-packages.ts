@@ -4,6 +4,7 @@ import { exec } from 'child-process-promise'
 import { Packages, Package, PackageJSON } from '../types'
 import deployablePackages from './get-packages'
 
+// Would be better to determine changed packages by imports, not changed dirs - to be implemented
 export default async (): Promise<Packages> => {
 	try {
 		const packagesWithName = deployablePackages
@@ -12,11 +13,12 @@ export default async (): Promise<Packages> => {
 		)
 		if (branchErr) throw Error(branchErr)
 
-		// TODO TEMPORARY while diff checking is dumb
 		const deployablePkgs = packagesWithName.filter(
 			(pkg) => pkg.type === 'app' || pkg.type === 'func-api',
 		)
 		if (branchName.trim() === 'main') return deployablePkgs
+
+		await exec('git fetch --all')
 
 		const checkChanged = async (pkg: Package) => {
 			const { stdout: diffOut, stdout: diffErr } = await exec(
