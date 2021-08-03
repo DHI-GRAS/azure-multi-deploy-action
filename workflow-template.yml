@@ -1,0 +1,42 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency: 
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_OPTIONS: --max_old_space_size=4096
+
+jobs:
+  deploy:
+    name: CI/CD
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+
+      - name: Install dependencies 
+        run: yarn
+
+      - name: Lint
+        run: yarn lint || echo "LINT_FAILED=true" >> $GITHUB_ENV
+
+      - name: Azure multi-deploy
+        uses: DHI-GRAS/azure-multi-deploy-action@1.0.7
+        with:
+          azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          preventProdDeploy: ${{ env.LINT_FAILED }}
