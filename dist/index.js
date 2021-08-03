@@ -31291,7 +31291,8 @@ const currentBranch = splitRef[splitRef.length - 1];
 const isPR = context.eventName === 'pull_request';
 const prNumber = (_c = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.number) !== null && _c !== void 0 ? _c : 0;
 const run = async () => {
-    var _a;
+    var _a, _b, _c;
+    console.log(defaultBranch, currentBranch, isPR, prNumber, (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state, payload.action);
     const startTime = new Date();
     console.log('Installing azure CLI...');
     await child_process_promise_1.exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
@@ -31300,7 +31301,7 @@ const run = async () => {
     // Deploy to stag
     if (isPR &&
         payload.action === 'synchronize' &&
-        ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
+        ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'open') {
         console.log('Deploying to staging...');
         await deploy_pr_staging_1.default(prNumber);
     }
@@ -31309,18 +31310,18 @@ const run = async () => {
     if (preventProdDeploy && currentBranch === defaultBranch) {
         console.error('Production deployment skipped! Code quality checks have failed');
     }
-    if (payload.action !== 'close' &&
+    if (!payload.pull_request &&
         currentBranch === defaultBranch &&
         !preventProdDeploy) {
         console.log('Deploying to production...');
         await deploy_main_1.default();
     }
-    if (isPR)
-        await post_comment_1.default(startTime);
-    if (payload.action === 'close') {
+    if (isPR && ((_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.state) === 'closed') {
         console.log('PR closed. Cleaning up deployments...');
         pr_close_cleanup_1.default(prNumber);
     }
+    if (isPR)
+        await post_comment_1.default(startTime);
 };
 void run();
 

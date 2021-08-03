@@ -19,6 +19,15 @@ const isPR = context.eventName === 'pull_request'
 const prNumber = payload.pull_request?.number ?? 0
 
 const run = async () => {
+	console.log(
+		defaultBranch,
+		currentBranch,
+		isPR,
+		prNumber,
+		payload.pull_request?.state,
+		payload.action,
+	)
+
 	const startTime = new Date()
 
 	console.log('Installing azure CLI...')
@@ -46,7 +55,7 @@ const run = async () => {
 	}
 
 	if (
-		payload.action !== 'close' &&
+		!payload.pull_request &&
 		currentBranch === defaultBranch &&
 		!preventProdDeploy
 	) {
@@ -54,12 +63,12 @@ const run = async () => {
 		await deployToProd()
 	}
 
-	if (isPR) await postComment(startTime)
-
-	if (payload.action === 'close') {
+	if (isPR && payload.pull_request?.state === 'closed') {
 		console.log('PR closed. Cleaning up deployments...')
 		cleanDeployments(prNumber)
 	}
+
+	if (isPR) await postComment(startTime)
 }
 
 void run()
