@@ -31317,7 +31317,7 @@ const run = async () => {
     }
     if (isPR)
         await post_comment_1.default(startTime);
-    if (payload.action === 'close' && isPR) {
+    if (payload.action === 'close') {
         console.log('PR closed. Cleaning up deployments...');
         pr_close_cleanup_1.default(prNumber);
     }

@@ -56,7 +56,7 @@ const run = async () => {
 
 	if (isPR) await postComment(startTime)
 
-	if (payload.action === 'close' && isPR) {
+	if (payload.action === 'close') {
 		console.log('PR closed. Cleaning up deployments...')
 		cleanDeployments(prNumber)
 	}
