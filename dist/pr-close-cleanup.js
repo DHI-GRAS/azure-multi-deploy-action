@@ -36,7 +36,7 @@ const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
 const cleanDeployments = (prNumber) => {
     const webPackages = get_packages_1.default.filter((pkg) => pkg.type === 'app');
     const funcPackages = get_packages_1.default.filter((pkg) => pkg.type === 'func-api');
-    void Promise.all(webPackages.map(removeWebStagingDeployment, prNumber));
-    void Promise.all(funcPackages.map(removeFuncAppStagingDeployment, prNumber));
+    void Promise.all(webPackages.map((pkg) => removeWebStagingDeployment(pkg, prNumber)));
+    void Promise.all(funcPackages.map((pkg) => removeFuncAppStagingDeployment(pkg, prNumber)));
 };
 exports.default = cleanDeployments;

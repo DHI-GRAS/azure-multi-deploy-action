@@ -31287,12 +31287,12 @@ const { context } = github;
 const { payload } = context;
 const defaultBranch = (_a = payload.repository) === null || _a === void 0 ? void 0 : _a.default_branch;
 const splitRef = context.ref.split('/');
+// may not be correct in PRs
 const currentBranch = splitRef[splitRef.length - 1];
 const isPR = context.eventName === 'pull_request';
 const prNumber = (_c = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.number) !== null && _c !== void 0 ? _c : 0;
 const run = async () => {
-    var _a, _b, _c;
-    console.log(defaultBranch, currentBranch, isPR, prNumber, (_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state, payload.action);
+    var _a, _b;
     const startTime = new Date();
     console.log('Installing azure CLI...');
     await child_process_promise_1.exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
@@ -31301,7 +31301,7 @@ const run = async () => {
     // Deploy to stag
     if (isPR &&
         payload.action === 'synchronize' &&
-        ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'open') {
+        ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
         console.log('Deploying to staging...');
         await deploy_pr_staging_1.default(prNumber);
     }
@@ -31316,7 +31316,7 @@ const run = async () => {
         console.log('Deploying to production...');
         await deploy_main_1.default();
     }
-    if (isPR && ((_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.state) === 'closed') {
+    if (isPR && ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'closed') {
         console.log('PR closed. Cleaning up deployments...');
         pr_close_cleanup_1.default(prNumber);
     }
@@ -31370,8 +31370,8 @@ const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
 const cleanDeployments = (prNumber) => {
     const webPackages = get_packages_1.default.filter((pkg) => pkg.type === 'app');
     const funcPackages = get_packages_1.default.filter((pkg) => pkg.type === 'func-api');
-    void Promise.all(webPackages.map(removeWebStagingDeployment, prNumber));
-    void Promise.all(funcPackages.map(removeFuncAppStagingDeployment, prNumber));
+    void Promise.all(webPackages.map((pkg) => removeWebStagingDeployment(pkg, prNumber)));
+    void Promise.all(funcPackages.map((pkg) => removeFuncAppStagingDeployment(pkg, prNumber)));
 };
 exports.default = cleanDeployments;
 

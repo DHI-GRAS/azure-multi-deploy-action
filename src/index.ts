@@ -13,21 +13,13 @@ const { payload } = context
 
 const defaultBranch = payload.repository?.default_branch
 const splitRef = context.ref.split('/')
+// may not be correct in PRs
 const currentBranch = splitRef[splitRef.length - 1]
 
 const isPR = context.eventName === 'pull_request'
 const prNumber = payload.pull_request?.number ?? 0
 
 const run = async () => {
-	console.log(
-		defaultBranch,
-		currentBranch,
-		isPR,
-		prNumber,
-		payload.pull_request?.state,
-		payload.action,
-	)
-
 	const startTime = new Date()
 
 	console.log('Installing azure CLI...')
