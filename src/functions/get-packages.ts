@@ -10,7 +10,7 @@ const apiRequiredFields = [...appRequiredFields, 'storageAccount']
 const pkgTypeRequiredFieldMap = {
 	apps: appRequiredFields,
 	'func-apis': apiRequiredFields,
-	libs: [],
+	libs: ['name'],
 }
 
 const getPackageObject = (
