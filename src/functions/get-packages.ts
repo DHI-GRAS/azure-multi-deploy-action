@@ -7,6 +7,12 @@ const packageTypes = ['apps', 'func-apis', 'libs'] as const
 const appRequiredFields = ['name', 'id', 'resourceGroup']
 const apiRequiredFields = [...appRequiredFields, 'storageAccount']
 
+const pkgTypeRequiredFieldMap = {
+	apps: appRequiredFields,
+	'func-apis': apiRequiredFields,
+	libs: [],
+}
+
 const getPackageObject = (
 	pkgDir: string,
 	pkgType: typeof packageTypes[number],
@@ -21,9 +27,9 @@ const getPackageObject = (
 	)
 	const pkgObj = JSON.parse(packageFile) as PackageJSON
 
-	const propertiesFromPkgJson = (
-		pkgType === 'apps' ? appRequiredFields : apiRequiredFields
-	).reduce((fieldAcc, field) => {
+	const pkgRequiredFields: string[] = pkgTypeRequiredFieldMap[pkgType]
+
+	const propertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
 		const fieldValue = pkgObj[field]
 		if (!fieldValue)
 			throw Error(`"${field}" is required in ${fullPath}/package.json`)

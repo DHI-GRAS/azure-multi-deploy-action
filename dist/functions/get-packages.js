@@ -8,12 +8,18 @@ const path_1 = __importDefault(require("path"));
 const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
+const pkgTypeRequiredFieldMap = {
+    apps: appRequiredFields,
+    'func-apis': apiRequiredFields,
+    libs: [],
+};
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
     const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '.' : pkgType, pkgDir));
     const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
     const pkgObj = JSON.parse(packageFile);
-    const propertiesFromPkgJson = (pkgType === 'apps' ? appRequiredFields : apiRequiredFields).reduce((fieldAcc, field) => {
+    const pkgRequiredFields = pkgTypeRequiredFieldMap[pkgType];
+    const propertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
         const fieldValue = pkgObj[field];
         if (!fieldValue)
             throw Error(`"${field}" is required in ${fullPath}/package.json`);
