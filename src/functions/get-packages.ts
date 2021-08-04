@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { Packages, Package, PackageJSON } from '../types'
 
-const packageTypes = ['apps', 'func-apis'] as const
+const packageTypes = ['apps', 'func-apis', 'libs'] as const
 
 const appRequiredFields = ['name', 'id', 'resourceGroup']
 const apiRequiredFields = [...appRequiredFields, 'storageAccount']
@@ -52,7 +52,7 @@ const getMonorepoPackages = () =>
 		const pkgDirs = fs
 			.readdirSync(path.join(pkgType), { withFileTypes: true })
 			.filter((item) => item.isDirectory())
-			.map((item) => item.name) // needs to be absolute - currently is app dir name like altimetry-app
+			.map((item) => item.name)
 
 		const packagesByType: Packages = pkgDirs.map((pkgDir) =>
 			getPackageObject(pkgDir, pkgType),

@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const packageTypes = ['apps', 'func-apis'];
+const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const getPackageObject = (pkgDir, pkgType) => {
@@ -36,7 +36,7 @@ const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
     const pkgDirs = fs_1.default
         .readdirSync(path_1.default.join(pkgType), { withFileTypes: true })
         .filter((item) => item.isDirectory())
-        .map((item) => item.name); // needs to be absolute - currently is app dir name like altimetry-app
+        .map((item) => item.name);
     const packagesByType = pkgDirs.map((pkgDir) => getPackageObject(pkgDir, pkgType));
     return [...acc, ...packagesByType];
 }, []);
