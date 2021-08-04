@@ -2,18 +2,17 @@ import fs from 'fs'
 import path from 'path'
 import { exec } from 'child-process-promise'
 import { Packages, Package, PackageJSON } from '../types'
-import deployablePackages from './get-packages'
+import packages from './get-packages'
 
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
 export default async (): Promise<Packages> => {
 	try {
-		const packagesWithName = deployablePackages
 		const { stdout: branchName, stderr: branchErr } = await exec(
 			`git branch --show-current`,
 		)
 		if (branchErr) throw Error(branchErr)
 
-		const deployablePkgs = packagesWithName.filter(
+		const deployablePkgs = packages.filter(
 			(pkg) => pkg.type === 'app' || pkg.type === 'func-api',
 		)
 		if (branchName.trim() === 'main') return deployablePkgs
@@ -31,7 +30,7 @@ export default async (): Promise<Packages> => {
 			return diffOut.includes('changed') ? pkg : null
 		}
 
-		const changedPromises = packagesWithName.map(checkChanged)
+		const changedPromises = packages.map(checkChanged)
 		const changedDiffPackages = (await Promise.all(changedPromises)).filter(
 			(item) => item,
 		) as Packages
@@ -40,7 +39,7 @@ export default async (): Promise<Packages> => {
 			(pkg) => pkg.type === 'lib',
 		)
 
-		const libDepPackages = packagesWithName.filter((pkg) => pkg.type === 'app')
+		const libDepPackages = packages.filter((pkg) => pkg.type === 'app')
 		const changedPackagesWithLibDeps = libDepPackages.filter((pkg) => {
 			const pkgPackageFile = fs.readFileSync(
 				path.join(pkg.path, 'package.json'),
