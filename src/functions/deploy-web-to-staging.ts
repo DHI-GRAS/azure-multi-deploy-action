@@ -1,9 +1,12 @@
 import { exec } from 'child-process-promise'
+import * as github from '@actions/github'
 import path from 'path'
 import fs from 'fs'
 import { Package } from '../types'
 
 const msgFile = path.join('github_message.txt')
+
+const commitSha = github.context.sha.substr(0, 7)
 
 export default async (pkg: Package, pullNumber: number): Promise<void> => {
 	try {
@@ -13,7 +16,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 
 		console.log(`Building webapp: ${pkg.name}`)
 		const { stdout, stderr } = await exec(
-			`cd ${pkg.path} && STAG_SLOT=${slotName} yarn ${pkg.name}:build`,
+			`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 		)
 		if (stderr) console.log(stderr, stdout)
 

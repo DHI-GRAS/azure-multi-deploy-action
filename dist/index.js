@@ -30778,15 +30778,36 @@ exports.default = createServices;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(3723);
+const github = __importStar(__nccwpck_require__(4435));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(9999));
+const commitSha = github.context.sha.substr(0, 7);
 const deployWebApp = async (pkg) => {
     console.log(`Building webapp: ${pkg.name}`);
-    const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && yarn ${pkg.name}:build`);
+    const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
     if (stderr)
         console.log(stderr, stdout);
     console.log(`Build finished, uploading webapp: ${pkg.name}`);
@@ -31016,14 +31037,35 @@ exports.default = async (pkg, pullNumber) => {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(3723);
+const github = __importStar(__nccwpck_require__(4435));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const msgFile = path_1.default.join('github_message.txt');
+const commitSha = github.context.sha.substr(0, 7);
 exports.default = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
@@ -31031,7 +31073,7 @@ exports.default = async (pkg, pullNumber) => {
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
         console.log(`Building webapp: ${pkg.name}`);
-        const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && STAG_SLOT=${slotName} yarn ${pkg.name}:build`);
+        const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
         console.log(`Build finished, uploading webapp: ${pkg.name}`);

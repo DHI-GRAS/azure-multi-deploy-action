@@ -1,11 +1,14 @@
 import { exec } from 'child-process-promise'
+import * as github from '@actions/github'
 import { Package } from './types'
 import getChangedPackages from './functions/get-changed-packages'
+
+const commitSha = github.context.sha.substr(0, 7)
 
 const deployWebApp = async (pkg: Package) => {
 	console.log(`Building webapp: ${pkg.name}`)
 	const { stdout, stderr } = await exec(
-		`cd ${pkg.path} && yarn ${pkg.name}:build`,
+		`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 	)
 	if (stderr) console.log(stderr, stdout)
 
