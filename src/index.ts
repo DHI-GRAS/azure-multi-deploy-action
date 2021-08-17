@@ -29,11 +29,7 @@ const run = async () => {
 	await createServices()
 
 	// Deploy to stag
-	if (
-		isPR &&
-		payload.action === 'synchronize' &&
-		payload.pull_request?.state === 'open'
-	) {
+	if (isPR && payload.pull_request?.state === 'open') {
 		console.log('Deploying to staging...')
 		await deployToStag(prNumber)
 	}

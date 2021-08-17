@@ -31304,9 +31304,7 @@ const run = async () => {
     await az_login_1.default();
     await create_services_1.default();
     // Deploy to stag
-    if (isPR &&
-        payload.action === 'synchronize' &&
-        ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
+    if (isPR && ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
         console.log('Deploying to staging...');
         await deploy_pr_staging_1.default(prNumber);
     }
