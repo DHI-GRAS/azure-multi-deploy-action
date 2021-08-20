@@ -1,5 +1,10 @@
 # Azure multi-deploy action
 
+Automates building and deployment of Azure web and function apps. In open PRs, seperate staging deployments are automatically made.  
+Supports 2 repository structures:
+- Monorepo: with web apps in the `apps` dir, and function apps in the `func-apps` dir.
+- Single web app: a standard single web app repo, with build output expected to be in `./dist`
+
 More documentation to come  
 
 ## Example project workflow file
