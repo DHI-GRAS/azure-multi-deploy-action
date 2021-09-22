@@ -22,7 +22,7 @@ See the example recommended workflow in [workflow-template.yml](https://github.c
 ## Setup checklist for single app projects
 
 - If using builder, App.tsx, index.html, index.tsx should be in `src/app`
-- Add `id` and `resourceGroup` to package.json. (`id` is used as the storage account name)
+- Add `id` and `resourceGroup` to "azureConfig" key in package.json. (`id` is used as the storage account name)
 - Ensure that the `{name}:build` script is present in package.json, `name` being the package name in package.json
 - Add workflow file, recommended template [workflow-template.yml](https://github.com/DHI-GRAS/azure-multi-deploy-action/blob/main/action.yml) can be used
 - Add `AZURE_CREDENTIALS` to repository secrets
