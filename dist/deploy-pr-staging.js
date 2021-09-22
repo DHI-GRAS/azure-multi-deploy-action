@@ -9,7 +9,7 @@ const get_changed_packages_1 = __importDefault(require("./functions/get-changed-
 const deploy_web_to_staging_1 = __importDefault(require("./functions/deploy-web-to-staging"));
 const deploy_func_to_staging_1 = __importDefault(require("./functions/deploy-func-to-staging"));
 const deployToStag = async (prNumber) => {
-    const changedPackages = await get_changed_packages_1.default();
+    const changedPackages = await (0, get_changed_packages_1.default)();
     const webPackages = changedPackages.filter((pkg) => pkg.type === 'app');
     const funcPackages = changedPackages.filter((pkg) => pkg.type === 'func-api');
     if (webPackages.length + funcPackages.length === 0) {
@@ -19,8 +19,8 @@ const deployToStag = async (prNumber) => {
         fs_1.default.appendFileSync(msgFile, `\n${deployMsg}  `);
     }
     for (const webApp of webPackages)
-        await deploy_web_to_staging_1.default(webApp, prNumber);
+        await (0, deploy_web_to_staging_1.default)(webApp, prNumber);
     for (const funcApp of funcPackages)
-        await deploy_func_to_staging_1.default(funcApp, prNumber);
+        await (0, deploy_func_to_staging_1.default)(funcApp, prNumber);
 };
 exports.default = deployToStag;

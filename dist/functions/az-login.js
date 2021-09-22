@@ -29,6 +29,6 @@ exports.default = async () => {
     const azureCredentials = JSON.parse(azureCredentialsInput);
     Object.keys(azureCredentials).forEach((key) => core.setSecret(azureCredentials[key]));
     const { clientId, tenantId, clientSecret, subscriptionId } = azureCredentials;
-    await child_process_promise_1.exec(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
-    await child_process_promise_1.exec(`az account set --subscription ${subscriptionId}`);
+    await (0, child_process_promise_1.exec)(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
+    await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
 };

@@ -35,12 +35,12 @@ exports.default = async (pkg, pullNumber) => {
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
         console.log(`Building webapp: ${pkg.name}`);
-        const { stdout, stderr } = await child_process_promise_1.exec(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
+        const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
         console.log(`Build finished, uploading webapp: ${pkg.name}`);
-        await child_process_promise_1.exec('az extension add --name storage-preview').catch();
-        const { stdout: uploadOut, stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`).catch((err) => {
+        await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
+        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`).catch((err) => {
             throw Error(err);
         });
         if (stdout)

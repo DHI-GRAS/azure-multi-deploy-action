@@ -30,7 +30,9 @@ export interface PackageJSON {
 	dependencies: Record<string, string>
 	devDependencies: Record<string, string>
 	private: boolean
-	id: string
-	resourceGroup: string
-	storageAccount: string
+	azureConfig: {
+		id: string
+		resourceGroup: string
+		storageAccount: string
+	}
 }
