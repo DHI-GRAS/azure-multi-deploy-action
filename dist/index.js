@@ -480,15 +480,16 @@ const getPackageObject = (pkgDir, pkgType) => {
     const pkgRequiredFields = pkgTypeRequiredFieldMap[pkgType];
     const propertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
         var _a;
-        const fieldValue = (_a = pkgObj.azureConfig) === null || _a === void 0 ? void 0 : _a[field];
+        const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
-            throw Error(`"${field}" is required in ${fullPath}/package.json under the "azureConfig" key`);
+            throw Error(`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
     // Enforce only lowecase letters for storage account syntax
     const lowercaseRe = /^[a-z]+$/;
     if (pkgType === 'apps' &&
-        ((_a = lowercaseRe.exec(pkgObj.azureConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !== ((_b = pkgObj.azureConfig.id) === null || _b === void 0 ? void 0 : _b.length))
+        ((_a = lowercaseRe.exec(pkgObj.azureDeployConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !==
+            ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
         throw Error(`"id" field in ${fullPath}/package.json must be all lowercase, only letters`);
     return {
         ...propertiesFromPkgJson,
