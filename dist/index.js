@@ -106,7 +106,7 @@ const deployWebApp = async (pkg) => {
         console.log(stderr, stdout);
     console.log(`Build finished, uploading webapp: ${pkg.name}`);
     await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/dist/ && az storage azcopy blob upload --container \\$web --account-name ${pkg.id} --source ./\\* --auth-mode key`).catch((err) => {
+    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ./dist --destination \\$web --account-name ${pkg.id} --auth-mode key`).catch((err) => {
         throw Error(err);
     });
 };
