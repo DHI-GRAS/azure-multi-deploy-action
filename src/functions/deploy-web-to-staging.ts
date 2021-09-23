@@ -24,7 +24,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 
 		await exec('az extension add --name storage-preview').catch()
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
-			`cd ${pkg.path}/dist/ && azcopy copy ./\\* 'https://${stagName}.blob.core.windows.net/$web/${slotName}'`,
+			`cd ${pkg.path}/dist/ && az storage azcopy copy ./\\* 'https://${stagName}.blob.core.windows.net/$web/${slotName}' --recursive --container \\$web --account-name ${stagName} --source ./\\* --destination ${slotName} --auth-mode key`,
 		).catch((err) => {
 			throw Error(err)
 		})
