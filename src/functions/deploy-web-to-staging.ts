@@ -24,7 +24,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 
 		await exec('az extension add --name storage-preview').catch()
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
-			`cd ${pkg.path}/dist/ && az storage blob upload-batch --source ./\\* --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key`,
+			`cd ${pkg.path}/ && az storage blob upload-batch --source ./dist --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key`,
 		).catch((err) => {
 			throw Error(err)
 		})

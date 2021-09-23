@@ -372,7 +372,7 @@ exports.default = async (pkg, pullNumber) => {
             console.log(stderr, stdout);
         console.log(`Build finished, uploading webapp: ${pkg.name}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/dist/ && az storage blob upload-batch --source ./\\* --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key`).catch((err) => {
+        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ./dist --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key`).catch((err) => {
             throw Error(err);
         });
         if (stdout)
