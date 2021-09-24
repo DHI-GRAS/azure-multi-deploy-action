@@ -35,5 +35,3 @@ yalc.lock
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-
-dist
