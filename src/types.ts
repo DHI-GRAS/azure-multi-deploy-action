@@ -4,6 +4,7 @@ export interface Package {
 	resourceGroup: string
 	type: 'app' | 'func-api' | 'lib'
 	storageAccount?: string
+	outputDir?: string
 	path: string
 }
 
@@ -34,5 +35,6 @@ export interface PackageJSON {
 		id: string
 		resourceGroup: string
 		storageAccount: string
+		outputDir?: string
 	}
 }
