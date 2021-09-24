@@ -10,15 +10,15 @@ const get_packages_1 = __importDefault(require("./get-packages"));
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
 exports.default = async () => {
     try {
-        const { stdout: branchName, stderr: branchErr } = await child_process_promise_1.exec(`git branch --show-current`);
+        const { stdout: branchName, stderr: branchErr } = await (0, child_process_promise_1.exec)(`git branch --show-current`);
         if (branchErr)
             throw Error(branchErr);
         const deployablePkgs = get_packages_1.default.filter((pkg) => pkg.type === 'app' || pkg.type === 'func-api');
         if (branchName.trim() === 'main')
             return deployablePkgs;
-        await child_process_promise_1.exec('git fetch --all');
+        await (0, child_process_promise_1.exec)('git fetch --all');
         const checkChanged = async (pkg) => {
-            const { stdout: diffOut, stdout: diffErr } = await child_process_promise_1.exec(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo changed`);
+            const { stdout: diffOut, stdout: diffErr } = await (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo changed`);
             if (diffErr)
                 console.log(diffErr);
             return diffOut.includes('changed') ? pkg : null;

@@ -13,7 +13,7 @@ const getMissingStorageAccounts = async (packages) => {
         console.log('No web app packages in project');
         return [];
     }
-    const { stdout, stderr } = await child_process_promise_1.exec('az storage account list');
+    const { stdout, stderr } = await (0, child_process_promise_1.exec)('az storage account list');
     if (stderr) {
         throw Error(stderr);
     }
@@ -27,7 +27,7 @@ const getMissingFunctionApps = async (packages) => {
         console.log('No function app packages in project');
         return [];
     }
-    const { stdout, stderr } = await child_process_promise_1.exec('az functionapp list');
+    const { stdout, stderr } = await (0, child_process_promise_1.exec)('az functionapp list');
     if (stderr) {
         throw Error(stderr);
     }
@@ -52,7 +52,7 @@ const createServices = async () => {
             .map((pkg) => pkg.id)
             .join()}`
         : 'No function apps to create');
-    missingStorageAccounts.forEach((pkg) => create_storage_account_1.default(pkg));
-    missingFunctionApps.forEach((pkg) => create_function_app_1.default(pkg));
+    missingStorageAccounts.forEach((pkg) => (0, create_storage_account_1.default)(pkg));
+    missingFunctionApps.forEach((pkg) => (0, create_function_app_1.default)(pkg));
 };
 exports.default = createServices;

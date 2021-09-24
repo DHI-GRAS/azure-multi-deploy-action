@@ -36,7 +36,7 @@ exports.default = async (startTime) => {
         // Append run stats to comment file
         fs_1.default.appendFileSync(path_1.default.join(messageFile), '\n#### Stats');
         const endTime = new Date();
-        const { minutes, seconds } = date_fns_1.intervalToDuration({
+        const { minutes, seconds } = (0, date_fns_1.intervalToDuration)({
             start: startTime,
             end: endTime,
         });

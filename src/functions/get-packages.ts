@@ -30,9 +30,11 @@ const getPackageObject = (
 	const pkgRequiredFields: string[] = pkgTypeRequiredFieldMap[pkgType]
 
 	const propertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
-		const fieldValue = pkgObj[field]
+		const fieldValue = pkgObj.azureDeployConfig?.[field]
 		if (!fieldValue)
-			throw Error(`"${field}" is required in ${fullPath}/package.json`)
+			throw Error(
+				`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`,
+			)
 		return { ...fieldAcc, [field]: fieldValue }
 	}, {}) as Omit<Package, 'type'>
 
@@ -40,7 +42,8 @@ const getPackageObject = (
 	const lowercaseRe = /^[a-z]+$/
 	if (
 		pkgType === 'apps' &&
-		lowercaseRe.exec(pkgObj.id)?.[0].length !== pkgObj.id?.length
+		lowercaseRe.exec(pkgObj.azureDeployConfig.id)?.[0].length !==
+			pkgObj.azureDeployConfig.id?.length
 	)
 		throw Error(
 			`"id" field in ${fullPath}/package.json must be all lowercase, only letters`,

@@ -9,7 +9,7 @@ const fs_1 = __importDefault(require("fs"));
 const msgFile = path_1.default.join('github_message.txt');
 exports.default = async (pkg, pullNumber) => {
     try {
-        const { stdout: listOut, stderr: listErr } = await child_process_promise_1.exec(`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`);
+        const { stdout: listOut, stderr: listErr } = await (0, child_process_promise_1.exec)(`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`);
         if (listErr)
             throw Error(listErr);
         const slots = JSON.parse(listOut);
@@ -19,10 +19,10 @@ exports.default = async (pkg, pullNumber) => {
         const slotNames = slots.map((slot) => slot.name);
         const slotExists = slotNames.includes(slotName);
         if (!slotExists) {
-            await child_process_promise_1.exec(`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
+            await (0, child_process_promise_1.exec)(`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         }
-        await child_process_promise_1.exec(`cd ${pkg.path} && yarn build ; zip -r dist.zip *`);
-        const { stdout: uploadOut, stderr: uploadErr } = await child_process_promise_1.exec(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
+        await (0, child_process_promise_1.exec)(`cd ${pkg.path} && yarn build ; zip -r dist.zip *`);
+        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
         console.log(`Deployed functionapp ${pkg.id}-${slotName}`);

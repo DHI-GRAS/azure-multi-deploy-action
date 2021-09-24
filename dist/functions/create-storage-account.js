@@ -6,15 +6,15 @@ exports.default = (pkg) => {
         const handleCreatedAccount = ({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
             console.log(`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`);
-            void child_process_promise_1.exec(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
+            void (0, child_process_promise_1.exec)(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
             console.log(`Enabled web container for storage account: ${newAccountData.name}`);
         };
-        void child_process_promise_1.exec(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`)
+        void (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`)
             .then(handleCreatedAccount)
             .catch((err) => {
             throw Error(err);
         });
-        void child_process_promise_1.exec(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`)
+        void (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`)
             .then(handleCreatedAccount)
             .catch((err) => {
             throw Error(err);
