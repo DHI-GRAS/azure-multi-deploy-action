@@ -29,6 +29,7 @@ const fs_1 = __importDefault(require("fs"));
 const msgFile = path_1.default.join('github_message.txt');
 const commitSha = github.context.sha.substr(0, 7);
 exports.default = async (pkg, pullNumber) => {
+    var _a;
     try {
         if (!pullNumber)
             throw Error('PR number is undefined');
@@ -40,7 +41,8 @@ exports.default = async (pkg, pullNumber) => {
             console.log(stderr, stdout);
         console.log(`Build finished, uploading webapp: ${pkg.name}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ./dist --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key`).catch((err) => {
+        const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
+        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key`).catch((err) => {
             throw Error(err);
         });
         if (stdout)

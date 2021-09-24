@@ -7,6 +7,7 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup'];
+const appNotRequiredFields = ['outputDir'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const pkgTypeRequiredFieldMap = {
     apps: appRequiredFields,
@@ -19,13 +20,24 @@ const getPackageObject = (pkgDir, pkgType) => {
     const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
     const pkgObj = JSON.parse(packageFile);
     const pkgRequiredFields = pkgTypeRequiredFieldMap[pkgType];
-    const propertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
+    const requiredPropertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
         var _a;
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
             throw Error(`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
+    const notReqPropertiesFromPckJson = appNotRequiredFields.reduce((fieldAcc, field) => {
+        var _a;
+        const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
+        if (!fieldValue)
+            return { ...fieldAcc };
+        return { ...fieldAcc, [field]: fieldValue };
+    }, {});
+    const propertiesFromPckJson = {
+        ...requiredPropertiesFromPkgJson,
+        ...notReqPropertiesFromPckJson,
+    };
     // Enforce only lowecase letters for storage account syntax
     const lowercaseRe = /^[a-z]+$/;
     if (pkgType === 'apps' &&
@@ -33,7 +45,7 @@ const getPackageObject = (pkgDir, pkgType) => {
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
         throw Error(`"id" field in ${fullPath}/package.json must be all lowercase, only letters`);
     return {
-        ...propertiesFromPkgJson,
+        ...propertiesFromPckJson,
         type: pkgType.substring(0, pkgType.length - 1),
         path: fullPath,
     };

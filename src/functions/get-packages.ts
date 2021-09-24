@@ -5,6 +5,7 @@ import { Packages, Package, PackageJSON } from '../types'
 const packageTypes = ['apps', 'func-apis', 'libs'] as const
 
 const appRequiredFields = ['name', 'id', 'resourceGroup']
+const appNotRequiredFields = ['outputDir']
 const apiRequiredFields = [...appRequiredFields, 'storageAccount']
 
 const pkgTypeRequiredFieldMap = {
@@ -29,14 +30,31 @@ const getPackageObject = (
 
 	const pkgRequiredFields: string[] = pkgTypeRequiredFieldMap[pkgType]
 
-	const propertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
-		const fieldValue = pkgObj.azureDeployConfig?.[field]
-		if (!fieldValue)
-			throw Error(
-				`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`,
-			)
-		return { ...fieldAcc, [field]: fieldValue }
-	}, {}) as Omit<Package, 'type'>
+	const requiredPropertiesFromPkgJson = pkgRequiredFields.reduce(
+		(fieldAcc, field) => {
+			const fieldValue = pkgObj.azureDeployConfig?.[field]
+			if (!fieldValue)
+				throw Error(
+					`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`,
+				)
+			return { ...fieldAcc, [field]: fieldValue }
+		},
+		{},
+	) as Omit<Package, 'type'>
+
+	const notReqPropertiesFromPckJson = appNotRequiredFields.reduce(
+		(fieldAcc, field) => {
+			const fieldValue = pkgObj.azureDeployConfig?.[field]
+			if (!fieldValue) return { ...fieldAcc }
+			return { ...fieldAcc, [field]: fieldValue }
+		},
+		{},
+	) as Omit<Package, 'type'>
+
+	const propertiesFromPckJson = {
+		...requiredPropertiesFromPkgJson,
+		...notReqPropertiesFromPckJson,
+	}
 
 	// Enforce only lowecase letters for storage account syntax
 	const lowercaseRe = /^[a-z]+$/
@@ -49,7 +67,7 @@ const getPackageObject = (
 			`"id" field in ${fullPath}/package.json must be all lowercase, only letters`,
 		)
 	return {
-		...propertiesFromPkgJson,
+		...propertiesFromPckJson,
 		type: pkgType.substring(0, pkgType.length - 1) as Package['type'],
 		path: fullPath,
 	}

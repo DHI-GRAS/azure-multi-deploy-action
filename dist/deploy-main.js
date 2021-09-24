@@ -27,13 +27,15 @@ const github = __importStar(require("@actions/github"));
 const get_changed_packages_1 = __importDefault(require("./functions/get-changed-packages"));
 const commitSha = github.context.sha.substr(0, 7);
 const deployWebApp = async (pkg) => {
+    var _a;
     console.log(`Building webapp: ${pkg.name}`);
     const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
+    const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
     if (stderr)
         console.log(stderr, stdout);
     console.log(`Build finished, uploading webapp: ${pkg.name}`);
     await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ./dist --destination \\$web --account-name ${pkg.id} --auth-mode key`).catch((err) => {
+    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key`).catch((err) => {
         throw Error(err);
     });
 };

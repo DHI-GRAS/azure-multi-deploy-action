@@ -100,13 +100,15 @@ const github = __importStar(__nccwpck_require__(5438));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
 const commitSha = github.context.sha.substr(0, 7);
 const deployWebApp = async (pkg) => {
+    var _a;
     console.log(`Building webapp: ${pkg.name}`);
     const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
+    const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
     if (stderr)
         console.log(stderr, stdout);
     console.log(`Build finished, uploading webapp: ${pkg.name}`);
     await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ./dist --destination \\$web --account-name ${pkg.id} --auth-mode key`).catch((err) => {
+    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key`).catch((err) => {
         throw Error(err);
     });
 };
@@ -361,6 +363,7 @@ const fs_1 = __importDefault(__nccwpck_require__(5747));
 const msgFile = path_1.default.join('github_message.txt');
 const commitSha = github.context.sha.substr(0, 7);
 exports.default = async (pkg, pullNumber) => {
+    var _a;
     try {
         if (!pullNumber)
             throw Error('PR number is undefined');
@@ -372,7 +375,8 @@ exports.default = async (pkg, pullNumber) => {
             console.log(stderr, stdout);
         console.log(`Build finished, uploading webapp: ${pkg.name}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ./dist --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key`).catch((err) => {
+        const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
+        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key`).catch((err) => {
             throw Error(err);
         });
         if (stdout)
@@ -466,6 +470,7 @@ const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup'];
+const appNotRequiredFields = ['outputDir'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const pkgTypeRequiredFieldMap = {
     apps: appRequiredFields,
@@ -478,13 +483,24 @@ const getPackageObject = (pkgDir, pkgType) => {
     const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
     const pkgObj = JSON.parse(packageFile);
     const pkgRequiredFields = pkgTypeRequiredFieldMap[pkgType];
-    const propertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
+    const requiredPropertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
         var _a;
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
             throw Error(`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
+    const notReqPropertiesFromPckJson = appNotRequiredFields.reduce((fieldAcc, field) => {
+        var _a;
+        const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
+        if (!fieldValue)
+            return { ...fieldAcc };
+        return { ...fieldAcc, [field]: fieldValue };
+    }, {});
+    const propertiesFromPckJson = {
+        ...requiredPropertiesFromPkgJson,
+        ...notReqPropertiesFromPckJson,
+    };
     // Enforce only lowecase letters for storage account syntax
     const lowercaseRe = /^[a-z]+$/;
     if (pkgType === 'apps' &&
@@ -492,7 +508,7 @@ const getPackageObject = (pkgDir, pkgType) => {
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
         throw Error(`"id" field in ${fullPath}/package.json must be all lowercase, only letters`);
     return {
-        ...propertiesFromPkgJson,
+        ...propertiesFromPckJson,
         type: pkgType.substring(0, pkgType.length - 1),
         path: fullPath,
     };
