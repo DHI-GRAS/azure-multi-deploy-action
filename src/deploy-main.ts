@@ -10,13 +10,14 @@ const deployWebApp = async (pkg: Package) => {
 	const { stdout, stderr } = await exec(
 		`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 	)
+	const outputDir = pkg.outputDir ?? './dist'
 	if (stderr) console.log(stderr, stdout)
 
 	console.log(`Build finished, uploading webapp: ${pkg.name}`)
 
 	await exec('az extension add --name storage-preview').catch()
 	await exec(
-		`cd ${pkg.path}/ && az storage blob upload-batch --source ./dist --destination \\$web --account-name ${pkg.id} --auth-mode key`,
+		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key`,
 	).catch((err) => {
 		throw Error(err)
 	})
