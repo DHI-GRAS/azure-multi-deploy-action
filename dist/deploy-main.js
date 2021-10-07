@@ -41,8 +41,17 @@ const deployWebApp = async (pkg) => {
 };
 const deployFuncApp = async (pkg) => {
     try {
+        const pkgPathSplit = pkg.path.split('/');
+        const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1];
         console.log(`Deploying functionapp: ${pkg.name}`);
-        await (0, child_process_promise_1.exec)(`cd ${pkg.path} && yarn build && zip -r dist.zip *`);
+        await (0, child_process_promise_1.exec)(`
+		cd ${pkg.path} &&
+		yarn build ;
+		cp -r -L ../${pkgDirname} ../../../ &&
+		cd ../../../${pkgDirname} &&
+		rm -rf node_modules &&
+		yarn install --production &&
+		zip -r dist.zip .`);
         const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
         if (uploadErr)
             console.log(uploadErr);
