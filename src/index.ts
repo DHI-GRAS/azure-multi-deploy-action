@@ -37,9 +37,10 @@ const run = async () => {
 	// Deploy to prod
 	const preventProdDeploy = core.getInput('preventProdDeploy')
 	if (preventProdDeploy && currentBranch === defaultBranch) {
-		console.error(
-			'Production deployment skipped! Code quality checks have failed',
-		)
+		const errorMsg =
+			'Production deployment skipped! Code quality checks have failed'
+		console.error(errorMsg)
+		core.setFailed(errorMsg)
 	}
 
 	if (
