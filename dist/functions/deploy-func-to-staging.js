@@ -27,11 +27,11 @@ exports.default = async (pkg, pullNumber) => {
         const { stderr: buildErr } = await (0, child_process_promise_1.exec)(`
 		cd ${pkg.path} &&
 		yarn build ;
-		cp -r -L ../${pkgDirname} ../../../ &&
-		cd ../../../${pkgDirname} &&
+		cp -r -L ../${pkgDirname} ../../ &&
+		cd ../../${pkgDirname} &&
 		rm -rf node_modules &&
 		yarn install --production ;
-		zip -r ${pkg.path}/dist.zip . > /dev/null ; echo "zipped to ${pkg.path}/dist.zip"`);
+		zip -r -b ../ ${pkg.path}/dist.zip . > /dev/null ; echo "zipped to ${pkg.path}/dist.zip"`);
         if (buildErr)
             console.log(buildErr);
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
