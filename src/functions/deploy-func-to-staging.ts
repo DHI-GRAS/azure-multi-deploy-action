@@ -43,7 +43,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		cd ../../../${pkgDirname} &&
 		rm -rf node_modules &&
 		yarn install --production &&
-		zip -r dist.zip .`)
+		zip -r ${pkg.path}/dist.zip .`)
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
 			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`,

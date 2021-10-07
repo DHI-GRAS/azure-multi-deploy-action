@@ -124,7 +124,7 @@ const deployFuncApp = async (pkg) => {
 		cd ../../../${pkgDirname} &&
 		rm -rf node_modules &&
 		yarn install --production &&
-		zip -r dist.zip .`);
+		zip -r ${pkg.path}/dist.zip .`);
         const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
         if (uploadErr)
             console.log(uploadErr);
@@ -327,7 +327,7 @@ exports.default = async (pkg, pullNumber) => {
 		cd ../../../${pkgDirname} &&
 		rm -rf node_modules &&
 		yarn install --production &&
-		zip -r dist.zip .`);
+		zip -r ${pkg.path}/dist.zip .`);
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
