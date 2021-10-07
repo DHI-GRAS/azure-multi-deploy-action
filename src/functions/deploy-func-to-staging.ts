@@ -43,7 +43,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		cd ../../../${pkgDirname} &&
 		rm -rf node_modules &&
 		yarn install --production ;
-		zip -r ${pkg.path}/dist.zip . ; echo "zipped to ${pkg.path}/dist.zip"`)
+		zip -r ${pkg.path}/dist.zip . > /dev/null ; echo "zipped to ${pkg.path}/dist.zip"`)
 
 		if (buildErr) console.log(buildErr)
 
