@@ -26,18 +26,18 @@ const run = async () => {
 	// Temporarily installing manually while https://github.com/Azure/azure-cli/issues/19860
 	// await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 	await exec(`
-		apt-get update ;
+		sudo apt-get update ;
 
-		apt-get install ca-certificates curl apt-transport-https lsb-release gnupg ;
+		sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg ;
 
-		curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null ;
+		curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null ;
 
 		AZ_REPO=$(lsb_release -cs) ;
 
-		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | tee /etc/apt/sources.list.d/azure-cli.list ;
+		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list ;
 
-		apt-get update ;
-		apt-get install azure-cli=2.28.0-1~focal
+		sudo apt-get update ;
+		sudo apt-get install azure-cli=2.28.0-1~focal
 
 	`)
 
