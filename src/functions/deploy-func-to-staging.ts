@@ -32,7 +32,20 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 			)
 		}
 
-		await exec(`cd ${pkg.path} && yarn build ; zip -r dist.zip *`)
+		const pkgPathSplit = pkg.path.split('/')
+		const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1]
+
+		// Has to be built with dev deps, then zipped with unhoisted prod deps
+		const { stderr: buildErr } = await exec(`
+		cd ${pkg.path} &&
+		yarn build ;
+		cp -r -L ../${pkgDirname} ../../ &&
+		cd ../../${pkgDirname} &&
+		rm -rf node_modules &&
+		yarn install --production ;
+		zip -r -b ../ ${pkg.path}/dist.zip . > /dev/null ; echo "zipped to ${pkg.path}/dist.zip"`)
+
+		if (buildErr) console.log(buildErr)
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
 			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`,
