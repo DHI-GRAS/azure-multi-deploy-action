@@ -675,7 +675,23 @@ const run = async () => {
     var _a, _b;
     const startTime = new Date();
     console.log('Installing azure CLI...');
-    await (0, child_process_promise_1.exec)('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
+    // Temporarily installing manually while https://github.com/Azure/azure-cli/issues/19860
+    // await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
+    await (0, child_process_promise_1.exec)(`
+		apt-get update ;
+
+		apt-get install ca-certificates curl apt-transport-https lsb-release gnupg ;
+
+		curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null ;
+
+		AZ_REPO=$(lsb_release -cs) ;
+
+		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | tee /etc/apt/sources.list.d/azure-cli.list ;
+
+		apt-get update ;
+		apt-get install azure-cli=2.28.0-1~focal
+
+	`);
     await (0, az_login_1.default)();
     await (0, create_services_1.default)();
     // Deploy to stag
