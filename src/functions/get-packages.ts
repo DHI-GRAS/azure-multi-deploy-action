@@ -57,7 +57,7 @@ const getPackageObject = (
 	}
 
 	// Enforce only lowecase letters for storage account syntax
-	const lowercaseRe = /^[a-z0-9]{1,17}+$/
+	const lowercaseRe = /^[a-z0-9]{1,17}$/
 	if (
 		pkgType === 'apps' &&
 		lowercaseRe.exec(pkgObj.azureDeployConfig.id)?.[0].length !==
