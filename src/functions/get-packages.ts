@@ -57,14 +57,14 @@ const getPackageObject = (
 	}
 
 	// Enforce only lowecase letters for storage account syntax
-	const lowercaseRe = /^[a-z0-9]{1,17}$/
+	const lowercaseRe = /^[a-z0-9]{1,20}$/
 	if (
 		pkgType === 'apps' &&
 		lowercaseRe.exec(pkgObj.azureDeployConfig.id)?.[0].length !==
 			pkgObj.azureDeployConfig.id?.length
 	)
 		throw Error(
-			`"id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 17 charachters.`,
+			`"id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`,
 		)
 	return {
 		...propertiesFromPckJson,
