@@ -36,7 +36,7 @@ const deployFuncApp = async (pkg: Package) => {
 		cd ../../../${pkgDirname} &&
 		rm -rf node_modules &&
 		yarn install --production &&
-		zip -r ${pkg.path}/dist.zip .`)
+		zip -r ${pkg.path}/dist.zip . > /dev/null`)
 
 		const { stderr: uploadErr } = await exec(
 			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`,
