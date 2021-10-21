@@ -37,7 +37,7 @@ const run = async () => {
 		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list ;
 
 		sudo apt-get update ;
-		sudo apt-get install azure-cli=2.28.0-1~focal
+		sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
 
 	`)
 
