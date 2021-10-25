@@ -23,23 +23,24 @@ const run = async () => {
 	const startTime = new Date()
 
 	console.log('Installing azure CLI...')
-	// Temporarily installing manually while https://github.com/Azure/azure-cli/issues/19860
-	// await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
-	await exec(`
-		sudo apt-get update ;
+	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 
-		sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg ;
+	// Use the below version in case specific version has to be installed
+	// await exec(`
+	// 	sudo apt-get update ;
 
-		curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null ;
+	// 	sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg ;
 
-		AZ_REPO=$(lsb_release -cs) ;
+	// 	curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null ;
 
-		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list ;
+	// 	AZ_REPO=$(lsb_release -cs) ;
 
-		sudo apt-get update ;
-		sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
+	// 	echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list ;
 
-	`)
+	// 	sudo apt-get update ;
+	// 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
+
+	// `)
 
 	await azLogin()
 	await createServices()
