@@ -323,8 +323,8 @@ exports.default = async (pkg, pullNumber) => {
         const { stderr: buildErr } = await (0, child_process_promise_1.exec)(`
 		cd ${pkg.path} &&
 		yarn build ;
-		cp -r -L ../${pkgDirname} ../../ &&
-		cd ../../${pkgDirname} &&
+		cp -r -L ../${pkgDirname} ../../../ &&
+		cd ../../../${pkgDirname} &&
 		rm -rf node_modules &&
 		yarn install --production ;
 		zip -r -b ../ ${pkg.path}/dist.zip . > /dev/null ; echo "zipped to ${pkg.path}/dist.zip"`);
