@@ -24,5 +24,4 @@ export default async (): Promise<void> => {
 	await exec(
 		`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`,
 	)
-	await exec(`az account set --subscription ${subscriptionId}`)
 }
