@@ -3,9 +3,18 @@ import { Package, StorageAccount } from '../types'
 
 export default (pkg: Package): void => {
 	try {
-		const handleCreatedAccount = async ({ stdout }) => {
+		if (!pkg.subscriptionId) {
+			throw Error(`${pkg.id} needs to specify subscriptionId`)
+		}
+
+		void exec(`az account set --subscription ${pkg.subscriptionId}`)
+			.then(() => console.log(`subscription set to ${pkg.subscriptionId}`))
+			.catch((err) => {
+				throw Error(err)
+			})
+
+		const handleCreatedAccount = ({ stdout }) => {
 			const newAccountData = JSON.parse(stdout) as StorageAccount
-			await exec(`az account set --subscription ${pkg.subscriptionId}`)
 
 			console.log(
 				`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`,
