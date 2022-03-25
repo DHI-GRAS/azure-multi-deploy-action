@@ -41,10 +41,9 @@ const getMissingFunctionApps = async (packages) => {
 const createServices = async () => {
     console.log('config packages', get_packages_1.default);
     console.log('Creating missing Azure services...');
-    // const missingStorageAccounts = await getMissingStorageAccounts(config)
-    // const missingFunctionApps = await getMissingFunctionApps(config)
-    const missingStorageAccounts = [];
-    const missingFunctionApps = [];
+    throw Error('stop here');
+    const missingStorageAccounts = await getMissingStorageAccounts(get_packages_1.default);
+    const missingFunctionApps = await getMissingFunctionApps(get_packages_1.default);
     console.log(missingStorageAccounts.length > 0
         ? `Creating storage accounts: ${missingStorageAccounts
             .map((pkg) => pkg.id)

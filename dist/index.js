@@ -48,10 +48,9 @@ const getMissingFunctionApps = async (packages) => {
 const createServices = async () => {
     console.log('config packages', get_packages_1.default);
     console.log('Creating missing Azure services...');
-    // const missingStorageAccounts = await getMissingStorageAccounts(config)
-    // const missingFunctionApps = await getMissingFunctionApps(config)
-    const missingStorageAccounts = [];
-    const missingFunctionApps = [];
+    throw Error('stop here');
+    const missingStorageAccounts = await getMissingStorageAccounts(get_packages_1.default);
+    const missingFunctionApps = await getMissingFunctionApps(get_packages_1.default);
     console.log(missingStorageAccounts.length > 0
         ? `Creating storage accounts: ${missingStorageAccounts
             .map((pkg) => pkg.id)
@@ -492,7 +491,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const packageTypes = ['apps', 'func-apis', 'libs'];
-const appRequiredFields = ['name', 'id', 'resourceGroup'];
+const appRequiredFields = ['name', 'id', 'resourceGroup', 'subscriptionId'];
 const appNotRequiredFields = ['outputDir'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const pkgTypeRequiredFieldMap = {

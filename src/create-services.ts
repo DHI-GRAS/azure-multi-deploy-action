@@ -54,10 +54,9 @@ const createServices = async (): Promise<void> => {
 	console.log('config packages', config)
 
 	console.log('Creating missing Azure services...')
-	// const missingStorageAccounts = await getMissingStorageAccounts(config)
-	// const missingFunctionApps = await getMissingFunctionApps(config)
-	const missingStorageAccounts: Packages = []
-	const missingFunctionApps: Packages = []
+	throw Error('stop here')
+	const missingStorageAccounts = await getMissingStorageAccounts(config)
+	const missingFunctionApps = await getMissingFunctionApps(config)
 	console.log(
 		missingStorageAccounts.length > 0
 			? `Creating storage accounts: ${missingStorageAccounts
