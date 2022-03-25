@@ -4,8 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
-const create_function_app_1 = __importDefault(require("./functions/create-function-app"));
-const create_storage_account_1 = __importDefault(require("./functions/create-storage-account"));
 const get_packages_1 = __importDefault(require("./functions/get-packages"));
 const getMissingStorageAccounts = async (packages) => {
     const webAppPackages = packages.filter((item) => item.type === 'app');
@@ -39,20 +37,25 @@ const getMissingFunctionApps = async (packages) => {
     });
 };
 const createServices = async () => {
-    console.log('Creating missing Azure services...');
-    const missingStorageAccounts = await getMissingStorageAccounts(get_packages_1.default);
-    const missingFunctionApps = await getMissingFunctionApps(get_packages_1.default);
-    console.log(missingStorageAccounts.length > 0
-        ? `Creating storage accounts: ${missingStorageAccounts
-            .map((pkg) => pkg.id)
-            .join()}`
-        : 'No storage accounts to create');
-    console.log(missingFunctionApps.length > 0
-        ? `Creating function apps: ${missingFunctionApps
-            .map((pkg) => pkg.id)
-            .join()}`
-        : 'No function apps to create');
-    missingStorageAccounts.forEach((pkg) => (0, create_storage_account_1.default)(pkg));
-    missingFunctionApps.forEach((pkg) => (0, create_function_app_1.default)(pkg));
+    console.log('config packages', get_packages_1.default);
+    // console.log('Creating missing Azure services...')
+    // const missingStorageAccounts = await getMissingStorageAccounts(config)
+    // const missingFunctionApps = await getMissingFunctionApps(config)
+    // console.log(
+    // 	missingStorageAccounts.length > 0
+    // 		? `Creating storage accounts: ${missingStorageAccounts
+    // 				.map((pkg) => pkg.id)
+    // 				.join()}`
+    // 		: 'No storage accounts to create',
+    // )
+    // console.log(
+    // 	missingFunctionApps.length > 0
+    // 		? `Creating function apps: ${missingFunctionApps
+    // 				.map((pkg) => pkg.id)
+    // 				.join()}`
+    // 		: 'No function apps to create',
+    // )
+    // missingStorageAccounts.forEach((pkg) => createStorageAccount(pkg))
+    // missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
 };
 exports.default = createServices;

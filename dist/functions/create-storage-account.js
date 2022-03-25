@@ -3,9 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
 exports.default = (pkg) => {
     try {
-        const handleCreatedAccount = async ({ stdout }) => {
+        const handleCreatedAccount = ({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
-            await (0, child_process_promise_1.exec)(`az account set --subscription ${pkg.subscriptionId}`);
             console.log(`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`);
             void (0, child_process_promise_1.exec)(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
             console.log(`Enabled web container for storage account: ${newAccountData.name}`);
