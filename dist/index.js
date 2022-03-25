@@ -11,6 +11,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const create_function_app_1 = __importDefault(__nccwpck_require__(2237));
+const create_storage_account_1 = __importDefault(__nccwpck_require__(9753));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
 const getMissingStorageAccounts = async (packages) => {
     const webAppPackages = packages.filter((item) => item.type === 'app');
@@ -45,25 +47,23 @@ const getMissingFunctionApps = async (packages) => {
 };
 const createServices = async () => {
     console.log('config packages', get_packages_1.default);
-    // console.log('Creating missing Azure services...')
+    console.log('Creating missing Azure services...');
     // const missingStorageAccounts = await getMissingStorageAccounts(config)
     // const missingFunctionApps = await getMissingFunctionApps(config)
-    // console.log(
-    // 	missingStorageAccounts.length > 0
-    // 		? `Creating storage accounts: ${missingStorageAccounts
-    // 				.map((pkg) => pkg.id)
-    // 				.join()}`
-    // 		: 'No storage accounts to create',
-    // )
-    // console.log(
-    // 	missingFunctionApps.length > 0
-    // 		? `Creating function apps: ${missingFunctionApps
-    // 				.map((pkg) => pkg.id)
-    // 				.join()}`
-    // 		: 'No function apps to create',
-    // )
-    // missingStorageAccounts.forEach((pkg) => createStorageAccount(pkg))
-    // missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
+    const missingStorageAccounts = [];
+    const missingFunctionApps = [];
+    console.log(missingStorageAccounts.length > 0
+        ? `Creating storage accounts: ${missingStorageAccounts
+            .map((pkg) => pkg.id)
+            .join()}`
+        : 'No storage accounts to create');
+    console.log(missingFunctionApps.length > 0
+        ? `Creating function apps: ${missingFunctionApps
+            .map((pkg) => pkg.id)
+            .join()}`
+        : 'No function apps to create');
+    missingStorageAccounts.forEach((pkg) => (0, create_storage_account_1.default)(pkg));
+    missingFunctionApps.forEach((pkg) => (0, create_function_app_1.default)(pkg));
 };
 exports.default = createServices;
 
@@ -224,6 +224,69 @@ exports.default = async () => {
     Object.keys(azureCredentials).forEach((key) => core.setSecret(azureCredentials[key]));
     const { clientId, tenantId, clientSecret, subscriptionId } = azureCredentials;
     await (0, child_process_promise_1.exec)(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
+};
+
+
+/***/ }),
+
+/***/ 2237:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const child_process_promise_1 = __nccwpck_require__(4858);
+exports.default = (pkg) => {
+    try {
+        if (!pkg.storageAccount) {
+            throw Error(`${pkg.id} needs to specify storageAccount`);
+        }
+        void (0, child_process_promise_1.exec)(`az functionapp create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --storage-account ${pkg.storageAccount} --runtime node --consumption-plan-location northeurope --functions-version 3 --disable-app-insights true`)
+            .then(({ stdout }) => {
+            const newAccountData = JSON.parse(stdout);
+            console.log(`Created function app: ${pkg.id}: ${newAccountData.defaultHostName}`);
+        })
+            .catch((err) => {
+            throw Error(err);
+        });
+    }
+    catch (err) {
+        throw Error(err);
+    }
+};
+
+
+/***/ }),
+
+/***/ 9753:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const child_process_promise_1 = __nccwpck_require__(4858);
+exports.default = (pkg) => {
+    try {
+        const handleCreatedAccount = ({ stdout }) => {
+            const newAccountData = JSON.parse(stdout);
+            console.log(`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`);
+            void (0, child_process_promise_1.exec)(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
+            console.log(`Enabled web container for storage account: ${newAccountData.name}`);
+        };
+        void (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`)
+            .then(handleCreatedAccount)
+            .catch((err) => {
+            throw Error(err);
+        });
+        void (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`)
+            .then(handleCreatedAccount)
+            .catch((err) => {
+            throw Error(err);
+        });
+    }
+    catch (err) {
+        throw Error(err);
+    }
 };
 
 
