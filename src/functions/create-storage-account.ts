@@ -3,16 +3,6 @@ import { Package, StorageAccount } from '../types'
 
 export default (pkg: Package): void => {
 	try {
-		if (!pkg.subscriptionId) {
-			throw Error(`${pkg.id} needs to specify subscriptionId`)
-		}
-
-		void exec(`az account set --subscription ${pkg.subscriptionId}`)
-			.then(() => console.log(`subscription set to ${pkg.subscriptionId}`))
-			.catch((err) => {
-				throw Error(err)
-			})
-
 		const handleCreatedAccount = ({ stdout }) => {
 			const newAccountData = JSON.parse(stdout) as StorageAccount
 
