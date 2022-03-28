@@ -39,8 +39,8 @@ const getMissingFunctionApps = async (packages) => {
     });
 };
 const createMissingResources = async (localConfig, subscriptionId) => {
-    console.log('Creating missing Azure services...');
     console.log('\nSetting the subscription for creating services...');
+    console.log('Creating missing Azure services...');
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
     console.log(`subscription set to ${subscriptionId}`);
     const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
@@ -55,8 +55,12 @@ const createMissingResources = async (localConfig, subscriptionId) => {
             .map((pkg) => pkg.id)
             .join()}`
         : 'No function apps to create');
-    missingStorageAccounts.forEach((pkg) => (0, create_storage_account_1.default)(pkg));
-    missingFunctionApps.forEach((pkg) => (0, create_function_app_1.default)(pkg));
+    for (const pkg of missingStorageAccounts) {
+        await (0, create_storage_account_1.default)(pkg);
+    }
+    for (const pkg of missingFunctionApps) {
+        await (0, create_function_app_1.default)(pkg);
+    }
     console.log(`Completed for subscriptionID ${subscriptionId}`);
 };
 const createServices = async () => {
