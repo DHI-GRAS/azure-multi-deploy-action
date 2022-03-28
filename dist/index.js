@@ -93,7 +93,11 @@ exports.default = createServices;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -226,7 +230,11 @@ exports.default = deployToStag;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -402,7 +410,11 @@ exports.default = async (pkg, pullNumber) => {
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -612,7 +624,11 @@ exports.default = packages;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -681,7 +697,11 @@ exports.default = async (startTime) => {
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -952,12 +972,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
+exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
 const command_1 = __nccwpck_require__(7351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(5278);
 const os = __importStar(__nccwpck_require__(2087));
 const path = __importStar(__nccwpck_require__(5622));
+const oidc_utils_1 = __nccwpck_require__(8041);
 /**
  * The code to exit an action
  */
@@ -1226,6 +1247,12 @@ function getState(name) {
     return process.env[`STATE_${name}`] || '';
 }
 exports.getState = getState;
+function getIDToken(aud) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield oidc_utils_1.OidcClient.getIDToken(aud);
+    });
+}
+exports.getIDToken = getIDToken;
 //# sourceMappingURL=core.js.map
 
 /***/ }),
@@ -1279,6 +1306,90 @@ exports.issueCommand = issueCommand;
 
 /***/ }),
 
+/***/ 8041:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OidcClient = void 0;
+const http_client_1 = __nccwpck_require__(9925);
+const auth_1 = __nccwpck_require__(3702);
+const core_1 = __nccwpck_require__(2186);
+class OidcClient {
+    static createHttpClient(allowRetry = true, maxRetry = 10) {
+        const requestOptions = {
+            allowRetries: allowRetry,
+            maxRetries: maxRetry
+        };
+        return new http_client_1.HttpClient('actions/oidc-client', [new auth_1.BearerCredentialHandler(OidcClient.getRequestToken())], requestOptions);
+    }
+    static getRequestToken() {
+        const token = process.env['ACTIONS_ID_TOKEN_REQUEST_TOKEN'];
+        if (!token) {
+            throw new Error('Unable to get ACTIONS_ID_TOKEN_REQUEST_TOKEN env variable');
+        }
+        return token;
+    }
+    static getIDTokenUrl() {
+        const runtimeUrl = process.env['ACTIONS_ID_TOKEN_REQUEST_URL'];
+        if (!runtimeUrl) {
+            throw new Error('Unable to get ACTIONS_ID_TOKEN_REQUEST_URL env variable');
+        }
+        return runtimeUrl;
+    }
+    static getCall(id_token_url) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const httpclient = OidcClient.createHttpClient();
+            const res = yield httpclient
+                .getJson(id_token_url)
+                .catch(error => {
+                throw new Error(`Failed to get ID Token. \n 
+        Error Code : ${error.statusCode}\n 
+        Error Message: ${error.result.message}`);
+            });
+            const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
+            if (!id_token) {
+                throw new Error('Response json body do not have ID Token field');
+            }
+            return id_token;
+        });
+    }
+    static getIDToken(audience) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // New ID Token is requested from action service
+                let id_token_url = OidcClient.getIDTokenUrl();
+                if (audience) {
+                    const encodedAudience = encodeURIComponent(audience);
+                    id_token_url = `${id_token_url}&audience=${encodedAudience}`;
+                }
+                core_1.debug(`ID token url is ${id_token_url}`);
+                const id_token = yield OidcClient.getCall(id_token_url);
+                core_1.setSecret(id_token);
+                return id_token;
+            }
+            catch (error) {
+                throw new Error(`Error message: ${error.message}`);
+            }
+        });
+    }
+}
+exports.OidcClient = OidcClient;
+//# sourceMappingURL=oidc-utils.js.map
+
+/***/ }),
+
 /***/ 5278:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -1314,6 +1425,7 @@ function toCommandProperties(annotationProperties) {
     }
     return {
         title: annotationProperties.title,
+        file: annotationProperties.file,
         line: annotationProperties.startLine,
         endLine: annotationProperties.endLine,
         col: annotationProperties.startColumn,
@@ -1537,6 +1649,72 @@ function getOctokitOptions(token, options) {
 }
 exports.getOctokitOptions = getOctokitOptions;
 //# sourceMappingURL=utils.js.map
+
+/***/ }),
+
+/***/ 3702:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+class BasicCredentialHandler {
+    constructor(username, password) {
+        this.username = username;
+        this.password = password;
+    }
+    prepareRequest(options) {
+        options.headers['Authorization'] =
+            'Basic ' +
+                Buffer.from(this.username + ':' + this.password).toString('base64');
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.BasicCredentialHandler = BasicCredentialHandler;
+class BearerCredentialHandler {
+    constructor(token) {
+        this.token = token;
+    }
+    // currently implements pre-authorization
+    // TODO: support preAuth = false where it hooks on 401
+    prepareRequest(options) {
+        options.headers['Authorization'] = 'Bearer ' + this.token;
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.BearerCredentialHandler = BearerCredentialHandler;
+class PersonalAccessTokenCredentialHandler {
+    constructor(token) {
+        this.token = token;
+    }
+    // currently implements pre-authorization
+    // TODO: support preAuth = false where it hooks on 401
+    prepareRequest(options) {
+        options.headers['Authorization'] =
+            'Basic ' + Buffer.from('PAT:' + this.token).toString('base64');
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHandler;
+
 
 /***/ }),
 
@@ -2263,7 +2441,7 @@ function _objectWithoutProperties(source, excluded) {
   return target;
 }
 
-const VERSION = "3.5.1";
+const VERSION = "3.6.0";
 
 const _excluded = ["authStrategy"];
 class Octokit {
@@ -2929,7 +3107,7 @@ exports.withCustomRequest = withCustomRequest;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-const VERSION = "2.16.3";
+const VERSION = "2.17.0";
 
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
@@ -3113,7 +3291,7 @@ const composePaginateRest = Object.assign(paginate, {
   iterator
 });
 
-const paginatingEndpoints = ["GET /app/hook/deliveries", "GET /app/installations", "GET /applications/grants", "GET /authorizations", "GET /enterprises/{enterprise}/actions/permissions/organizations", "GET /enterprises/{enterprise}/actions/runner-groups", "GET /enterprises/{enterprise}/actions/runner-groups/{runner_group_id}/organizations", "GET /enterprises/{enterprise}/actions/runner-groups/{runner_group_id}/runners", "GET /enterprises/{enterprise}/actions/runners", "GET /enterprises/{enterprise}/actions/runners/downloads", "GET /events", "GET /gists", "GET /gists/public", "GET /gists/starred", "GET /gists/{gist_id}/comments", "GET /gists/{gist_id}/commits", "GET /gists/{gist_id}/forks", "GET /installation/repositories", "GET /issues", "GET /marketplace_listing/plans", "GET /marketplace_listing/plans/{plan_id}/accounts", "GET /marketplace_listing/stubbed/plans", "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts", "GET /networks/{owner}/{repo}/events", "GET /notifications", "GET /organizations", "GET /orgs/{org}/actions/permissions/repositories", "GET /orgs/{org}/actions/runner-groups", "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/repositories", "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/runners", "GET /orgs/{org}/actions/runners", "GET /orgs/{org}/actions/runners/downloads", "GET /orgs/{org}/actions/secrets", "GET /orgs/{org}/actions/secrets/{secret_name}/repositories", "GET /orgs/{org}/blocks", "GET /orgs/{org}/credential-authorizations", "GET /orgs/{org}/events", "GET /orgs/{org}/failed_invitations", "GET /orgs/{org}/hooks", "GET /orgs/{org}/hooks/{hook_id}/deliveries", "GET /orgs/{org}/installations", "GET /orgs/{org}/invitations", "GET /orgs/{org}/invitations/{invitation_id}/teams", "GET /orgs/{org}/issues", "GET /orgs/{org}/members", "GET /orgs/{org}/migrations", "GET /orgs/{org}/migrations/{migration_id}/repositories", "GET /orgs/{org}/outside_collaborators", "GET /orgs/{org}/packages", "GET /orgs/{org}/projects", "GET /orgs/{org}/public_members", "GET /orgs/{org}/repos", "GET /orgs/{org}/secret-scanning/alerts", "GET /orgs/{org}/team-sync/groups", "GET /orgs/{org}/teams", "GET /orgs/{org}/teams/{team_slug}/discussions", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", "GET /orgs/{org}/teams/{team_slug}/invitations", "GET /orgs/{org}/teams/{team_slug}/members", "GET /orgs/{org}/teams/{team_slug}/projects", "GET /orgs/{org}/teams/{team_slug}/repos", "GET /orgs/{org}/teams/{team_slug}/team-sync/group-mappings", "GET /orgs/{org}/teams/{team_slug}/teams", "GET /projects/columns/{column_id}/cards", "GET /projects/{project_id}/collaborators", "GET /projects/{project_id}/columns", "GET /repos/{owner}/{repo}/actions/artifacts", "GET /repos/{owner}/{repo}/actions/runners", "GET /repos/{owner}/{repo}/actions/runners/downloads", "GET /repos/{owner}/{repo}/actions/runs", "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts", "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", "GET /repos/{owner}/{repo}/actions/secrets", "GET /repos/{owner}/{repo}/actions/workflows", "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs", "GET /repos/{owner}/{repo}/assignees", "GET /repos/{owner}/{repo}/autolinks", "GET /repos/{owner}/{repo}/branches", "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations", "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs", "GET /repos/{owner}/{repo}/code-scanning/alerts", "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances", "GET /repos/{owner}/{repo}/code-scanning/analyses", "GET /repos/{owner}/{repo}/collaborators", "GET /repos/{owner}/{repo}/comments", "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/commits", "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head", "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments", "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls", "GET /repos/{owner}/{repo}/commits/{ref}/check-runs", "GET /repos/{owner}/{repo}/commits/{ref}/check-suites", "GET /repos/{owner}/{repo}/commits/{ref}/statuses", "GET /repos/{owner}/{repo}/contributors", "GET /repos/{owner}/{repo}/deployments", "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses", "GET /repos/{owner}/{repo}/events", "GET /repos/{owner}/{repo}/forks", "GET /repos/{owner}/{repo}/git/matching-refs/{ref}", "GET /repos/{owner}/{repo}/hooks", "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries", "GET /repos/{owner}/{repo}/invitations", "GET /repos/{owner}/{repo}/issues", "GET /repos/{owner}/{repo}/issues/comments", "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/issues/events", "GET /repos/{owner}/{repo}/issues/{issue_number}/comments", "GET /repos/{owner}/{repo}/issues/{issue_number}/events", "GET /repos/{owner}/{repo}/issues/{issue_number}/labels", "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions", "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", "GET /repos/{owner}/{repo}/keys", "GET /repos/{owner}/{repo}/labels", "GET /repos/{owner}/{repo}/milestones", "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels", "GET /repos/{owner}/{repo}/notifications", "GET /repos/{owner}/{repo}/pages/builds", "GET /repos/{owner}/{repo}/projects", "GET /repos/{owner}/{repo}/pulls", "GET /repos/{owner}/{repo}/pulls/comments", "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments", "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits", "GET /repos/{owner}/{repo}/pulls/{pull_number}/files", "GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers", "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews", "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments", "GET /repos/{owner}/{repo}/releases", "GET /repos/{owner}/{repo}/releases/{release_id}/assets", "GET /repos/{owner}/{repo}/secret-scanning/alerts", "GET /repos/{owner}/{repo}/stargazers", "GET /repos/{owner}/{repo}/subscribers", "GET /repos/{owner}/{repo}/tags", "GET /repos/{owner}/{repo}/teams", "GET /repositories", "GET /repositories/{repository_id}/environments/{environment_name}/secrets", "GET /scim/v2/enterprises/{enterprise}/Groups", "GET /scim/v2/enterprises/{enterprise}/Users", "GET /scim/v2/organizations/{org}/Users", "GET /search/code", "GET /search/commits", "GET /search/issues", "GET /search/labels", "GET /search/repositories", "GET /search/topics", "GET /search/users", "GET /teams/{team_id}/discussions", "GET /teams/{team_id}/discussions/{discussion_number}/comments", "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions", "GET /teams/{team_id}/discussions/{discussion_number}/reactions", "GET /teams/{team_id}/invitations", "GET /teams/{team_id}/members", "GET /teams/{team_id}/projects", "GET /teams/{team_id}/repos", "GET /teams/{team_id}/team-sync/group-mappings", "GET /teams/{team_id}/teams", "GET /user/blocks", "GET /user/emails", "GET /user/followers", "GET /user/following", "GET /user/gpg_keys", "GET /user/installations", "GET /user/installations/{installation_id}/repositories", "GET /user/issues", "GET /user/keys", "GET /user/marketplace_purchases", "GET /user/marketplace_purchases/stubbed", "GET /user/memberships/orgs", "GET /user/migrations", "GET /user/migrations/{migration_id}/repositories", "GET /user/orgs", "GET /user/packages", "GET /user/public_emails", "GET /user/repos", "GET /user/repository_invitations", "GET /user/starred", "GET /user/subscriptions", "GET /user/teams", "GET /user/{username}/packages", "GET /users", "GET /users/{username}/events", "GET /users/{username}/events/orgs/{org}", "GET /users/{username}/events/public", "GET /users/{username}/followers", "GET /users/{username}/following", "GET /users/{username}/gists", "GET /users/{username}/gpg_keys", "GET /users/{username}/keys", "GET /users/{username}/orgs", "GET /users/{username}/projects", "GET /users/{username}/received_events", "GET /users/{username}/received_events/public", "GET /users/{username}/repos", "GET /users/{username}/starred", "GET /users/{username}/subscriptions"];
+const paginatingEndpoints = ["GET /app/hook/deliveries", "GET /app/installations", "GET /applications/grants", "GET /authorizations", "GET /enterprises/{enterprise}/actions/permissions/organizations", "GET /enterprises/{enterprise}/actions/runner-groups", "GET /enterprises/{enterprise}/actions/runner-groups/{runner_group_id}/organizations", "GET /enterprises/{enterprise}/actions/runner-groups/{runner_group_id}/runners", "GET /enterprises/{enterprise}/actions/runners", "GET /enterprises/{enterprise}/actions/runners/downloads", "GET /events", "GET /gists", "GET /gists/public", "GET /gists/starred", "GET /gists/{gist_id}/comments", "GET /gists/{gist_id}/commits", "GET /gists/{gist_id}/forks", "GET /installation/repositories", "GET /issues", "GET /marketplace_listing/plans", "GET /marketplace_listing/plans/{plan_id}/accounts", "GET /marketplace_listing/stubbed/plans", "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts", "GET /networks/{owner}/{repo}/events", "GET /notifications", "GET /organizations", "GET /orgs/{org}/actions/permissions/repositories", "GET /orgs/{org}/actions/runner-groups", "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/repositories", "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/runners", "GET /orgs/{org}/actions/runners", "GET /orgs/{org}/actions/runners/downloads", "GET /orgs/{org}/actions/secrets", "GET /orgs/{org}/actions/secrets/{secret_name}/repositories", "GET /orgs/{org}/blocks", "GET /orgs/{org}/credential-authorizations", "GET /orgs/{org}/events", "GET /orgs/{org}/failed_invitations", "GET /orgs/{org}/hooks", "GET /orgs/{org}/hooks/{hook_id}/deliveries", "GET /orgs/{org}/installations", "GET /orgs/{org}/invitations", "GET /orgs/{org}/invitations/{invitation_id}/teams", "GET /orgs/{org}/issues", "GET /orgs/{org}/members", "GET /orgs/{org}/migrations", "GET /orgs/{org}/migrations/{migration_id}/repositories", "GET /orgs/{org}/outside_collaborators", "GET /orgs/{org}/packages", "GET /orgs/{org}/projects", "GET /orgs/{org}/public_members", "GET /orgs/{org}/repos", "GET /orgs/{org}/secret-scanning/alerts", "GET /orgs/{org}/team-sync/groups", "GET /orgs/{org}/teams", "GET /orgs/{org}/teams/{team_slug}/discussions", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", "GET /orgs/{org}/teams/{team_slug}/invitations", "GET /orgs/{org}/teams/{team_slug}/members", "GET /orgs/{org}/teams/{team_slug}/projects", "GET /orgs/{org}/teams/{team_slug}/repos", "GET /orgs/{org}/teams/{team_slug}/team-sync/group-mappings", "GET /orgs/{org}/teams/{team_slug}/teams", "GET /projects/columns/{column_id}/cards", "GET /projects/{project_id}/collaborators", "GET /projects/{project_id}/columns", "GET /repos/{owner}/{repo}/actions/artifacts", "GET /repos/{owner}/{repo}/actions/runners", "GET /repos/{owner}/{repo}/actions/runners/downloads", "GET /repos/{owner}/{repo}/actions/runs", "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts", "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs", "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", "GET /repos/{owner}/{repo}/actions/secrets", "GET /repos/{owner}/{repo}/actions/workflows", "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs", "GET /repos/{owner}/{repo}/assignees", "GET /repos/{owner}/{repo}/autolinks", "GET /repos/{owner}/{repo}/branches", "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations", "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs", "GET /repos/{owner}/{repo}/code-scanning/alerts", "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances", "GET /repos/{owner}/{repo}/code-scanning/analyses", "GET /repos/{owner}/{repo}/collaborators", "GET /repos/{owner}/{repo}/comments", "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/commits", "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head", "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments", "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls", "GET /repos/{owner}/{repo}/commits/{ref}/check-runs", "GET /repos/{owner}/{repo}/commits/{ref}/check-suites", "GET /repos/{owner}/{repo}/commits/{ref}/statuses", "GET /repos/{owner}/{repo}/contributors", "GET /repos/{owner}/{repo}/deployments", "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses", "GET /repos/{owner}/{repo}/events", "GET /repos/{owner}/{repo}/forks", "GET /repos/{owner}/{repo}/git/matching-refs/{ref}", "GET /repos/{owner}/{repo}/hooks", "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries", "GET /repos/{owner}/{repo}/invitations", "GET /repos/{owner}/{repo}/issues", "GET /repos/{owner}/{repo}/issues/comments", "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/issues/events", "GET /repos/{owner}/{repo}/issues/{issue_number}/comments", "GET /repos/{owner}/{repo}/issues/{issue_number}/events", "GET /repos/{owner}/{repo}/issues/{issue_number}/labels", "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions", "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", "GET /repos/{owner}/{repo}/keys", "GET /repos/{owner}/{repo}/labels", "GET /repos/{owner}/{repo}/milestones", "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels", "GET /repos/{owner}/{repo}/notifications", "GET /repos/{owner}/{repo}/pages/builds", "GET /repos/{owner}/{repo}/projects", "GET /repos/{owner}/{repo}/pulls", "GET /repos/{owner}/{repo}/pulls/comments", "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments", "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits", "GET /repos/{owner}/{repo}/pulls/{pull_number}/files", "GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers", "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews", "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments", "GET /repos/{owner}/{repo}/releases", "GET /repos/{owner}/{repo}/releases/{release_id}/assets", "GET /repos/{owner}/{repo}/secret-scanning/alerts", "GET /repos/{owner}/{repo}/stargazers", "GET /repos/{owner}/{repo}/subscribers", "GET /repos/{owner}/{repo}/tags", "GET /repos/{owner}/{repo}/teams", "GET /repositories", "GET /repositories/{repository_id}/environments/{environment_name}/secrets", "GET /scim/v2/enterprises/{enterprise}/Groups", "GET /scim/v2/enterprises/{enterprise}/Users", "GET /scim/v2/organizations/{org}/Users", "GET /search/code", "GET /search/commits", "GET /search/issues", "GET /search/labels", "GET /search/repositories", "GET /search/topics", "GET /search/users", "GET /teams/{team_id}/discussions", "GET /teams/{team_id}/discussions/{discussion_number}/comments", "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions", "GET /teams/{team_id}/discussions/{discussion_number}/reactions", "GET /teams/{team_id}/invitations", "GET /teams/{team_id}/members", "GET /teams/{team_id}/projects", "GET /teams/{team_id}/repos", "GET /teams/{team_id}/team-sync/group-mappings", "GET /teams/{team_id}/teams", "GET /user/blocks", "GET /user/emails", "GET /user/followers", "GET /user/following", "GET /user/gpg_keys", "GET /user/installations", "GET /user/installations/{installation_id}/repositories", "GET /user/issues", "GET /user/keys", "GET /user/marketplace_purchases", "GET /user/marketplace_purchases/stubbed", "GET /user/memberships/orgs", "GET /user/migrations", "GET /user/migrations/{migration_id}/repositories", "GET /user/orgs", "GET /user/packages", "GET /user/public_emails", "GET /user/repos", "GET /user/repository_invitations", "GET /user/starred", "GET /user/subscriptions", "GET /user/teams", "GET /users", "GET /users/{username}/events", "GET /users/{username}/events/orgs/{org}", "GET /users/{username}/events/public", "GET /users/{username}/followers", "GET /users/{username}/following", "GET /users/{username}/gists", "GET /users/{username}/gpg_keys", "GET /users/{username}/keys", "GET /users/{username}/orgs", "GET /users/{username}/packages", "GET /users/{username}/projects", "GET /users/{username}/received_events", "GET /users/{username}/received_events/public", "GET /users/{username}/repos", "GET /users/{username}/starred", "GET /users/{username}/subscriptions"];
 
 function isPaginatingEndpoint(arg) {
   if (typeof arg === "string") {
@@ -3232,6 +3410,7 @@ const Endpoints = {
     disableWorkflow: ["PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable"],
     downloadArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}"],
     downloadJobLogsForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs"],
+    downloadWorkflowRunAttemptLogs: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/logs"],
     downloadWorkflowRunLogs: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs"],
     enableSelectedRepositoryGithubActionsOrganization: ["PUT /orgs/{org}/actions/permissions/repositories/{repository_id}"],
     enableWorkflow: ["PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable"],
@@ -3256,11 +3435,13 @@ const Endpoints = {
     getSelfHostedRunnerForRepo: ["GET /repos/{owner}/{repo}/actions/runners/{runner_id}"],
     getWorkflow: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}"],
     getWorkflowRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}"],
+    getWorkflowRunAttempt: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}"],
     getWorkflowRunUsage: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/timing"],
     getWorkflowUsage: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/timing"],
     listArtifactsForRepo: ["GET /repos/{owner}/{repo}/actions/artifacts"],
     listEnvironmentSecrets: ["GET /repositories/{repository_id}/environments/{environment_name}/secrets"],
     listJobsForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs"],
+    listJobsForWorkflowRunAttempt: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs"],
     listOrgSecrets: ["GET /orgs/{org}/actions/secrets"],
     listRepoSecrets: ["GET /repos/{owner}/{repo}/actions/secrets"],
     listRepoWorkflows: ["GET /repos/{owner}/{repo}/actions/workflows"],
@@ -3273,9 +3454,7 @@ const Endpoints = {
     listWorkflowRunArtifacts: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts"],
     listWorkflowRuns: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs"],
     listWorkflowRunsForRepo: ["GET /repos/{owner}/{repo}/actions/runs"],
-    reRunWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun"],
     removeSelectedRepoFromOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"],
-    retryWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/retry"],
     reviewPendingDeploymentsForRun: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"],
     setAllowedActionsOrganization: ["PUT /orgs/{org}/actions/permissions/selected-actions"],
     setAllowedActionsRepository: ["PUT /repos/{owner}/{repo}/actions/permissions/selected-actions"],
@@ -3318,7 +3497,10 @@ const Endpoints = {
     unstarRepoForAuthenticatedUser: ["DELETE /user/starred/{owner}/{repo}"]
   },
   apps: {
-    addRepoToInstallation: ["PUT /user/installations/{installation_id}/repositories/{repository_id}"],
+    addRepoToInstallation: ["PUT /user/installations/{installation_id}/repositories/{repository_id}", {}, {
+      renamed: ["apps", "addRepoToInstallationForAuthenticatedUser"]
+    }],
+    addRepoToInstallationForAuthenticatedUser: ["PUT /user/installations/{installation_id}/repositories/{repository_id}"],
     checkToken: ["POST /applications/{client_id}/token"],
     createContentAttachment: ["POST /content_references/{content_reference_id}/attachments", {
       mediaType: {
@@ -3357,7 +3539,10 @@ const Endpoints = {
     listSubscriptionsForAuthenticatedUserStubbed: ["GET /user/marketplace_purchases/stubbed"],
     listWebhookDeliveries: ["GET /app/hook/deliveries"],
     redeliverWebhookDelivery: ["POST /app/hook/deliveries/{delivery_id}/attempts"],
-    removeRepoFromInstallation: ["DELETE /user/installations/{installation_id}/repositories/{repository_id}"],
+    removeRepoFromInstallation: ["DELETE /user/installations/{installation_id}/repositories/{repository_id}", {}, {
+      renamed: ["apps", "removeRepoFromInstallationForAuthenticatedUser"]
+    }],
+    removeRepoFromInstallationForAuthenticatedUser: ["DELETE /user/installations/{installation_id}/repositories/{repository_id}"],
     resetToken: ["PATCH /applications/{client_id}/token"],
     revokeInstallationAccessToken: ["DELETE /installation/token"],
     scopeToken: ["POST /applications/{client_id}/token/scoped"],
@@ -3382,6 +3567,7 @@ const Endpoints = {
     listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs"],
     listForSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs"],
     listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites"],
+    rerequestRun: ["POST /repos/{owner}/{repo}/check-runs/{check_run_id}/rerequest"],
     rerequestSuite: ["POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest"],
     setSuitesPreferences: ["PATCH /repos/{owner}/{repo}/check-suites/preferences"],
     update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}"]
@@ -3406,12 +3592,7 @@ const Endpoints = {
   },
   codesOfConduct: {
     getAllCodesOfConduct: ["GET /codes_of_conduct"],
-    getConductCode: ["GET /codes_of_conduct/{key}"],
-    getForRepo: ["GET /repos/{owner}/{repo}/community/code_of_conduct", {
-      mediaType: {
-        previews: ["scarlet-witch"]
-      }
-    }]
+    getConductCode: ["GET /codes_of_conduct/{key}"]
   },
   emojis: {
     get: ["GET /emojis"]
@@ -3509,11 +3690,7 @@ const Endpoints = {
     listCommentsForRepo: ["GET /repos/{owner}/{repo}/issues/comments"],
     listEvents: ["GET /repos/{owner}/{repo}/issues/{issue_number}/events"],
     listEventsForRepo: ["GET /repos/{owner}/{repo}/issues/events"],
-    listEventsForTimeline: ["GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", {
-      mediaType: {
-        previews: ["mockingbird"]
-      }
-    }],
+    listEventsForTimeline: ["GET /repos/{owner}/{repo}/issues/{issue_number}/timeline"],
     listForAuthenticatedUser: ["GET /user/issues"],
     listForOrg: ["GET /orgs/{org}/issues"],
     listForRepo: ["GET /repos/{owner}/{repo}/issues"],
@@ -3553,74 +3730,29 @@ const Endpoints = {
   },
   migrations: {
     cancelImport: ["DELETE /repos/{owner}/{repo}/import"],
-    deleteArchiveForAuthenticatedUser: ["DELETE /user/migrations/{migration_id}/archive", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    deleteArchiveForOrg: ["DELETE /orgs/{org}/migrations/{migration_id}/archive", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    downloadArchiveForOrg: ["GET /orgs/{org}/migrations/{migration_id}/archive", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    getArchiveForAuthenticatedUser: ["GET /user/migrations/{migration_id}/archive", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
+    deleteArchiveForAuthenticatedUser: ["DELETE /user/migrations/{migration_id}/archive"],
+    deleteArchiveForOrg: ["DELETE /orgs/{org}/migrations/{migration_id}/archive"],
+    downloadArchiveForOrg: ["GET /orgs/{org}/migrations/{migration_id}/archive"],
+    getArchiveForAuthenticatedUser: ["GET /user/migrations/{migration_id}/archive"],
     getCommitAuthors: ["GET /repos/{owner}/{repo}/import/authors"],
     getImportStatus: ["GET /repos/{owner}/{repo}/import"],
     getLargeFiles: ["GET /repos/{owner}/{repo}/import/large_files"],
-    getStatusForAuthenticatedUser: ["GET /user/migrations/{migration_id}", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    getStatusForOrg: ["GET /orgs/{org}/migrations/{migration_id}", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    listForAuthenticatedUser: ["GET /user/migrations", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    listForOrg: ["GET /orgs/{org}/migrations", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    listReposForOrg: ["GET /orgs/{org}/migrations/{migration_id}/repositories", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    listReposForUser: ["GET /user/migrations/{migration_id}/repositories", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
+    getStatusForAuthenticatedUser: ["GET /user/migrations/{migration_id}"],
+    getStatusForOrg: ["GET /orgs/{org}/migrations/{migration_id}"],
+    listForAuthenticatedUser: ["GET /user/migrations"],
+    listForOrg: ["GET /orgs/{org}/migrations"],
+    listReposForAuthenticatedUser: ["GET /user/migrations/{migration_id}/repositories"],
+    listReposForOrg: ["GET /orgs/{org}/migrations/{migration_id}/repositories"],
+    listReposForUser: ["GET /user/migrations/{migration_id}/repositories", {}, {
+      renamed: ["migrations", "listReposForAuthenticatedUser"]
     }],
     mapCommitAuthor: ["PATCH /repos/{owner}/{repo}/import/authors/{author_id}"],
     setLfsPreference: ["PATCH /repos/{owner}/{repo}/import/lfs"],
     startForAuthenticatedUser: ["POST /user/migrations"],
     startForOrg: ["POST /orgs/{org}/migrations"],
     startImport: ["PUT /repos/{owner}/{repo}/import"],
-    unlockRepoForAuthenticatedUser: ["DELETE /user/migrations/{migration_id}/repos/{repo_name}/lock", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
-    unlockRepoForOrg: ["DELETE /orgs/{org}/migrations/{migration_id}/repos/{repo_name}/lock", {
-      mediaType: {
-        previews: ["wyandotte"]
-      }
-    }],
+    unlockRepoForAuthenticatedUser: ["DELETE /user/migrations/{migration_id}/repos/{repo_name}/lock"],
+    unlockRepoForOrg: ["DELETE /orgs/{org}/migrations/{migration_id}/repos/{repo_name}/lock"],
     updateImport: ["PATCH /repos/{owner}/{repo}/import"]
   },
   orgs: {
@@ -3691,7 +3823,7 @@ const Endpoints = {
     getPackageVersionForUser: ["GET /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"],
     listPackagesForAuthenticatedUser: ["GET /user/packages"],
     listPackagesForOrganization: ["GET /orgs/{org}/packages"],
-    listPackagesForUser: ["GET /user/{username}/packages"],
+    listPackagesForUser: ["GET /users/{username}/packages"],
     restorePackageForAuthenticatedUser: ["POST /user/packages/{package_type}/{package_name}/restore{?token}"],
     restorePackageForOrg: ["POST /orgs/{org}/packages/{package_type}/{package_name}/restore{?token}"],
     restorePackageForUser: ["POST /users/{username}/packages/{package_type}/{package_name}/restore{?token}"],
@@ -3700,131 +3832,31 @@ const Endpoints = {
     restorePackageVersionForUser: ["POST /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"]
   },
   projects: {
-    addCollaborator: ["PUT /projects/{project_id}/collaborators/{username}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    createCard: ["POST /projects/columns/{column_id}/cards", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    createColumn: ["POST /projects/{project_id}/columns", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    createForAuthenticatedUser: ["POST /user/projects", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    createForOrg: ["POST /orgs/{org}/projects", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    createForRepo: ["POST /repos/{owner}/{repo}/projects", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    delete: ["DELETE /projects/{project_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    deleteCard: ["DELETE /projects/columns/cards/{card_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    deleteColumn: ["DELETE /projects/columns/{column_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    get: ["GET /projects/{project_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    getCard: ["GET /projects/columns/cards/{card_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    getColumn: ["GET /projects/columns/{column_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    getPermissionForUser: ["GET /projects/{project_id}/collaborators/{username}/permission", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    listCards: ["GET /projects/columns/{column_id}/cards", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    listCollaborators: ["GET /projects/{project_id}/collaborators", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    listColumns: ["GET /projects/{project_id}/columns", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    listForOrg: ["GET /orgs/{org}/projects", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    listForRepo: ["GET /repos/{owner}/{repo}/projects", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    listForUser: ["GET /users/{username}/projects", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    moveCard: ["POST /projects/columns/cards/{card_id}/moves", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    moveColumn: ["POST /projects/columns/{column_id}/moves", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    removeCollaborator: ["DELETE /projects/{project_id}/collaborators/{username}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    update: ["PATCH /projects/{project_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    updateCard: ["PATCH /projects/columns/cards/{card_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
-    updateColumn: ["PATCH /projects/columns/{column_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }]
+    addCollaborator: ["PUT /projects/{project_id}/collaborators/{username}"],
+    createCard: ["POST /projects/columns/{column_id}/cards"],
+    createColumn: ["POST /projects/{project_id}/columns"],
+    createForAuthenticatedUser: ["POST /user/projects"],
+    createForOrg: ["POST /orgs/{org}/projects"],
+    createForRepo: ["POST /repos/{owner}/{repo}/projects"],
+    delete: ["DELETE /projects/{project_id}"],
+    deleteCard: ["DELETE /projects/columns/cards/{card_id}"],
+    deleteColumn: ["DELETE /projects/columns/{column_id}"],
+    get: ["GET /projects/{project_id}"],
+    getCard: ["GET /projects/columns/cards/{card_id}"],
+    getColumn: ["GET /projects/columns/{column_id}"],
+    getPermissionForUser: ["GET /projects/{project_id}/collaborators/{username}/permission"],
+    listCards: ["GET /projects/columns/{column_id}/cards"],
+    listCollaborators: ["GET /projects/{project_id}/collaborators"],
+    listColumns: ["GET /projects/{project_id}/columns"],
+    listForOrg: ["GET /orgs/{org}/projects"],
+    listForRepo: ["GET /repos/{owner}/{repo}/projects"],
+    listForUser: ["GET /users/{username}/projects"],
+    moveCard: ["POST /projects/columns/cards/{card_id}/moves"],
+    moveColumn: ["POST /projects/columns/{column_id}/moves"],
+    removeCollaborator: ["DELETE /projects/{project_id}/collaborators/{username}"],
+    update: ["PATCH /projects/{project_id}"],
+    updateCard: ["PATCH /projects/columns/cards/{card_id}"],
+    updateColumn: ["PATCH /projects/columns/{column_id}"]
   },
   pulls: {
     checkIfMerged: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
@@ -3851,11 +3883,7 @@ const Endpoints = {
     requestReviewers: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"],
     submitReview: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events"],
     update: ["PATCH /repos/{owner}/{repo}/pulls/{pull_number}"],
-    updateBranch: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/update-branch", {
-      mediaType: {
-        previews: ["lydian"]
-      }
-    }],
+    updateBranch: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/update-branch"],
     updateReview: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"],
     updateReviewComment: ["PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}"]
   },
@@ -3863,111 +3891,31 @@ const Endpoints = {
     get: ["GET /rate_limit"]
   },
   reactions: {
-    createForCommitComment: ["POST /repos/{owner}/{repo}/comments/{comment_id}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    createForIssue: ["POST /repos/{owner}/{repo}/issues/{issue_number}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    createForIssueComment: ["POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    createForPullRequestReviewComment: ["POST /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    createForRelease: ["POST /repos/{owner}/{repo}/releases/{release_id}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    createForTeamDiscussionCommentInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    createForTeamDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    deleteForCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}/reactions/{reaction_id}", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    deleteForIssue: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    deleteForIssueComment: ["DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    deleteForPullRequestComment: ["DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions/{reaction_id}", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    deleteForTeamDiscussion: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions/{reaction_id}", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    deleteForTeamDiscussionComment: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions/{reaction_id}", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    deleteLegacy: ["DELETE /reactions/{reaction_id}", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }, {
-      deprecated: "octokit.rest.reactions.deleteLegacy() is deprecated, see https://docs.github.com/rest/reference/reactions/#delete-a-reaction-legacy"
-    }],
-    listForCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    listForIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    listForIssueComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    listForPullRequestReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    listForTeamDiscussionCommentInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }],
-    listForTeamDiscussionInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", {
-      mediaType: {
-        previews: ["squirrel-girl"]
-      }
-    }]
+    createForCommitComment: ["POST /repos/{owner}/{repo}/comments/{comment_id}/reactions"],
+    createForIssue: ["POST /repos/{owner}/{repo}/issues/{issue_number}/reactions"],
+    createForIssueComment: ["POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"],
+    createForPullRequestReviewComment: ["POST /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"],
+    createForRelease: ["POST /repos/{owner}/{repo}/releases/{release_id}/reactions"],
+    createForTeamDiscussionCommentInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"],
+    createForTeamDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"],
+    deleteForCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}/reactions/{reaction_id}"],
+    deleteForIssue: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}"],
+    deleteForIssueComment: ["DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}"],
+    deleteForPullRequestComment: ["DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions/{reaction_id}"],
+    deleteForTeamDiscussion: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions/{reaction_id}"],
+    deleteForTeamDiscussionComment: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions/{reaction_id}"],
+    listForCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}/reactions"],
+    listForIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/reactions"],
+    listForIssueComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"],
+    listForPullRequestReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"],
+    listForTeamDiscussionCommentInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"],
+    listForTeamDiscussionInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"]
   },
   repos: {
-    acceptInvitation: ["PATCH /user/repository_invitations/{invitation_id}"],
+    acceptInvitation: ["PATCH /user/repository_invitations/{invitation_id}", {}, {
+      renamed: ["repos", "acceptInvitationForAuthenticatedUser"]
+    }],
+    acceptInvitationForAuthenticatedUser: ["PATCH /user/repository_invitations/{invitation_id}"],
     addAppAccessRestrictions: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps", {}, {
       mapToData: "apps"
     }],
@@ -3982,20 +3930,12 @@ const Endpoints = {
       mapToData: "users"
     }],
     checkCollaborator: ["GET /repos/{owner}/{repo}/collaborators/{username}"],
-    checkVulnerabilityAlerts: ["GET /repos/{owner}/{repo}/vulnerability-alerts", {
-      mediaType: {
-        previews: ["dorian"]
-      }
-    }],
+    checkVulnerabilityAlerts: ["GET /repos/{owner}/{repo}/vulnerability-alerts"],
     compareCommits: ["GET /repos/{owner}/{repo}/compare/{base}...{head}"],
     compareCommitsWithBasehead: ["GET /repos/{owner}/{repo}/compare/{basehead}"],
     createAutolink: ["POST /repos/{owner}/{repo}/autolinks"],
     createCommitComment: ["POST /repos/{owner}/{repo}/commits/{commit_sha}/comments"],
-    createCommitSignatureProtection: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
-      mediaType: {
-        previews: ["zzzax"]
-      }
-    }],
+    createCommitSignatureProtection: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"],
     createCommitStatus: ["POST /repos/{owner}/{repo}/statuses/{sha}"],
     createDeployKey: ["POST /repos/{owner}/{repo}/keys"],
     createDeployment: ["POST /repos/{owner}/{repo}/deployments"],
@@ -4006,19 +3946,14 @@ const Endpoints = {
     createInOrg: ["POST /orgs/{org}/repos"],
     createOrUpdateEnvironment: ["PUT /repos/{owner}/{repo}/environments/{environment_name}"],
     createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
-    createPagesSite: ["POST /repos/{owner}/{repo}/pages", {
-      mediaType: {
-        previews: ["switcheroo"]
-      }
-    }],
+    createPagesSite: ["POST /repos/{owner}/{repo}/pages"],
     createRelease: ["POST /repos/{owner}/{repo}/releases"],
-    createUsingTemplate: ["POST /repos/{template_owner}/{template_repo}/generate", {
-      mediaType: {
-        previews: ["baptiste"]
-      }
-    }],
+    createUsingTemplate: ["POST /repos/{template_owner}/{template_repo}/generate"],
     createWebhook: ["POST /repos/{owner}/{repo}/hooks"],
-    declineInvitation: ["DELETE /user/repository_invitations/{invitation_id}"],
+    declineInvitation: ["DELETE /user/repository_invitations/{invitation_id}", {}, {
+      renamed: ["repos", "declineInvitationForAuthenticatedUser"]
+    }],
+    declineInvitationForAuthenticatedUser: ["DELETE /user/repository_invitations/{invitation_id}"],
     delete: ["DELETE /repos/{owner}/{repo}"],
     deleteAccessRestrictions: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"],
     deleteAdminBranchProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"],
@@ -4026,49 +3961,28 @@ const Endpoints = {
     deleteAutolink: ["DELETE /repos/{owner}/{repo}/autolinks/{autolink_id}"],
     deleteBranchProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection"],
     deleteCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}"],
-    deleteCommitSignatureProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
-      mediaType: {
-        previews: ["zzzax"]
-      }
-    }],
+    deleteCommitSignatureProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"],
     deleteDeployKey: ["DELETE /repos/{owner}/{repo}/keys/{key_id}"],
     deleteDeployment: ["DELETE /repos/{owner}/{repo}/deployments/{deployment_id}"],
     deleteFile: ["DELETE /repos/{owner}/{repo}/contents/{path}"],
     deleteInvitation: ["DELETE /repos/{owner}/{repo}/invitations/{invitation_id}"],
-    deletePagesSite: ["DELETE /repos/{owner}/{repo}/pages", {
-      mediaType: {
-        previews: ["switcheroo"]
-      }
-    }],
+    deletePagesSite: ["DELETE /repos/{owner}/{repo}/pages"],
     deletePullRequestReviewProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"],
     deleteRelease: ["DELETE /repos/{owner}/{repo}/releases/{release_id}"],
     deleteReleaseAsset: ["DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}"],
     deleteWebhook: ["DELETE /repos/{owner}/{repo}/hooks/{hook_id}"],
-    disableAutomatedSecurityFixes: ["DELETE /repos/{owner}/{repo}/automated-security-fixes", {
-      mediaType: {
-        previews: ["london"]
-      }
-    }],
-    disableVulnerabilityAlerts: ["DELETE /repos/{owner}/{repo}/vulnerability-alerts", {
-      mediaType: {
-        previews: ["dorian"]
-      }
-    }],
+    disableAutomatedSecurityFixes: ["DELETE /repos/{owner}/{repo}/automated-security-fixes"],
+    disableLfsForRepo: ["DELETE /repos/{owner}/{repo}/lfs"],
+    disableVulnerabilityAlerts: ["DELETE /repos/{owner}/{repo}/vulnerability-alerts"],
     downloadArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}", {}, {
       renamed: ["repos", "downloadZipballArchive"]
     }],
     downloadTarballArchive: ["GET /repos/{owner}/{repo}/tarball/{ref}"],
     downloadZipballArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}"],
-    enableAutomatedSecurityFixes: ["PUT /repos/{owner}/{repo}/automated-security-fixes", {
-      mediaType: {
-        previews: ["london"]
-      }
-    }],
-    enableVulnerabilityAlerts: ["PUT /repos/{owner}/{repo}/vulnerability-alerts", {
-      mediaType: {
-        previews: ["dorian"]
-      }
-    }],
+    enableAutomatedSecurityFixes: ["PUT /repos/{owner}/{repo}/automated-security-fixes"],
+    enableLfsForRepo: ["PUT /repos/{owner}/{repo}/lfs"],
+    enableVulnerabilityAlerts: ["PUT /repos/{owner}/{repo}/vulnerability-alerts"],
+    generateReleaseNotes: ["POST /repos/{owner}/{repo}/releases/generate-notes"],
     get: ["GET /repos/{owner}/{repo}"],
     getAccessRestrictions: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"],
     getAdminBranchProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"],
@@ -4090,11 +4004,7 @@ const Endpoints = {
     getCommit: ["GET /repos/{owner}/{repo}/commits/{ref}"],
     getCommitActivityStats: ["GET /repos/{owner}/{repo}/stats/commit_activity"],
     getCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}"],
-    getCommitSignatureProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
-      mediaType: {
-        previews: ["zzzax"]
-      }
-    }],
+    getCommitSignatureProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"],
     getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile"],
     getContent: ["GET /repos/{owner}/{repo}/contents/{path}"],
     getContributorsStats: ["GET /repos/{owner}/{repo}/stats/contributors"],
@@ -4126,11 +4036,7 @@ const Endpoints = {
     getWebhookDelivery: ["GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}"],
     listAutolinks: ["GET /repos/{owner}/{repo}/autolinks"],
     listBranches: ["GET /repos/{owner}/{repo}/branches"],
-    listBranchesForHeadCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head", {
-      mediaType: {
-        previews: ["groot"]
-      }
-    }],
+    listBranchesForHeadCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head"],
     listCollaborators: ["GET /repos/{owner}/{repo}/collaborators"],
     listCommentsForCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/comments"],
     listCommitCommentsForRepo: ["GET /repos/{owner}/{repo}/comments"],
@@ -4149,11 +4055,7 @@ const Endpoints = {
     listLanguages: ["GET /repos/{owner}/{repo}/languages"],
     listPagesBuilds: ["GET /repos/{owner}/{repo}/pages/builds"],
     listPublic: ["GET /repositories"],
-    listPullRequestsAssociatedWithCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls", {
-      mediaType: {
-        previews: ["groot"]
-      }
-    }],
+    listPullRequestsAssociatedWithCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls"],
     listReleaseAssets: ["GET /repos/{owner}/{repo}/releases/{release_id}/assets"],
     listReleases: ["GET /repos/{owner}/{repo}/releases"],
     listTags: ["GET /repos/{owner}/{repo}/tags"],
@@ -4220,11 +4122,7 @@ const Endpoints = {
   },
   search: {
     code: ["GET /search/code"],
-    commits: ["GET /search/commits", {
-      mediaType: {
-        previews: ["cloak"]
-      }
-    }],
+    commits: ["GET /search/commits"],
     issuesAndPullRequests: ["GET /search/issues"],
     labels: ["GET /search/labels"],
     repos: ["GET /search/repositories"],
@@ -4243,17 +4141,9 @@ const Endpoints = {
   },
   teams: {
     addOrUpdateMembershipForUserInOrg: ["PUT /orgs/{org}/teams/{team_slug}/memberships/{username}"],
-    addOrUpdateProjectPermissionsInOrg: ["PUT /orgs/{org}/teams/{team_slug}/projects/{project_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
+    addOrUpdateProjectPermissionsInOrg: ["PUT /orgs/{org}/teams/{team_slug}/projects/{project_id}"],
     addOrUpdateRepoPermissionsInOrg: ["PUT /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"],
-    checkPermissionsForProjectInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects/{project_id}", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
+    checkPermissionsForProjectInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects/{project_id}"],
     checkPermissionsForRepoInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"],
     create: ["POST /orgs/{org}/teams"],
     createDiscussionCommentInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"],
@@ -4272,11 +4162,7 @@ const Endpoints = {
     listForAuthenticatedUser: ["GET /user/teams"],
     listMembersInOrg: ["GET /orgs/{org}/teams/{team_slug}/members"],
     listPendingInvitationsInOrg: ["GET /orgs/{org}/teams/{team_slug}/invitations"],
-    listProjectsInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects", {
-      mediaType: {
-        previews: ["inertia"]
-      }
-    }],
+    listProjectsInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects"],
     listReposInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos"],
     removeMembershipForUserInOrg: ["DELETE /orgs/{org}/teams/{team_slug}/memberships/{username}"],
     removeProjectInOrg: ["DELETE /orgs/{org}/teams/{team_slug}/projects/{project_id}"],
@@ -4286,42 +4172,87 @@ const Endpoints = {
     updateInOrg: ["PATCH /orgs/{org}/teams/{team_slug}"]
   },
   users: {
-    addEmailForAuthenticated: ["POST /user/emails"],
+    addEmailForAuthenticated: ["POST /user/emails", {}, {
+      renamed: ["users", "addEmailForAuthenticatedUser"]
+    }],
+    addEmailForAuthenticatedUser: ["POST /user/emails"],
     block: ["PUT /user/blocks/{username}"],
     checkBlocked: ["GET /user/blocks/{username}"],
     checkFollowingForUser: ["GET /users/{username}/following/{target_user}"],
     checkPersonIsFollowedByAuthenticated: ["GET /user/following/{username}"],
-    createGpgKeyForAuthenticated: ["POST /user/gpg_keys"],
-    createPublicSshKeyForAuthenticated: ["POST /user/keys"],
-    deleteEmailForAuthenticated: ["DELETE /user/emails"],
-    deleteGpgKeyForAuthenticated: ["DELETE /user/gpg_keys/{gpg_key_id}"],
-    deletePublicSshKeyForAuthenticated: ["DELETE /user/keys/{key_id}"],
+    createGpgKeyForAuthenticated: ["POST /user/gpg_keys", {}, {
+      renamed: ["users", "createGpgKeyForAuthenticatedUser"]
+    }],
+    createGpgKeyForAuthenticatedUser: ["POST /user/gpg_keys"],
+    createPublicSshKeyForAuthenticated: ["POST /user/keys", {}, {
+      renamed: ["users", "createPublicSshKeyForAuthenticatedUser"]
+    }],
+    createPublicSshKeyForAuthenticatedUser: ["POST /user/keys"],
+    deleteEmailForAuthenticated: ["DELETE /user/emails", {}, {
+      renamed: ["users", "deleteEmailForAuthenticatedUser"]
+    }],
+    deleteEmailForAuthenticatedUser: ["DELETE /user/emails"],
+    deleteGpgKeyForAuthenticated: ["DELETE /user/gpg_keys/{gpg_key_id}", {}, {
+      renamed: ["users", "deleteGpgKeyForAuthenticatedUser"]
+    }],
+    deleteGpgKeyForAuthenticatedUser: ["DELETE /user/gpg_keys/{gpg_key_id}"],
+    deletePublicSshKeyForAuthenticated: ["DELETE /user/keys/{key_id}", {}, {
+      renamed: ["users", "deletePublicSshKeyForAuthenticatedUser"]
+    }],
+    deletePublicSshKeyForAuthenticatedUser: ["DELETE /user/keys/{key_id}"],
     follow: ["PUT /user/following/{username}"],
     getAuthenticated: ["GET /user"],
     getByUsername: ["GET /users/{username}"],
     getContextForUser: ["GET /users/{username}/hovercard"],
-    getGpgKeyForAuthenticated: ["GET /user/gpg_keys/{gpg_key_id}"],
-    getPublicSshKeyForAuthenticated: ["GET /user/keys/{key_id}"],
+    getGpgKeyForAuthenticated: ["GET /user/gpg_keys/{gpg_key_id}", {}, {
+      renamed: ["users", "getGpgKeyForAuthenticatedUser"]
+    }],
+    getGpgKeyForAuthenticatedUser: ["GET /user/gpg_keys/{gpg_key_id}"],
+    getPublicSshKeyForAuthenticated: ["GET /user/keys/{key_id}", {}, {
+      renamed: ["users", "getPublicSshKeyForAuthenticatedUser"]
+    }],
+    getPublicSshKeyForAuthenticatedUser: ["GET /user/keys/{key_id}"],
     list: ["GET /users"],
-    listBlockedByAuthenticated: ["GET /user/blocks"],
-    listEmailsForAuthenticated: ["GET /user/emails"],
-    listFollowedByAuthenticated: ["GET /user/following"],
+    listBlockedByAuthenticated: ["GET /user/blocks", {}, {
+      renamed: ["users", "listBlockedByAuthenticatedUser"]
+    }],
+    listBlockedByAuthenticatedUser: ["GET /user/blocks"],
+    listEmailsForAuthenticated: ["GET /user/emails", {}, {
+      renamed: ["users", "listEmailsForAuthenticatedUser"]
+    }],
+    listEmailsForAuthenticatedUser: ["GET /user/emails"],
+    listFollowedByAuthenticated: ["GET /user/following", {}, {
+      renamed: ["users", "listFollowedByAuthenticatedUser"]
+    }],
+    listFollowedByAuthenticatedUser: ["GET /user/following"],
     listFollowersForAuthenticatedUser: ["GET /user/followers"],
     listFollowersForUser: ["GET /users/{username}/followers"],
     listFollowingForUser: ["GET /users/{username}/following"],
-    listGpgKeysForAuthenticated: ["GET /user/gpg_keys"],
+    listGpgKeysForAuthenticated: ["GET /user/gpg_keys", {}, {
+      renamed: ["users", "listGpgKeysForAuthenticatedUser"]
+    }],
+    listGpgKeysForAuthenticatedUser: ["GET /user/gpg_keys"],
     listGpgKeysForUser: ["GET /users/{username}/gpg_keys"],
-    listPublicEmailsForAuthenticated: ["GET /user/public_emails"],
+    listPublicEmailsForAuthenticated: ["GET /user/public_emails", {}, {
+      renamed: ["users", "listPublicEmailsForAuthenticatedUser"]
+    }],
+    listPublicEmailsForAuthenticatedUser: ["GET /user/public_emails"],
     listPublicKeysForUser: ["GET /users/{username}/keys"],
-    listPublicSshKeysForAuthenticated: ["GET /user/keys"],
-    setPrimaryEmailVisibilityForAuthenticated: ["PATCH /user/email/visibility"],
+    listPublicSshKeysForAuthenticated: ["GET /user/keys", {}, {
+      renamed: ["users", "listPublicSshKeysForAuthenticatedUser"]
+    }],
+    listPublicSshKeysForAuthenticatedUser: ["GET /user/keys"],
+    setPrimaryEmailVisibilityForAuthenticated: ["PATCH /user/email/visibility", {}, {
+      renamed: ["users", "setPrimaryEmailVisibilityForAuthenticatedUser"]
+    }],
+    setPrimaryEmailVisibilityForAuthenticatedUser: ["PATCH /user/email/visibility"],
     unblock: ["DELETE /user/blocks/{username}"],
     unfollow: ["DELETE /user/following/{username}"],
     updateAuthenticated: ["PATCH /user"]
   }
 };
 
-const VERSION = "5.11.0";
+const VERSION = "5.13.0";
 
 function endpointsToMethods(octokit, endpointsMap) {
   const newMethods = {};
@@ -4524,7 +4455,7 @@ var isPlainObject = __nccwpck_require__(3287);
 var nodeFetch = _interopDefault(__nccwpck_require__(467));
 var requestError = __nccwpck_require__(537);
 
-const VERSION = "5.6.1";
+const VERSION = "5.6.3";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -7161,19 +7092,19 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = void 0;
 
-var _index = _interopRequireDefault(__nccwpck_require__(289));
+var _index = _interopRequireDefault(__nccwpck_require__(2966));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(2966));
+var _index2 = _interopRequireDefault(__nccwpck_require__(8493));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(8493));
+var _index3 = _interopRequireDefault(__nccwpck_require__(7170));
 
-var _index4 = _interopRequireDefault(__nccwpck_require__(7170));
+var _index4 = _interopRequireDefault(__nccwpck_require__(5993));
 
-var _index5 = _interopRequireDefault(__nccwpck_require__(5993));
+var _index5 = _interopRequireDefault(__nccwpck_require__(8050));
 
-var _index6 = _interopRequireDefault(__nccwpck_require__(8050));
+var _index6 = _interopRequireDefault(__nccwpck_require__(8794));
 
-var _index7 = _interopRequireDefault(__nccwpck_require__(8794));
+var _index7 = _interopRequireDefault(__nccwpck_require__(289));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7273,17 +7204,17 @@ var formatters = {
       });
     }
 
-    return _index.default.y(date, token);
+    return _index7.default.y(date, token);
   },
   // Local week-numbering year
   Y: function (date, token, localize, options) {
-    var signedWeekYear = (0, _index6.default)(date, options); // Returns 1 for 1 BC (which is year 0 in JavaScript)
+    var signedWeekYear = (0, _index5.default)(date, options); // Returns 1 for 1 BC (which is year 0 in JavaScript)
 
     var weekYear = signedWeekYear > 0 ? signedWeekYear : 1 - signedWeekYear; // Two digit year
 
     if (token === 'YY') {
       var twoDigitYear = weekYear % 100;
-      return (0, _index7.default)(twoDigitYear, 2);
+      return (0, _index6.default)(twoDigitYear, 2);
     } // Ordinal number
 
 
@@ -7294,13 +7225,13 @@ var formatters = {
     } // Padding
 
 
-    return (0, _index7.default)(weekYear, token.length);
+    return (0, _index6.default)(weekYear, token.length);
   },
   // ISO week-numbering year
   R: function (date, token) {
-    var isoWeekYear = (0, _index4.default)(date); // Padding
+    var isoWeekYear = (0, _index3.default)(date); // Padding
 
-    return (0, _index7.default)(isoWeekYear, token.length);
+    return (0, _index6.default)(isoWeekYear, token.length);
   },
   // Extended year. This is a single number designating the year of this calendar system.
   // The main difference between `y` and `u` localizers are B.C. years:
@@ -7313,7 +7244,7 @@ var formatters = {
   // while `uu` pads single digit years to 2 characters and returns other years unchanged.
   u: function (date, token) {
     var year = date.getUTCFullYear();
-    return (0, _index7.default)(year, token.length);
+    return (0, _index6.default)(year, token.length);
   },
   // Quarter
   Q: function (date, token, localize) {
@@ -7326,7 +7257,7 @@ var formatters = {
       // 01, 02, 03, 04
 
       case 'QQ':
-        return (0, _index7.default)(quarter, 2);
+        return (0, _index6.default)(quarter, 2);
       // 1st, 2nd, 3rd, 4th
 
       case 'Qo':
@@ -7368,7 +7299,7 @@ var formatters = {
       // 01, 02, 03, 04
 
       case 'qq':
-        return (0, _index7.default)(quarter, 2);
+        return (0, _index6.default)(quarter, 2);
       // 1st, 2nd, 3rd, 4th
 
       case 'qo':
@@ -7406,7 +7337,7 @@ var formatters = {
     switch (token) {
       case 'M':
       case 'MM':
-        return _index.default.M(date, token);
+        return _index7.default.M(date, token);
       // 1st, 2nd, ..., 12th
 
       case 'Mo':
@@ -7448,7 +7379,7 @@ var formatters = {
       // 01, 02, ..., 12
 
       case 'LL':
-        return (0, _index7.default)(month + 1, 2);
+        return (0, _index6.default)(month + 1, 2);
       // 1st, 2nd, ..., 12th
 
       case 'Lo':
@@ -7481,7 +7412,7 @@ var formatters = {
   },
   // Local week of year
   w: function (date, token, localize, options) {
-    var week = (0, _index5.default)(date, options);
+    var week = (0, _index4.default)(date, options);
 
     if (token === 'wo') {
       return localize.ordinalNumber(week, {
@@ -7489,11 +7420,11 @@ var formatters = {
       });
     }
 
-    return (0, _index7.default)(week, token.length);
+    return (0, _index6.default)(week, token.length);
   },
   // ISO week of year
   I: function (date, token, localize) {
-    var isoWeek = (0, _index3.default)(date);
+    var isoWeek = (0, _index2.default)(date);
 
     if (token === 'Io') {
       return localize.ordinalNumber(isoWeek, {
@@ -7501,7 +7432,7 @@ var formatters = {
       });
     }
 
-    return (0, _index7.default)(isoWeek, token.length);
+    return (0, _index6.default)(isoWeek, token.length);
   },
   // Day of the month
   d: function (date, token, localize) {
@@ -7511,11 +7442,11 @@ var formatters = {
       });
     }
 
-    return _index.default.d(date, token);
+    return _index7.default.d(date, token);
   },
   // Day of year
   D: function (date, token, localize) {
-    var dayOfYear = (0, _index2.default)(date);
+    var dayOfYear = (0, _index.default)(date);
 
     if (token === 'Do') {
       return localize.ordinalNumber(dayOfYear, {
@@ -7523,7 +7454,7 @@ var formatters = {
       });
     }
 
-    return (0, _index7.default)(dayOfYear, token.length);
+    return (0, _index6.default)(dayOfYear, token.length);
   },
   // Day of week
   E: function (date, token, localize) {
@@ -7574,7 +7505,7 @@ var formatters = {
       // Padded numerical value
 
       case 'ee':
-        return (0, _index7.default)(localDayOfWeek, 2);
+        return (0, _index6.default)(localDayOfWeek, 2);
       // 1st, 2nd, ..., 7th
 
       case 'eo':
@@ -7623,7 +7554,7 @@ var formatters = {
       // Padded numerical value
 
       case 'cc':
-        return (0, _index7.default)(localDayOfWeek, token.length);
+        return (0, _index6.default)(localDayOfWeek, token.length);
       // 1st, 2nd, ..., 7th
 
       case 'co':
@@ -7672,7 +7603,7 @@ var formatters = {
       // 02
 
       case 'ii':
-        return (0, _index7.default)(isoDayOfWeek, token.length);
+        return (0, _index6.default)(isoDayOfWeek, token.length);
       // 2nd
 
       case 'io':
@@ -7832,7 +7763,7 @@ var formatters = {
       });
     }
 
-    return _index.default.h(date, token);
+    return _index7.default.h(date, token);
   },
   // Hour [0-23]
   H: function (date, token, localize) {
@@ -7842,7 +7773,7 @@ var formatters = {
       });
     }
 
-    return _index.default.H(date, token);
+    return _index7.default.H(date, token);
   },
   // Hour [0-11]
   K: function (date, token, localize) {
@@ -7854,7 +7785,7 @@ var formatters = {
       });
     }
 
-    return (0, _index7.default)(hours, token.length);
+    return (0, _index6.default)(hours, token.length);
   },
   // Hour [1-24]
   k: function (date, token, localize) {
@@ -7867,7 +7798,7 @@ var formatters = {
       });
     }
 
-    return (0, _index7.default)(hours, token.length);
+    return (0, _index6.default)(hours, token.length);
   },
   // Minute
   m: function (date, token, localize) {
@@ -7877,7 +7808,7 @@ var formatters = {
       });
     }
 
-    return _index.default.m(date, token);
+    return _index7.default.m(date, token);
   },
   // Second
   s: function (date, token, localize) {
@@ -7887,11 +7818,11 @@ var formatters = {
       });
     }
 
-    return _index.default.s(date, token);
+    return _index7.default.s(date, token);
   },
   // Fraction of second
   S: function (date, token) {
-    return _index.default.S(date, token);
+    return _index7.default.S(date, token);
   },
   // Timezone (ISO-8601. If offset is 0, output is always `'Z'`)
   X: function (date, token, _localize, options) {
@@ -7993,13 +7924,13 @@ var formatters = {
   t: function (date, token, _localize, options) {
     var originalDate = options._originalDate || date;
     var timestamp = Math.floor(originalDate.getTime() / 1000);
-    return (0, _index7.default)(timestamp, token.length);
+    return (0, _index6.default)(timestamp, token.length);
   },
   // Milliseconds timestamp
   T: function (date, token, _localize, options) {
     var originalDate = options._originalDate || date;
     var timestamp = originalDate.getTime();
-    return (0, _index7.default)(timestamp, token.length);
+    return (0, _index6.default)(timestamp, token.length);
   }
 };
 
@@ -8014,13 +7945,13 @@ function formatTimezoneShort(offset, dirtyDelimiter) {
   }
 
   var delimiter = dirtyDelimiter || '';
-  return sign + String(hours) + delimiter + (0, _index7.default)(minutes, 2);
+  return sign + String(hours) + delimiter + (0, _index6.default)(minutes, 2);
 }
 
 function formatTimezoneWithOptionalMinutes(offset, dirtyDelimiter) {
   if (offset % 60 === 0) {
     var sign = offset > 0 ? '-' : '+';
-    return sign + (0, _index7.default)(Math.abs(offset) / 60, 2);
+    return sign + (0, _index6.default)(Math.abs(offset) / 60, 2);
   }
 
   return formatTimezone(offset, dirtyDelimiter);
@@ -8030,8 +7961,8 @@ function formatTimezone(offset, dirtyDelimiter) {
   var delimiter = dirtyDelimiter || '';
   var sign = offset > 0 ? '-' : '+';
   var absOffset = Math.abs(offset);
-  var hours = (0, _index7.default)(Math.floor(absOffset / 60), 2);
-  var minutes = (0, _index7.default)(absOffset % 60, 2);
+  var hours = (0, _index6.default)(Math.floor(absOffset / 60), 2);
+  var minutes = (0, _index6.default)(absOffset % 60, 2);
   return sign + hours + delimiter + minutes;
 }
 
@@ -8205,7 +8136,7 @@ function timeLongFormatter(pattern, formatLong) {
 }
 
 function dateTimeLongFormatter(pattern, formatLong) {
-  var matchResult = pattern.match(/(P+)(p+)?/);
+  var matchResult = pattern.match(/(P+)(p+)?/) || [];
   var datePattern = matchResult[1];
   var timePattern = matchResult[2];
 
@@ -8335,26 +8266,26 @@ exports.default = getUTCISOWeekYear;
 
 var _index = _interopRequireDefault(__nccwpck_require__(6477));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(3061));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index3 = _interopRequireDefault(__nccwpck_require__(3061));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // This function will be a part of public API when UTC function will be implemented.
 // See issue: https://github.com/date-fns/date-fns/issues/376
 function getUTCISOWeekYear(dirtyDate) {
-  (0, _index3.default)(1, arguments);
+  (0, _index2.default)(1, arguments);
   var date = (0, _index.default)(dirtyDate);
   var year = date.getUTCFullYear();
   var fourthOfJanuaryOfNextYear = new Date(0);
   fourthOfJanuaryOfNextYear.setUTCFullYear(year + 1, 0, 4);
   fourthOfJanuaryOfNextYear.setUTCHours(0, 0, 0, 0);
-  var startOfNextYear = (0, _index2.default)(fourthOfJanuaryOfNextYear);
+  var startOfNextYear = (0, _index3.default)(fourthOfJanuaryOfNextYear);
   var fourthOfJanuaryOfThisYear = new Date(0);
   fourthOfJanuaryOfThisYear.setUTCFullYear(year, 0, 4);
   fourthOfJanuaryOfThisYear.setUTCHours(0, 0, 0, 0);
-  var startOfThisYear = (0, _index2.default)(fourthOfJanuaryOfThisYear);
+  var startOfThisYear = (0, _index3.default)(fourthOfJanuaryOfThisYear);
 
   if (date.getTime() >= startOfNextYear.getTime()) {
     return year + 1;
@@ -8418,27 +8349,27 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = getUTCWeekYear;
 
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 var _index3 = _interopRequireDefault(__nccwpck_require__(2258));
 
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index4 = _interopRequireDefault(__nccwpck_require__(1985));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // This function will be a part of public API when UTC function will be implemented.
 // See issue: https://github.com/date-fns/date-fns/issues/376
 function getUTCWeekYear(dirtyDate, dirtyOptions) {
-  (0, _index4.default)(1, arguments);
-  var date = (0, _index2.default)(dirtyDate, dirtyOptions);
+  (0, _index2.default)(1, arguments);
+  var date = (0, _index.default)(dirtyDate);
   var year = date.getUTCFullYear();
   var options = dirtyOptions || {};
   var locale = options.locale;
   var localeFirstWeekContainsDate = locale && locale.options && locale.options.firstWeekContainsDate;
-  var defaultFirstWeekContainsDate = localeFirstWeekContainsDate == null ? 1 : (0, _index.default)(localeFirstWeekContainsDate);
-  var firstWeekContainsDate = options.firstWeekContainsDate == null ? defaultFirstWeekContainsDate : (0, _index.default)(options.firstWeekContainsDate); // Test if weekStartsOn is between 1 and 7 _and_ is not NaN
+  var defaultFirstWeekContainsDate = localeFirstWeekContainsDate == null ? 1 : (0, _index4.default)(localeFirstWeekContainsDate);
+  var firstWeekContainsDate = options.firstWeekContainsDate == null ? defaultFirstWeekContainsDate : (0, _index4.default)(options.firstWeekContainsDate); // Test if weekStartsOn is between 1 and 7 _and_ is not NaN
 
   if (!(firstWeekContainsDate >= 1 && firstWeekContainsDate <= 7)) {
     throw new RangeError('firstWeekContainsDate must be between 1 and 7 inclusively');
@@ -8600,30 +8531,30 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = setUTCDay;
 
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // This function will be a part of public API when UTC function will be implemented.
 // See issue: https://github.com/date-fns/date-fns/issues/376
 function setUTCDay(dirtyDate, dirtyDay, dirtyOptions) {
-  (0, _index3.default)(2, arguments);
+  (0, _index2.default)(2, arguments);
   var options = dirtyOptions || {};
   var locale = options.locale;
   var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index.default)(localeWeekStartsOn);
-  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index3.default)(localeWeekStartsOn);
+  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index3.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
 
   if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
     throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
   }
 
-  var date = (0, _index2.default)(dirtyDate);
-  var day = (0, _index.default)(dirtyDay);
+  var date = (0, _index.default)(dirtyDate);
+  var day = (0, _index3.default)(dirtyDay);
   var currentDay = date.getUTCDay();
   var remainder = day % 7;
   var dayIndex = (remainder + 7) % 7;
@@ -8647,26 +8578,26 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = setUTCISODay;
 
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // This function will be a part of public API when UTC function will be implemented.
 // See issue: https://github.com/date-fns/date-fns/issues/376
 function setUTCISODay(dirtyDate, dirtyDay) {
-  (0, _index3.default)(2, arguments);
-  var day = (0, _index.default)(dirtyDay);
+  (0, _index2.default)(2, arguments);
+  var day = (0, _index3.default)(dirtyDay);
 
   if (day % 7 === 0) {
     day = day - 7;
   }
 
   var weekStartsOn = 1;
-  var date = (0, _index2.default)(dirtyDate);
+  var date = (0, _index.default)(dirtyDate);
   var currentDay = date.getUTCDay();
   var remainder = day % 7;
   var dayIndex = (remainder + 7) % 7;
@@ -8831,26 +8762,26 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = startOfUTCWeekYear;
 
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
+var _index = _interopRequireDefault(__nccwpck_require__(8050));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(8050));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 var _index3 = _interopRequireDefault(__nccwpck_require__(2258));
 
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index4 = _interopRequireDefault(__nccwpck_require__(1985));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // This function will be a part of public API when UTC function will be implemented.
 // See issue: https://github.com/date-fns/date-fns/issues/376
 function startOfUTCWeekYear(dirtyDate, dirtyOptions) {
-  (0, _index4.default)(1, arguments);
+  (0, _index2.default)(1, arguments);
   var options = dirtyOptions || {};
   var locale = options.locale;
   var localeFirstWeekContainsDate = locale && locale.options && locale.options.firstWeekContainsDate;
-  var defaultFirstWeekContainsDate = localeFirstWeekContainsDate == null ? 1 : (0, _index.default)(localeFirstWeekContainsDate);
-  var firstWeekContainsDate = options.firstWeekContainsDate == null ? defaultFirstWeekContainsDate : (0, _index.default)(options.firstWeekContainsDate);
-  var year = (0, _index2.default)(dirtyDate, dirtyOptions);
+  var defaultFirstWeekContainsDate = localeFirstWeekContainsDate == null ? 1 : (0, _index4.default)(localeFirstWeekContainsDate);
+  var firstWeekContainsDate = options.firstWeekContainsDate == null ? defaultFirstWeekContainsDate : (0, _index4.default)(options.firstWeekContainsDate);
+  var year = (0, _index.default)(dirtyDate, dirtyOptions);
   var firstWeek = new Date(0);
   firstWeek.setUTCFullYear(year, 0, firstWeekContainsDate);
   firstWeek.setUTCHours(0, 0, 0, 0);
@@ -8873,29 +8804,29 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = startOfUTCWeek;
 
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // This function will be a part of public API when UTC function will be implemented.
 // See issue: https://github.com/date-fns/date-fns/issues/376
 function startOfUTCWeek(dirtyDate, dirtyOptions) {
-  (0, _index3.default)(1, arguments);
+  (0, _index2.default)(1, arguments);
   var options = dirtyOptions || {};
   var locale = options.locale;
   var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index.default)(localeWeekStartsOn);
-  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index3.default)(localeWeekStartsOn);
+  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index3.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
 
   if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
     throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
   }
 
-  var date = (0, _index2.default)(dirtyDate);
+  var date = (0, _index.default)(dirtyDate);
   var day = date.getUTCDay();
   var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
   date.setUTCDate(date.getUTCDate() - diff);
@@ -9902,30 +9833,26 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * - Now, `closestIndexTo` doesn't throw an exception
  *   when the second argument is not an array, and returns Invalid Date instead.
  *
- * @param {Date|Number} dateToCompare - the date to compare with
- * @param {Date[]|Number[]} datesArray - the array to search
- * @returns {Number} an index of the date closest to the given date
+ * @param {Date | Number} dateToCompare - the date to compare with
+ * @param {Array<Date> | Array<number>} datesArray - the array to search
+ * @returns {Number | undefined} an index of the date closest to the given date or undefined if no valid value is given
  * @throws {TypeError} 2 arguments required
  *
  * @example
  * // Which date is closer to 6 September 2015?
- * var dateToCompare = new Date(2015, 8, 6)
- * var datesArray = [
+ * const dateToCompare = new Date(2015, 8, 6)
+ * const datesArray = [
  *   new Date(2015, 0, 1),
  *   new Date(2016, 0, 1),
  *   new Date(2017, 0, 1)
  * ]
- * var result = closestIndexTo(dateToCompare, datesArray)
+ * const result = closestIndexTo(dateToCompare, datesArray)
  * //=> 1
  */
 function closestIndexTo(dirtyDateToCompare, dirtyDatesArray) {
   (0, _index2.default)(2, arguments);
   var dateToCompare = (0, _index.default)(dirtyDateToCompare);
-
-  if (isNaN(dateToCompare)) {
-    return NaN;
-  }
-
+  if (isNaN(Number(dateToCompare))) return NaN;
   var timeToCompare = dateToCompare.getTime();
   var datesArray; // `dirtyDatesArray` is undefined or null
 
@@ -9942,7 +9869,7 @@ function closestIndexTo(dirtyDateToCompare, dirtyDatesArray) {
   datesArray.forEach(function (dirtyDate, index) {
     var currentDate = (0, _index.default)(dirtyDate);
 
-    if (isNaN(currentDate)) {
+    if (isNaN(Number(currentDate))) {
       result = NaN;
       minDistance = NaN;
       return;
@@ -9950,7 +9877,7 @@ function closestIndexTo(dirtyDateToCompare, dirtyDatesArray) {
 
     var distance = Math.abs(timeToCompare - currentDate.getTime());
 
-    if (result == null || distance < minDistance) {
+    if (result == null || distance < Number(minDistance)) {
       result = index;
       minDistance = distance;
     }
@@ -9994,15 +9921,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * - Now, `closestTo` doesn't throw an exception
  *   when the second argument is not an array, and returns Invalid Date instead.
  *
- * @param {Date|Number} dateToCompare - the date to compare with
- * @param {Date[]|Number[]} datesArray - the array to search
- * @returns {Date} the date from the array closest to the given date
+ * @param {Date | Number} dateToCompare - the date to compare with
+ * @param {Array<Date> | Array<number>} datesArray - the array to search
+ * @returns {Date | undefined} the date from the array closest to the given date or undefined if no valid value is given
  * @throws {TypeError} 2 arguments required
  *
  * @example
  * // Which date is closer to 6 September 2015: 1 January 2000 or 1 January 2030?
- * var dateToCompare = new Date(2015, 8, 6)
- * var result = closestTo(dateToCompare, [
+ * const dateToCompare = new Date(2015, 8, 6)
+ * const result = closestTo(dateToCompare, [
  *   new Date(2000, 0, 1),
  *   new Date(2030, 0, 1)
  * ])
@@ -10011,11 +9938,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function closestTo(dirtyDateToCompare, dirtyDatesArray) {
   (0, _index2.default)(2, arguments);
   var dateToCompare = (0, _index.default)(dirtyDateToCompare);
-
-  if (isNaN(dateToCompare)) {
-    return new Date(NaN);
-  }
-
+  if (isNaN(Number(dateToCompare))) return new Date(NaN);
   var timeToCompare = dateToCompare.getTime();
   var datesArray; // `dirtyDatesArray` is undefined or null
 
@@ -10032,7 +9955,7 @@ function closestTo(dirtyDateToCompare, dirtyDatesArray) {
   datesArray.forEach(function (dirtyDate) {
     var currentDate = (0, _index.default)(dirtyDate);
 
-    if (isNaN(currentDate)) {
+    if (isNaN(Number(currentDate))) {
       result = new Date(NaN);
       minDistance = NaN;
       return;
@@ -10040,7 +9963,7 @@ function closestTo(dirtyDateToCompare, dirtyDatesArray) {
 
     var distance = Math.abs(timeToCompare - currentDate.getTime());
 
-    if (result == null || distance < minDistance) {
+    if (result == null || distance < Number(minDistance)) {
       result = currentDate;
       minDistance = distance;
     }
@@ -10402,21 +10325,21 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = differenceInBusinessDays;
 
-var _index = _interopRequireDefault(__nccwpck_require__(9920));
+var _index = _interopRequireDefault(__nccwpck_require__(6227));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(403));
+var _index2 = _interopRequireDefault(__nccwpck_require__(3086));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index3 = _interopRequireDefault(__nccwpck_require__(2154));
 
-var _index4 = _interopRequireDefault(__nccwpck_require__(3086));
+var _index4 = _interopRequireDefault(__nccwpck_require__(9920));
 
-var _index5 = _interopRequireDefault(__nccwpck_require__(6227));
+var _index5 = _interopRequireDefault(__nccwpck_require__(403));
 
-var _index6 = _interopRequireDefault(__nccwpck_require__(2154));
+var _index6 = _interopRequireDefault(__nccwpck_require__(6477));
 
-var _index7 = _interopRequireDefault(__nccwpck_require__(1985));
+var _index7 = _interopRequireDefault(__nccwpck_require__(2063));
 
-var _index8 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index8 = _interopRequireDefault(__nccwpck_require__(1985));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -10439,27 +10362,51 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @example
  * // How many business days are between
  * // 10 January 2014 and 20 July 2014?
- * var result = differenceInBusinessDays(
+ * const result = differenceInBusinessDays(
  *   new Date(2014, 6, 20),
  *   new Date(2014, 0, 10)
  * )
  * //=> 136
+ *
+ * // How many business days are between
+ * // 1 November 2021 and 30 November 2021?
+ * const result = differenceInBusinessDays(
+ *   new Date(2021, 10, 1),
+ *   new Date(2021, 10, 30)
+ * )
+ * //=> 21
+ *
+ * // How many business days are between
+ * // 1 November 2021 and 1 December 2021?
+ * const result = differenceInBusinessDays(
+ *   new Date(2021, 10, 1),
+ *   new Date(2021, 11, 1)
+ * )
+ * //=> 22
+ *
+ * // How many business days are between
+ * // 1 November 2021 and 1 November 2021 ?
+ * const result = differenceInBusinessDays(
+ *   new Date(2021, 10, 1),
+ *   new Date(2021, 10, 1)
+ * )
+ * //=> 0
  */
 function differenceInBusinessDays(dirtyDateLeft, dirtyDateRight) {
-  (0, _index8.default)(2, arguments);
-  var dateLeft = (0, _index3.default)(dirtyDateLeft);
-  var dateRight = (0, _index3.default)(dirtyDateRight);
-  if (!(0, _index.default)(dateLeft) || !(0, _index.default)(dateRight)) return NaN;
-  var calendarDifference = (0, _index4.default)(dateLeft, dateRight);
+  (0, _index7.default)(2, arguments);
+  var dateLeft = (0, _index6.default)(dirtyDateLeft);
+  var dateRight = (0, _index6.default)(dirtyDateRight);
+  if (!(0, _index4.default)(dateLeft) || !(0, _index4.default)(dateRight)) return NaN;
+  var calendarDifference = (0, _index2.default)(dateLeft, dateRight);
   var sign = calendarDifference < 0 ? -1 : 1;
-  var weeks = (0, _index7.default)(calendarDifference / 7);
+  var weeks = (0, _index8.default)(calendarDifference / 7);
   var result = weeks * 5;
-  dateRight = (0, _index5.default)(dateRight, weeks * 7); // the loop below will run at most 6 times to account for the remaining days that don't makeup a full week
+  dateRight = (0, _index.default)(dateRight, weeks * 7); // the loop below will run at most 6 times to account for the remaining days that don't makeup a full week
 
-  while (!(0, _index6.default)(dateLeft, dateRight)) {
+  while (!(0, _index3.default)(dateLeft, dateRight)) {
     // sign is used to account for both negative and positive differences
-    result += (0, _index2.default)(dateRight) ? 0 : sign;
-    dateRight = (0, _index5.default)(dateRight, sign);
+    result += (0, _index5.default)(dateRight) ? 0 : sign;
+    dateRight = (0, _index.default)(dateRight, sign);
   }
 
   return result === 0 ? 0 : result;
@@ -11838,7 +11785,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function eachMinuteOfInterval(interval, options) {
   (0, _index4.default)(1, arguments);
   var startDate = (0, _index3.default)((0, _index2.default)(interval.start));
-  var endDate = (0, _index3.default)((0, _index2.default)(interval.end));
+  var endDate = (0, _index2.default)(interval.end);
   var startTime = startDate.getTime();
   var endTime = endDate.getTime();
 
@@ -12334,7 +12281,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @example
  * // Each year between 6 February 2014 and 10 August 2017:
- * var result = eachYearOfInterval({
+ * const result = eachYearOfInterval({
  *   start: new Date(2014, 1, 6),
  *   end: new Date(2017, 7, 10)
  * })
@@ -13881,6 +13828,7 @@ var _index = _interopRequireDefault(__nccwpck_require__(1773));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var defaultFormat = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'];
+
 /**
  * @name formatDuration
  * @category Common Helpers
@@ -13891,9 +13839,8 @@ var defaultFormat = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'se
  *
  * @param {Duration} duration - the duration to format
  * @param {Object} [options] - an object with options.
-
  * @param {string[]} [options.format=['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds']] - the array of units to format
- * @param {boolean} [options.zero=false] - should be zeros be included in the output?
+ * @param {boolean} [options.zero=false] - should zeros be included in the output?
  * @param {string} [options.delimiter=' '] - delimiter string
  * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
  * @returns {string} the formatted date string
@@ -13910,7 +13857,7 @@ var defaultFormat = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'se
  *   minutes: 9,
  *   seconds: 30
  * })
- * //=> '2 years 9 months 1 week 7 days 5 hours 9 minutes 30 seconds
+ * //=> '2 years 9 months 1 week 7 days 5 hours 9 minutes 30 seconds'
  *
  * @example
  * // Format partial duration
@@ -13944,8 +13891,9 @@ var defaultFormat = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'se
  * formatDuration({ years: 2, months: 9, weeks: 3 }, { delimiter: ', ' })
  * //=> '2 years, 9 months, 3 weeks'
  */
+function formatDuration(duration) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-function formatDuration(duration, options) {
   if (arguments.length < 1) {
     throw new TypeError("1 argument required, but only ".concat(arguments.length, " present"));
   }
@@ -13959,7 +13907,7 @@ function formatDuration(duration, options) {
       return m.toUpperCase();
     }));
     var addChunk = typeof duration[unit] === 'number' && (zero || duration[unit]);
-    return addChunk ? acc.concat(locale.formatDistance(token, duration[unit])) : acc;
+    return addChunk && locale.formatDistance ? acc.concat(locale.formatDistance(token, duration[unit])) : acc;
   }, []).join(delimiter);
   return result;
 }
@@ -14154,16 +14102,16 @@ exports.default = formatISO;
 
 var _index = _interopRequireDefault(__nccwpck_require__(6477));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
+var _index2 = _interopRequireDefault(__nccwpck_require__(8794));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
+var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
  * @name formatISO
  * @category Common Helpers
- * @summary Format the date according to the ISO 8601 standard (http://support.sas.com/documentation/cdl/en/lrdict/64316/HTML/default/viewer.htm#a003169814.htm).
+ * @summary Format the date according to the ISO 8601 standard (https://support.sas.com/documentation/cdl/en/lrdict/64316/HTML/default/viewer.htm#a003169814.htm).
  *
  * @description
  * Return the formatted date string in ISO 8601 format. Options may be passed to control the parts and notations of the date.
@@ -14171,20 +14119,20 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @param {Date|Number} date - the original date
  * @param {Object} [options] - an object with options.
  * @param {'extended'|'basic'} [options.format='extended'] - if 'basic', hide delimiters between date and time values.
- * @param {'complete'|'date'|'time'} [options.representation='complete'] - format date, time with time zone, or both.
- * @returns {String} the formatted date string
+ * @param {'complete'|'date'|'time'} [options.representation='complete'] - format date, time with local time zone, or both.
+ * @returns {String} the formatted date string (in local time zone)
  * @throws {TypeError} 1 argument required
  * @throws {RangeError} `date` must not be Invalid Date
  * @throws {RangeError} `options.format` must be 'extended' or 'basic'
  * @throws {RangeError} `options.represenation` must be 'date', 'time' or 'complete'
  *
  * @example
- * // Represent 18 September 2019 in ISO 8601 format (UTC):
+ * // Represent 18 September 2019 in ISO 8601 format (local time zone is UTC):
  * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52))
  * //=> '2019-09-18T19:00:52Z'
  *
  * @example
- * // Represent 18 September 2019 in ISO 8601, short format (UTC):
+ * // Represent 18 September 2019 in ISO 8601, short format (local time zone is UTC):
  * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52), { format: 'basic' })
  * //=> '20190918T190052'
  *
@@ -14194,24 +14142,20 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //=> '2019-09-18'
  *
  * @example
- * // Represent 18 September 2019 in ISO 8601 format, time only (UTC):
+ * // Represent 18 September 2019 in ISO 8601 format, time only (local time zone is UTC):
  * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52), { representation: 'time' })
  * //=> '19:00:52Z'
  */
-function formatISO(dirtyDate, dirtyOptions) {
-  if (arguments.length < 1) {
-    throw new TypeError("1 argument required, but only ".concat(arguments.length, " present"));
-  }
+function formatISO(date, options) {
+  (0, _index3.default)(1, arguments);
+  var originalDate = (0, _index.default)(date);
 
-  var originalDate = (0, _index.default)(dirtyDate);
-
-  if (!(0, _index2.default)(originalDate)) {
+  if (isNaN(originalDate.getTime())) {
     throw new RangeError('Invalid time value');
   }
 
-  var options = dirtyOptions || {};
-  var format = options.format == null ? 'extended' : String(options.format);
-  var representation = options.representation == null ? 'complete' : String(options.representation);
+  var format = !(options !== null && options !== void 0 && options.format) ? 'extended' : String(options.format);
+  var representation = !(options !== null && options !== void 0 && options.representation) ? 'complete' : String(options.representation);
 
   if (format !== 'extended' && format !== 'basic') {
     throw new RangeError("format must be 'extended' or 'basic'");
@@ -14227,9 +14171,9 @@ function formatISO(dirtyDate, dirtyOptions) {
   var timeDelimiter = format === 'extended' ? ':' : ''; // Representation is either 'date' or 'complete'
 
   if (representation !== 'time') {
-    var day = (0, _index3.default)(originalDate.getDate(), 2);
-    var month = (0, _index3.default)(originalDate.getMonth() + 1, 2);
-    var year = (0, _index3.default)(originalDate.getFullYear(), 4); // yyyyMMdd or yyyy-MM-dd.
+    var day = (0, _index2.default)(originalDate.getDate(), 2);
+    var month = (0, _index2.default)(originalDate.getMonth() + 1, 2);
+    var year = (0, _index2.default)(originalDate.getFullYear(), 4); // yyyyMMdd or yyyy-MM-dd.
 
     result = "".concat(year).concat(dateDelimiter).concat(month).concat(dateDelimiter).concat(day);
   } // Representation is either 'time' or 'complete'
@@ -14241,8 +14185,8 @@ function formatISO(dirtyDate, dirtyOptions) {
 
     if (offset !== 0) {
       var absoluteOffset = Math.abs(offset);
-      var hourOffset = (0, _index3.default)(Math.floor(absoluteOffset / 60), 2);
-      var minuteOffset = (0, _index3.default)(absoluteOffset % 60, 2); // If less than 0, the sign is +, because it is ahead of time.
+      var hourOffset = (0, _index2.default)(Math.floor(absoluteOffset / 60), 2);
+      var minuteOffset = (0, _index2.default)(absoluteOffset % 60, 2); // If less than 0, the sign is +, because it is ahead of time.
 
       var sign = offset < 0 ? '+' : '-';
       tzOffset = "".concat(sign).concat(hourOffset, ":").concat(minuteOffset);
@@ -14250,9 +14194,9 @@ function formatISO(dirtyDate, dirtyOptions) {
       tzOffset = 'Z';
     }
 
-    var hour = (0, _index3.default)(originalDate.getHours(), 2);
-    var minute = (0, _index3.default)(originalDate.getMinutes(), 2);
-    var second = (0, _index3.default)(originalDate.getSeconds(), 2); // If there's also date, separate it with time with 'T'
+    var hour = (0, _index2.default)(originalDate.getHours(), 2);
+    var minute = (0, _index2.default)(originalDate.getMinutes(), 2);
+    var second = (0, _index2.default)(originalDate.getSeconds(), 2); // If there's also date, separate it with time with 'T'
 
     var separator = result === '' ? '' : 'T'; // Creates a time string consisting of hour, minute, and second, separated by delimiters, if defined.
 
@@ -14711,28 +14655,28 @@ var unescapedLatinCharacterRegExp = /[a-zA-Z]/;
  * | Day of week (formatting)        | E..EEE  | Mon, Tue, Wed, ..., Sun           |       |
  * |                                 | EEEE    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 | EEEEE   | M, T, W, T, F, S, S               |       |
- * |                                 | EEEEEE  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 | EEEEEE  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | ISO day of week (formatting)    | i       | 1, 2, 3, ..., 7                   | 7     |
  * |                                 | io      | 1st, 2nd, ..., 7th                | 7     |
  * |                                 | ii      | 01, 02, ..., 07                   | 7     |
  * |                                 | iii     | Mon, Tue, Wed, ..., Sun           | 7     |
  * |                                 | iiii    | Monday, Tuesday, ..., Sunday      | 2,7   |
  * |                                 | iiiii   | M, T, W, T, F, S, S               | 7     |
- * |                                 | iiiiii  | Mo, Tu, We, Th, Fr, Su, Sa        | 7     |
+ * |                                 | iiiiii  | Mo, Tu, We, Th, Fr, Sa, Su        | 7     |
  * | Local day of week (formatting)  | e       | 2, 3, 4, ..., 1                   |       |
  * |                                 | eo      | 2nd, 3rd, ..., 1st                | 7     |
  * |                                 | ee      | 02, 03, ..., 01                   |       |
  * |                                 | eee     | Mon, Tue, Wed, ..., Sun           |       |
  * |                                 | eeee    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 | eeeee   | M, T, W, T, F, S, S               |       |
- * |                                 | eeeeee  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 | eeeeee  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | Local day of week (stand-alone) | c       | 2, 3, 4, ..., 1                   |       |
  * |                                 | co      | 2nd, 3rd, ..., 1st                | 7     |
  * |                                 | cc      | 02, 03, ..., 01                   |       |
  * |                                 | ccc     | Mon, Tue, Wed, ..., Sun           |       |
  * |                                 | cccc    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 | ccccc   | M, T, W, T, F, S, S               |       |
- * |                                 | cccccc  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 | cccccc  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | AM, PM                          | a..aa   | AM, PM                            |       |
  * |                                 | aaa     | am, pm                            |       |
  * |                                 | aaaa    | a.m., p.m.                        | 2     |
@@ -14870,7 +14814,7 @@ var unescapedLatinCharacterRegExp = /[a-zA-Z]/;
  * 8. `YY` and `YYYY` tokens represent week-numbering years but they are often confused with years.
  *    You should enable `options.useAdditionalWeekYearTokens` to use them. See: https://git.io/fxCyr
  *
- * 9. `D` and `DD` tokens represent days of the year but they are ofthen confused with days of the month.
+ * 9. `D` and `DD` tokens represent days of the year but they are often confused with days of the month.
  *    You should enable `options.useAdditionalDayOfYearTokens` to use them. See: https://git.io/fxCyr
  *
  * ### v2.0.0 breaking changes:
@@ -16163,9 +16107,9 @@ var _index2 = _interopRequireDefault(__nccwpck_require__(9361));
 
 var _index3 = _interopRequireDefault(__nccwpck_require__(7182));
 
-var _index4 = _interopRequireDefault(__nccwpck_require__(1985));
+var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
 
-var _index5 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index5 = _interopRequireDefault(__nccwpck_require__(1985));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -16187,48 +16131,31 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
  * @returns {Number} the week of month
  * @throws {TypeError} 1 argument required
- * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
+ * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6 inclusively
  *
  * @example
  * // Which week of the month is 9 November 2017?
- * var result = getWeekOfMonth(new Date(2017, 10, 9))
+ * const result = getWeekOfMonth(new Date(2017, 10, 9))
  * //=> 2
  */
-function getWeekOfMonth(date, dirtyOptions) {
-  (0, _index5.default)(1, arguments);
-  var options = dirtyOptions || {};
-  var locale = options.locale;
-  var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index4.default)(localeWeekStartsOn);
-  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index4.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+function getWeekOfMonth(date, options) {
+  var _options$locale, _options$locale$optio;
+
+  (0, _index4.default)(1, arguments);
+  var defaultWeekStartsOn = (options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.weekStartsOn) || 0;
+  var weekStartsOn = (options === null || options === void 0 ? void 0 : options.weekStartsOn) == null ? (0, _index5.default)(defaultWeekStartsOn) : (0, _index5.default)(options.weekStartsOn);
 
   if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
     throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
   }
 
   var currentDayOfMonth = (0, _index.default)(date);
-
-  if (isNaN(currentDayOfMonth)) {
-    return currentDayOfMonth;
-  }
-
+  if (isNaN(currentDayOfMonth)) return NaN;
   var startWeekDay = (0, _index2.default)((0, _index3.default)(date));
-  var lastDayOfFirstWeek = 0;
-
-  if (startWeekDay >= weekStartsOn) {
-    lastDayOfFirstWeek = weekStartsOn + 7 - startWeekDay;
-  } else {
-    lastDayOfFirstWeek = weekStartsOn - startWeekDay;
-  }
-
-  var weekNumber = 1;
-
-  if (currentDayOfMonth > lastDayOfFirstWeek) {
-    var remainingDaysAfterFirstWeek = currentDayOfMonth - lastDayOfFirstWeek;
-    weekNumber = weekNumber + Math.ceil(remainingDaysAfterFirstWeek / 7);
-  }
-
-  return weekNumber;
+  var lastDayOfFirstWeek = weekStartsOn - startWeekDay;
+  if (lastDayOfFirstWeek <= 0) lastDayOfFirstWeek += 7;
+  var remainingDaysAfterFirstWeek = currentDayOfMonth - lastDayOfFirstWeek;
+  return Math.ceil(remainingDaysAfterFirstWeek / 7) + 1;
 }
 
 module.exports = exports.default;
@@ -16387,13 +16314,13 @@ var MILLISECONDS_IN_WEEK = 604800000;
  *
  * @example
  * // Which week of the local week numbering year is 2 January 2005 with default options?
- * const result = getISOWeek(new Date(2005, 0, 2))
+ * const result = getWeek(new Date(2005, 0, 2))
  * //=> 2
  *
  * // Which week of the local week numbering year is 2 January 2005,
  * // if Monday is the first day of the week,
  * // and the first week of the year always contains 4 January?
- * const result = getISOWeek(new Date(2005, 0, 2), {
+ * const result = getWeek(new Date(2005, 0, 2), {
  *   weekStartsOn: 1,
  *   firstWeekContainsDate: 4
  * })
@@ -16515,9 +16442,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  */
 function getYear(dirtyDate) {
   (0, _index2.default)(1, arguments);
-  var date = (0, _index.default)(dirtyDate);
-  var year = date.getFullYear();
-  return year;
+  return (0, _index.default)(dirtyDate).getFullYear();
 }
 
 module.exports = exports.default;
@@ -19651,28 +19576,28 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * | Day of week (formatting)        |  90 | E..EEE  | Mon, Tue, Wed, ..., Su            |       |
  * |                                 |     | EEEE    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 |     | EEEEE   | M, T, W, T, F, S, S               |       |
- * |                                 |     | EEEEEE  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 |     | EEEEEE  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | ISO day of week (formatting)    |  90 | i       | 1, 2, 3, ..., 7                   | 5     |
  * |                                 |     | io      | 1st, 2nd, ..., 7th                | 5     |
  * |                                 |     | ii      | 01, 02, ..., 07                   | 5     |
  * |                                 |     | iii     | Mon, Tue, Wed, ..., Su            | 5     |
  * |                                 |     | iiii    | Monday, Tuesday, ..., Sunday      | 2,5   |
  * |                                 |     | iiiii   | M, T, W, T, F, S, S               | 5     |
- * |                                 |     | iiiiii  | Mo, Tu, We, Th, Fr, Su, Sa        | 5     |
+ * |                                 |     | iiiiii  | Mo, Tu, We, Th, Fr, Sa, Su        | 5     |
  * | Local day of week (formatting)  |  90 | e       | 2, 3, 4, ..., 1                   |       |
  * |                                 |     | eo      | 2nd, 3rd, ..., 1st                | 5     |
  * |                                 |     | ee      | 02, 03, ..., 01                   |       |
  * |                                 |     | eee     | Mon, Tue, Wed, ..., Su            |       |
  * |                                 |     | eeee    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 |     | eeeee   | M, T, W, T, F, S, S               |       |
- * |                                 |     | eeeeee  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 |     | eeeeee  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | Local day of week (stand-alone) |  90 | c       | 2, 3, 4, ..., 1                   |       |
  * |                                 |     | co      | 2nd, 3rd, ..., 1st                | 5     |
  * |                                 |     | cc      | 02, 03, ..., 01                   |       |
  * |                                 |     | ccc     | Mon, Tue, Wed, ..., Su            |       |
  * |                                 |     | cccc    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 |     | ccccc   | M, T, W, T, F, S, S               |       |
- * |                                 |     | cccccc  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 |     | cccccc  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | AM, PM                          |  80 | a..aaa  | AM, PM                            |       |
  * |                                 |     | aaaa    | a.m., p.m.                        | 2     |
  * |                                 |     | aaaaa   | a, p                              |       |
@@ -19704,7 +19629,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * |                                 |     | tt      | ...                               | 2     |
  * | Fraction of second              |  30 | S       | 0, 1, ..., 9                      |       |
  * |                                 |     | SS      | 00, 01, ..., 99                   |       |
- * |                                 |     | SSS     | 000, 0001, ..., 999               |       |
+ * |                                 |     | SSS     | 000, 001, ..., 999                |       |
  * |                                 |     | SSSS    | ...                               | 2     |
  * | Milliseconds timestamp          |  20 | T       | 512969520900                      |       |
  * |                                 |     | TT      | ...                               | 2     |
@@ -19972,10 +19897,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @name isSameDay
  * @category Day Helpers
- * @summary Are the given dates in the same day?
+ * @summary Are the given dates in the same day (and year and month)?
  *
  * @description
- * Are the given dates in the same day?
+ * Are the given dates in the same day (and year and month)?
  *
  * ### v2.0.0 breaking changes:
  *
@@ -19983,13 +19908,23 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @param {Date|Number} dateLeft - the first date to check
  * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same day
+ * @returns {Boolean} the dates are in the same day (and year and month)
  * @throws {TypeError} 2 arguments required
  *
  * @example
  * // Are 4 September 06:00:00 and 4 September 18:00:00 in the same day?
  * var result = isSameDay(new Date(2014, 8, 4, 6, 0), new Date(2014, 8, 4, 18, 0))
  * //=> true
+ * 
+ * @example
+ * // Are 4 September and 4 October in the same day?
+ * var result = isSameDay(new Date(2014, 8, 4), new Date(2014, 9, 4))
+ * //=> false
+ * 
+ * @example
+ * // Are 4 September, 2014 and 4 September, 2015 in the same day?
+ * var result = isSameDay(new Date(2014, 8, 4), new Date(2015, 8, 4))
+ * //=> false
  */
 function isSameDay(dirtyDateLeft, dirtyDateRight) {
   (0, _index2.default)(2, arguments);
@@ -20022,10 +19957,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @name isSameHour
  * @category Hour Helpers
- * @summary Are the given dates in the same hour?
+ * @summary Are the given dates in the same hour (and same day)?
  *
  * @description
- * Are the given dates in the same hour?
+ * Are the given dates in the same hour (and same day)?
  *
  * ### v2.0.0 breaking changes:
  *
@@ -20033,13 +19968,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @param {Date|Number} dateLeft - the first date to check
  * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same hour
+ * @returns {Boolean} the dates are in the same hour (and same day)
  * @throws {TypeError} 2 arguments required
  *
  * @example
  * // Are 4 September 2014 06:00:00 and 4 September 06:30:00 in the same hour?
  * var result = isSameHour(new Date(2014, 8, 4, 6, 0), new Date(2014, 8, 4, 6, 30))
  * //=> true
+ * 
+ * @example
+ * // Are 4 September 2014 06:00:00 and 5 September 06:00:00 in the same hour?
+ * var result = isSameHour(new Date(2014, 8, 4, 6, 0), new Date(2014, 8, 5, 6, 0))
+ * //=> false
  */
 function isSameHour(dirtyDateLeft, dirtyDateRight) {
   (0, _index2.default)(2, arguments);
@@ -20129,10 +20069,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @name isSameISOWeek
  * @category ISO Week Helpers
- * @summary Are the given dates in the same ISO week?
+ * @summary Are the given dates in the same ISO week (and year)?
  *
  * @description
- * Are the given dates in the same ISO week?
+ * Are the given dates in the same ISO week (and year)?
  *
  * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
  *
@@ -20142,13 +20082,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @param {Date|Number} dateLeft - the first date to check
  * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same ISO week
+ * @returns {Boolean} the dates are in the same ISO week (and year)
  * @throws {TypeError} 2 arguments required
  *
  * @example
  * // Are 1 September 2014 and 7 September 2014 in the same ISO week?
  * var result = isSameISOWeek(new Date(2014, 8, 1), new Date(2014, 8, 7))
  * //=> true
+ *
+ * @example
+ * // Are 1 September 2014 and 1 September 2015 in the same ISO week?
+ * var result = isSameISOWeek(new Date(2014, 8, 1), new Date(2015, 8, 1))
+ * //=> false
  */
 function isSameISOWeek(dirtyDateLeft, dirtyDateRight) {
   (0, _index2.default)(2, arguments);
@@ -20181,10 +20126,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @name isSameMinute
  * @category Minute Helpers
- * @summary Are the given dates in the same minute?
+ * @summary Are the given dates in the same minute (and hour and day)?
  *
  * @description
- * Are the given dates in the same minute?
+ * Are the given dates in the same minute (and hour and day)?
  *
  * ### v2.0.0 breaking changes:
  *
@@ -20192,17 +20137,24 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @param {Date|Number} dateLeft - the first date to check
  * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same minute
+ * @returns {Boolean} the dates are in the same minute (and hour and day)
  * @throws {TypeError} 2 arguments required
  *
  * @example
- * // Are 4 September 2014 06:30:00 and 4 September 2014 06:30:15
- * // in the same minute?
+ * // Are 4 September 2014 06:30:00 and 4 September 2014 06:30:15 in the same minute?
  * var result = isSameMinute(
  *   new Date(2014, 8, 4, 6, 30),
  *   new Date(2014, 8, 4, 6, 30, 15)
  * )
  * //=> true
+ * 
+ * @example
+ * // Are 4 September 2014 06:30:00 and 5 September 2014 06:30:00 in the same minute?
+ * var result = isSameMinute(
+ *   new Date(2014, 8, 4, 6, 30),
+ *   new Date(2014, 8, 5, 6, 30)
+ * )
+ * //=> false
  */
 function isSameMinute(dirtyDateLeft, dirtyDateRight) {
   (0, _index2.default)(2, arguments);
@@ -20235,10 +20187,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @name isSameMonth
  * @category Month Helpers
- * @summary Are the given dates in the same month?
+ * @summary Are the given dates in the same month (and year)?
  *
  * @description
- * Are the given dates in the same month?
+ * Are the given dates in the same month (and year)?
  *
  * ### v2.0.0 breaking changes:
  *
@@ -20246,13 +20198,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @param {Date|Number} dateLeft - the first date to check
  * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same month
+ * @returns {Boolean} the dates are in the same month (and year)
  * @throws {TypeError} 2 arguments required
  *
  * @example
  * // Are 2 September 2014 and 25 September 2014 in the same month?
  * var result = isSameMonth(new Date(2014, 8, 2), new Date(2014, 8, 25))
  * //=> true
+ *
+ * @example
+ * // Are 2 September 2014 and 25 September 2015 in the same month?
+ * var result = isSameMonth(new Date(2014, 8, 2), new Date(2015, 8, 25))
+ * //=> false
  */
 function isSameMonth(dirtyDateLeft, dirtyDateRight) {
   (0, _index2.default)(2, arguments);
@@ -20285,10 +20242,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @name isSameQuarter
  * @category Quarter Helpers
- * @summary Are the given dates in the same year quarter?
+ * @summary Are the given dates in the same quarter (and year)?
  *
  * @description
- * Are the given dates in the same year quarter?
+ * Are the given dates in the same quarter (and year)?
  *
  * ### v2.0.0 breaking changes:
  *
@@ -20296,13 +20253,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @param {Date|Number} dateLeft - the first date to check
  * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same quarter
+ * @returns {Boolean} the dates are in the same quarter (and year)
  * @throws {TypeError} 2 arguments required
  *
  * @example
  * // Are 1 January 2014 and 8 March 2014 in the same quarter?
  * var result = isSameQuarter(new Date(2014, 0, 1), new Date(2014, 2, 8))
  * //=> true
+ * 
+ * @example
+ * // Are 1 January 2014 and 1 January 2015 in the same quarter?
+ * var result = isSameQuarter(new Date(2014, 0, 1), new Date(2015, 0, 1))
+ * //=> false
  */
 function isSameQuarter(dirtyDateLeft, dirtyDateRight) {
   (0, _index2.default)(2, arguments);
@@ -20335,10 +20297,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @name isSameSecond
  * @category Second Helpers
- * @summary Are the given dates in the same second?
+ * @summary Are the given dates in the same second (and hour and day)?
  *
  * @description
- * Are the given dates in the same second?
+ * Are the given dates in the same second (and hour and day)?
  *
  * ### v2.0.0 breaking changes:
  *
@@ -20346,17 +20308,32 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @param {Date|Number} dateLeft - the first date to check
  * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same second
+ * @returns {Boolean} the dates are in the same second (and hour and day)
  * @throws {TypeError} 2 arguments required
  *
  * @example
- * // Are 4 September 2014 06:30:15.000 and 4 September 2014 06:30.15.500
- * // in the same second?
+ * // Are 4 September 2014 06:30:15.000 and 4 September 2014 06:30.15.500 in the same second?
  * var result = isSameSecond(
  *   new Date(2014, 8, 4, 6, 30, 15),
  *   new Date(2014, 8, 4, 6, 30, 15, 500)
  * )
  * //=> true
+ * 
+ * @example
+ * // Are 4 September 2014 06:00:15.000 and 4 September 2014 06:01.15.000 in the same second?
+ * var result = isSameSecond(
+ *   new Date(2014, 8, 4, 6, 0, 15),
+ *   new Date(2014, 8, 4, 6, 1, 15)
+ * )
+ * //=> false
+ * 
+ * @example
+ * // Are 4 September 2014 06:00:15.000 and 5 September 2014 06:00.15.000 in the same second?
+ * var result = isSameSecond(
+ *   new Date(2014, 8, 4, 6, 0, 15),
+ *   new Date(2014, 8, 5, 6, 0, 15)
+ * )
+ * //=> false
  */
 function isSameSecond(dirtyDateLeft, dirtyDateRight) {
   (0, _index2.default)(2, arguments);
@@ -20389,10 +20366,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @name isSameWeek
  * @category Week Helpers
- * @summary Are the given dates in the same week?
+ * @summary Are the given dates in the same week (and month and year)?
  *
  * @description
- * Are the given dates in the same week?
+ * Are the given dates in the same week (and month and year)?
  *
  * ### v2.0.0 breaking changes:
  *
@@ -20403,7 +20380,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @param {Object} [options] - an object with options.
  * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
  * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
- * @returns {Boolean} the dates are in the same week
+ * @returns {Boolean} the dates are in the same week (and month and year)
  * @throws {TypeError} 2 arguments required
  * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
  *
@@ -20418,6 +20395,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * var result = isSameWeek(new Date(2014, 7, 31), new Date(2014, 8, 4), {
  *   weekStartsOn: 1
  * })
+ * //=> false
+ * 
+ * @example
+ * // Are 1 January 2014 and 1 January 2015 in the same week?
+ * var result = isSameWeek(new Date(2014, 0, 1), new Date(2015, 0, 1))
  * //=> false
  */
 function isSameWeek(dirtyDateLeft, dirtyDateRight, dirtyOptions) {
@@ -22025,7 +22007,7 @@ var unescapedLatinCharacterRegExp = /[a-zA-Z]/;
  * |                                 | ss      | 00, 01, ..., 59                   |
  * | Fraction of second              | S       | 0, 1, ..., 9                      |
  * |                                 | SS      | 00, 01, ..., 99                   |
- * |                                 | SSS     | 000, 0001, ..., 999               |
+ * |                                 | SSS     | 000, 001, ..., 999                |
  * |                                 | SSSS    | ...                               |
  *
  * @param {Date|Number} date - the original date
@@ -22150,7 +22132,7 @@ function buildLocalizeFn(args) {
       valuesArray = args.values[_width] || args.values[_defaultWidth];
     }
 
-    var index = args.argumentCallback ? args.argumentCallback(dirtyIndex) : dirtyIndex; // @ts-ignore: For some reason TypeScript just don't want to match it, no matter how hard we try. I challange you to try to remove it!
+    var index = args.argumentCallback ? args.argumentCallback(dirtyIndex) : dirtyIndex; // @ts-ignore: For some reason TypeScript just don't want to match it, no matter how hard we try. I challenge you to try to remove it!
 
     return valuesArray[index];
   };
@@ -23469,11 +23451,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = nextFriday;
 
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
+var _index = _interopRequireDefault(__nccwpck_require__(6771));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6771));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23495,8 +23475,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //=> Fri Mar 27 2020 00:00:00
  */
 function nextFriday(date) {
-  (0, _index.default)(1, arguments);
-  return (0, _index2.default)((0, _index3.default)(date), 5);
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(date, 5);
 }
 
 module.exports = exports.default;
@@ -23514,11 +23494,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = nextMonday;
 
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
+var _index = _interopRequireDefault(__nccwpck_require__(6771));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6771));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23540,8 +23518,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //=> Mon Mar 23 2020 00:00:00
  */
 function nextMonday(date) {
-  (0, _index.default)(1, arguments);
-  return (0, _index2.default)((0, _index3.default)(date), 1);
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(date, 1);
 }
 
 module.exports = exports.default;
@@ -23559,11 +23537,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = nextSaturday;
 
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
+var _index = _interopRequireDefault(__nccwpck_require__(6771));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6771));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23585,8 +23561,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //=> Sat Mar 28 2020 00:00:00
  */
 function nextSaturday(date) {
-  (0, _index.default)(1, arguments);
-  return (0, _index2.default)((0, _index3.default)(date), 6);
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(date, 6);
 }
 
 module.exports = exports.default;
@@ -23604,11 +23580,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = nextSunday;
 
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
+var _index = _interopRequireDefault(__nccwpck_require__(6771));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6771));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23630,8 +23604,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //=> Sun Mar 29 2020 00:00:00
  */
 function nextSunday(date) {
-  (0, _index.default)(1, arguments);
-  return (0, _index2.default)((0, _index3.default)(date), 0);
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(date, 0);
 }
 
 module.exports = exports.default;
@@ -23649,11 +23623,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = nextThursday;
 
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
+var _index = _interopRequireDefault(__nccwpck_require__(6771));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6771));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23675,8 +23647,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //=> Thur Mar 26 2020 00:00:00
  */
 function nextThursday(date) {
-  (0, _index.default)(1, arguments);
-  return (0, _index2.default)((0, _index3.default)(date), 4);
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(date, 4);
 }
 
 module.exports = exports.default;
@@ -23694,11 +23666,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = nextTuesday;
 
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
+var _index = _interopRequireDefault(__nccwpck_require__(6771));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6771));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23720,8 +23690,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //=> Tue Mar 24 2020 00:00:00
  */
 function nextTuesday(date) {
-  (0, _index.default)(1, arguments);
-  return (0, _index2.default)((0, _index3.default)(date), 2);
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(date, 2);
 }
 
 module.exports = exports.default;
@@ -23739,11 +23709,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = nextWednesday;
 
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
+var _index = _interopRequireDefault(__nccwpck_require__(6771));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(6771));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23765,8 +23733,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //=> Wed Mar 25 2020 00:00:00
  */
 function nextWednesday(date) {
-  (0, _index.default)(1, arguments);
-  return (0, _index2.default)((0, _index3.default)(date), 3);
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(date, 3);
 }
 
 module.exports = exports.default;
@@ -23784,23 +23752,14 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = parseISO;
 
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
+var _index = __nccwpck_require__(5756);
 
 var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
+var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var MILLISECONDS_IN_HOUR = 3600000;
-var MILLISECONDS_IN_MINUTE = 60000;
-var DEFAULT_ADDITIONAL_DIGITS = 2;
-var patterns = {
-  dateTimeDelimiter: /[T ]/,
-  timeZoneDelimiter: /[Z ]/i,
-  timezone: /([Z+-].*)$/
-};
-var dateRegex = /^-?(?:(\d{3})|(\d{2})(?:-?(\d{2}))?|W(\d{2})(?:-?(\d{1}))?|)$/;
-var timeRegex = /^(\d{2}(?:[.,]\d*)?)(?::?(\d{2}(?:[.,]\d*)?))?(?::?(\d{2}(?:[.,]\d*)?))?$/;
-var timezoneRegex = /^([+-])(\d{2})(?::?(\d{2}))?$/;
 /**
  * @name parseISO
  * @category Common Helpers
@@ -23849,20 +23808,19 @@ var timezoneRegex = /^([+-])(\d{2})(?::?(\d{2}))?$/;
  *
  * @example
  * // Convert string '2014-02-11T11:30:30' to date:
- * var result = parseISO('2014-02-11T11:30:30')
+ * const result = parseISO('2014-02-11T11:30:30')
  * //=> Tue Feb 11 2014 11:30:30
  *
  * @example
  * // Convert string '+02014101' to date,
  * // if the additional number of digits in the extended year format is 1:
- * var result = parseISO('+02014101', { additionalDigits: 1 })
+ * const result = parseISO('+02014101', { additionalDigits: 1 })
  * //=> Fri Apr 11 2014 00:00:00
  */
-
 function parseISO(argument, dirtyOptions) {
   (0, _index2.default)(1, arguments);
   var options = dirtyOptions || {};
-  var additionalDigits = options.additionalDigits == null ? DEFAULT_ADDITIONAL_DIGITS : (0, _index.default)(options.additionalDigits);
+  var additionalDigits = options.additionalDigits == null ? 2 : (0, _index3.default)(options.additionalDigits);
 
   if (additionalDigits !== 2 && additionalDigits !== 1 && additionalDigits !== 0) {
     throw new RangeError('additionalDigits must be 0, 1 or 2');
@@ -23880,7 +23838,7 @@ function parseISO(argument, dirtyOptions) {
     date = parseDate(parseYearResult.restDateString, parseYearResult.year);
   }
 
-  if (isNaN(date) || !date) {
+  if (!date || isNaN(date.getTime())) {
     return new Date(NaN);
   }
 
@@ -23891,7 +23849,7 @@ function parseISO(argument, dirtyOptions) {
   if (dateStrings.time) {
     time = parseTime(dateStrings.time);
 
-    if (isNaN(time) || time === null) {
+    if (isNaN(time)) {
       return new Date(NaN);
     }
   }
@@ -23918,6 +23876,15 @@ function parseISO(argument, dirtyOptions) {
   return new Date(timestamp + time + offset);
 }
 
+var patterns = {
+  dateTimeDelimiter: /[T ]/,
+  timeZoneDelimiter: /[Z ]/i,
+  timezone: /([Z+-].*)$/
+};
+var dateRegex = /^-?(?:(\d{3})|(\d{2})(?:-?(\d{2}))?|W(\d{2})(?:-?(\d{1}))?|)$/;
+var timeRegex = /^(\d{2}(?:[.,]\d*)?)(?::?(\d{2}(?:[.,]\d*)?))?(?::?(\d{2}(?:[.,]\d*)?))?$/;
+var timezoneRegex = /^([+-])(\d{2})(?::?(\d{2}))?$/;
+
 function splitDateString(dateString) {
   var dateStrings = {};
   var array = dateString.split(patterns.dateTimeDelimiter);
@@ -23929,7 +23896,6 @@ function splitDateString(dateString) {
   }
 
   if (/:/.test(array[0])) {
-    dateStrings.date = null;
     timeString = array[0];
   } else {
     dateStrings.date = array[0];
@@ -23960,22 +23926,24 @@ function parseYear(dateString, additionalDigits) {
   var captures = dateString.match(regex); // Invalid ISO-formatted year
 
   if (!captures) return {
-    year: null
+    year: NaN,
+    restDateString: ''
   };
-  var year = captures[1] && parseInt(captures[1]);
-  var century = captures[2] && parseInt(captures[2]);
+  var year = captures[1] ? parseInt(captures[1]) : null;
+  var century = captures[2] ? parseInt(captures[2]) : null; // either year or century is null, not both
+
   return {
-    year: century == null ? year : century * 100,
+    year: century === null ? year : century * 100,
     restDateString: dateString.slice((captures[1] || captures[2]).length)
   };
 }
 
 function parseDate(dateString, year) {
   // Invalid ISO-formatted year
-  if (year === null) return null;
+  if (year === null) return new Date(NaN);
   var captures = dateString.match(dateRegex); // Invalid ISO-formatted string
 
-  if (!captures) return null;
+  if (!captures) return new Date(NaN);
   var isWeekDate = !!captures[4];
   var dayOfYear = parseDateUnit(captures[1]);
   var month = parseDateUnit(captures[2]) - 1;
@@ -24007,7 +23975,7 @@ function parseDateUnit(value) {
 
 function parseTime(timeString) {
   var captures = timeString.match(timeRegex);
-  if (!captures) return null; // Invalid ISO-formatted time
+  if (!captures) return NaN; // Invalid ISO-formatted time
 
   var hours = parseTimeUnit(captures[1]);
   var minutes = parseTimeUnit(captures[2]);
@@ -24017,7 +23985,7 @@ function parseTime(timeString) {
     return NaN;
   }
 
-  return hours * MILLISECONDS_IN_HOUR + minutes * MILLISECONDS_IN_MINUTE + seconds * 1000;
+  return hours * _index.millisecondsInHour + minutes * _index.millisecondsInMinute + seconds * 1000;
 }
 
 function parseTimeUnit(value) {
@@ -24036,7 +24004,7 @@ function parseTimezone(timezoneString) {
     return NaN;
   }
 
-  return sign * (hours * MILLISECONDS_IN_HOUR + minutes * MILLISECONDS_IN_MINUTE);
+  return sign * (hours * _index.millisecondsInHour + minutes * _index.millisecondsInMinute);
 }
 
 function dayOfISOWeekYear(isoWeekYear, week, day) {
@@ -24053,7 +24021,7 @@ function dayOfISOWeekYear(isoWeekYear, week, day) {
 var daysInMonths = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 function isLeapYearIndex(year) {
-  return year % 400 === 0 || year % 4 === 0 && year % 100;
+  return year % 400 === 0 || year % 4 === 0 && year % 100 !== 0;
 }
 
 function validateDate(year, month, date) {
@@ -25314,7 +25282,7 @@ var parsers = {
       date.setUTCHours(dayPeriodEnumToHours(value), 0, 0, 0);
       return date;
     },
-    incompatibleTokens: ['b', 'B', 'H', 'K', 'k', 't', 'T']
+    incompatibleTokens: ['b', 'B', 'H', 'k', 't', 'T']
   },
   // AM, PM, midnight
   b: {
@@ -25356,7 +25324,7 @@ var parsers = {
       date.setUTCHours(dayPeriodEnumToHours(value), 0, 0, 0);
       return date;
     },
-    incompatibleTokens: ['a', 'B', 'H', 'K', 'k', 't', 'T']
+    incompatibleTokens: ['a', 'B', 'H', 'k', 't', 'T']
   },
   // in the morning, in the afternoon, in the evening, at night
   B: {
@@ -25492,7 +25460,7 @@ var parsers = {
 
       return date;
     },
-    incompatibleTokens: ['a', 'b', 'h', 'H', 'k', 't', 'T']
+    incompatibleTokens: ['h', 'H', 'k', 't', 'T']
   },
   // Hour [1-24]
   k: {
@@ -25834,28 +25802,28 @@ var unescapedLatinCharacterRegExp = /[a-zA-Z]/;
  * | Day of week (formatting)        |  90 | E..EEE  | Mon, Tue, Wed, ..., Sun           |       |
  * |                                 |     | EEEE    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 |     | EEEEE   | M, T, W, T, F, S, S               |       |
- * |                                 |     | EEEEEE  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 |     | EEEEEE  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | ISO day of week (formatting)    |  90 | i       | 1, 2, 3, ..., 7                   | 5     |
  * |                                 |     | io      | 1st, 2nd, ..., 7th                | 5     |
  * |                                 |     | ii      | 01, 02, ..., 07                   | 5     |
  * |                                 |     | iii     | Mon, Tue, Wed, ..., Sun           | 5     |
  * |                                 |     | iiii    | Monday, Tuesday, ..., Sunday      | 2,5   |
  * |                                 |     | iiiii   | M, T, W, T, F, S, S               | 5     |
- * |                                 |     | iiiiii  | Mo, Tu, We, Th, Fr, Su, Sa        | 5     |
+ * |                                 |     | iiiiii  | Mo, Tu, We, Th, Fr, Sa, Su        | 5     |
  * | Local day of week (formatting)  |  90 | e       | 2, 3, 4, ..., 1                   |       |
  * |                                 |     | eo      | 2nd, 3rd, ..., 1st                | 5     |
  * |                                 |     | ee      | 02, 03, ..., 01                   |       |
  * |                                 |     | eee     | Mon, Tue, Wed, ..., Sun           |       |
  * |                                 |     | eeee    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 |     | eeeee   | M, T, W, T, F, S, S               |       |
- * |                                 |     | eeeeee  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 |     | eeeeee  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | Local day of week (stand-alone) |  90 | c       | 2, 3, 4, ..., 1                   |       |
  * |                                 |     | co      | 2nd, 3rd, ..., 1st                | 5     |
  * |                                 |     | cc      | 02, 03, ..., 01                   |       |
  * |                                 |     | ccc     | Mon, Tue, Wed, ..., Sun           |       |
  * |                                 |     | cccc    | Monday, Tuesday, ..., Sunday      | 2     |
  * |                                 |     | ccccc   | M, T, W, T, F, S, S               |       |
- * |                                 |     | cccccc  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+ * |                                 |     | cccccc  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
  * | AM, PM                          |  80 | a..aaa  | AM, PM                            |       |
  * |                                 |     | aaaa    | a.m., p.m.                        | 2     |
  * |                                 |     | aaaaa   | a, p                              |       |
@@ -25887,7 +25855,7 @@ var unescapedLatinCharacterRegExp = /[a-zA-Z]/;
  * |                                 |     | tt      | ...                               | 2     |
  * | Fraction of second              |  30 | S       | 0, 1, ..., 9                      |       |
  * |                                 |     | SS      | 00, 01, ..., 99                   |       |
- * |                                 |     | SSS     | 000, 0001, ..., 999               |       |
+ * |                                 |     | SSS     | 000, 001, ..., 999                |       |
  * |                                 |     | SSSS    | ...                               | 2     |
  * | Milliseconds timestamp          |  20 | T       | 512969520900                      |       |
  * |                                 |     | TT      | ...                               | 2     |
@@ -28795,11 +28763,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = subBusinessDays;
 
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
+var _index = _interopRequireDefault(__nccwpck_require__(1727));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(1727));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28818,13 +28786,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * @example
  * // Substract 10 business days from 1 September 2014:
- * var result = subBusinessDays(new Date(2014, 8, 1), 10)
+ * const result = subBusinessDays(new Date(2014, 8, 1), 10)
  * //=> Mon Aug 18 2014 00:00:00 (skipped weekend days)
  */
 function subBusinessDays(dirtyDate, dirtyAmount) {
-  (0, _index3.default)(2, arguments);
-  var amount = (0, _index.default)(dirtyAmount);
-  return (0, _index2.default)(dirtyDate, -amount);
+  (0, _index2.default)(2, arguments);
+  var amount = (0, _index3.default)(dirtyAmount);
+  return (0, _index.default)(dirtyDate, -amount);
 }
 
 module.exports = exports.default;
@@ -34066,7 +34034,7 @@ Object.defineProperty(Response.prototype, Symbol.toStringTag, {
 });
 
 const INTERNALS$2 = Symbol('Request internals');
-const URL = whatwgUrl.URL;
+const URL = Url.URL || whatwgUrl.URL;
 
 // fix an issue where "format", "parse" aren't a named export for node <10
 const parse_url = Url.parse;
@@ -34329,9 +34297,17 @@ AbortError.prototype = Object.create(Error.prototype);
 AbortError.prototype.constructor = AbortError;
 AbortError.prototype.name = 'AbortError';
 
+const URL$1 = Url.URL || whatwgUrl.URL;
+
 // fix an issue where "PassThrough", "resolve" aren't a named export for node <10
 const PassThrough$1 = Stream.PassThrough;
-const resolve_url = Url.resolve;
+
+const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) {
+	const orig = new URL$1(original).hostname;
+	const dest = new URL$1(destination).hostname;
+
+	return orig === dest || orig[orig.length - dest.length - 1] === '.' && orig.endsWith(dest);
+};
 
 /**
  * Fetch function
@@ -34419,7 +34395,19 @@ function fetch(url, opts) {
 				const location = headers.get('Location');
 
 				// HTTP fetch step 5.3
-				const locationURL = location === null ? null : resolve_url(request.url, location);
+				let locationURL = null;
+				try {
+					locationURL = location === null ? null : new URL$1(location, request.url).toString();
+				} catch (err) {
+					// error here can only be invalid URL in Location: header
+					// do not throw when options.redirect == manual
+					// let the user extract the errorneous redirect URL
+					if (request.redirect !== 'manual') {
+						reject(new FetchError(`uri requested responds with an invalid redirect URL: ${location}`, 'invalid-redirect'));
+						finalize();
+						return;
+					}
+				}
 
 				// HTTP fetch step 5.5
 				switch (request.redirect) {
@@ -34466,6 +34454,12 @@ function fetch(url, opts) {
 							timeout: request.timeout,
 							size: request.size
 						};
+
+						if (!isDomainOrSubdomain(request.url, locationURL)) {
+							for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
+								requestOpts.headers.delete(name);
+							}
+						}
 
 						// HTTP-redirect fetch step 9
 						if (res.statusCode !== 303 && request.body && getTotalBytes(request) === null) {
