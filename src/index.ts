@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 import deployToStag from './deploy-pr-staging'
 import deployToProd from './deploy-main'
 import cleanDeployments from './pr-close-cleanup'
@@ -22,7 +23,7 @@ const prNumber = payload.pull_request?.number ?? 0
 const run = async () => {
 	const startTime = new Date()
 
-	console.log('Installing azure CLI...')
+	console.log(`${chalk.bold.blue('info')}: Installing azure CLI...`)
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 
 	// Use the below version in case specific version has to be installed
