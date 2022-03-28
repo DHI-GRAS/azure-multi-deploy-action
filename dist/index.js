@@ -243,11 +243,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 exports.default = async () => {
-    console.log(`chalk.blue.bold('Info'): Logging into Azure CLI...`);
+    console.log(`${chalk_1.default.blue.bold('info')}: Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });

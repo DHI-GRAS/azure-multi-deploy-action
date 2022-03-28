@@ -10,7 +10,7 @@ interface AzureCredentials {
 }
 
 export default async (): Promise<void> => {
-	console.log(`chalk.blue.bold('Info'): Logging into Azure CLI...`)
+	console.log(`${chalk.blue.bold('info')}: Logging into Azure CLI...`)
 	const azureCredentialsInput = core.getInput('azureCredentials', {
 		required: true,
 	})
