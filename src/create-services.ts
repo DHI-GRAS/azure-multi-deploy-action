@@ -55,8 +55,8 @@ const createMissingResources = async (
 	localConfig: Package[],
 	subscriptionId: string,
 ) => {
-	console.log('Creating missing Azure services...')
 	console.log('\nSetting the subscription for creating services...')
+	console.log('Creating missing Azure services...')
 	await exec(`az account set --subscription ${subscriptionId}`)
 	console.log(`subscription set to ${subscriptionId}`)
 	const missingStorageAccounts = await getMissingStorageAccounts(localConfig)
@@ -76,8 +76,14 @@ const createMissingResources = async (
 					.join()}`
 			: 'No function apps to create',
 	)
-	missingStorageAccounts.forEach((pkg) => createStorageAccount(pkg))
-	missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
+
+	for (const pkg of missingStorageAccounts) {
+		await createStorageAccount(pkg)
+	}
+
+	for (const pkg of missingFunctionApps) {
+		await createFunctionApp(pkg)
+	}
 
 	console.log(`Completed for subscriptionID ${subscriptionId}`)
 }

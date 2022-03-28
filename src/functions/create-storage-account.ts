@@ -1,16 +1,16 @@
 import { exec } from 'child-process-promise'
 import { Package, StorageAccount } from '../types'
 
-export default (pkg: Package): void => {
+export default async (pkg: Package): Promise<void> => {
 	try {
-		const handleCreatedAccount = ({ stdout }) => {
+		const handleCreatedAccount = async ({ stdout }) => {
 			const newAccountData = JSON.parse(stdout) as StorageAccount
 
 			console.log(
 				`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`,
 			)
 
-			void exec(
+			await exec(
 				`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`,
 			)
 			console.log(
@@ -18,7 +18,7 @@ export default (pkg: Package): void => {
 			)
 		}
 
-		void exec(
+		await exec(
 			`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`,
 		)
 			.then(handleCreatedAccount)
@@ -26,10 +26,10 @@ export default (pkg: Package): void => {
 				throw Error(err)
 			})
 
-		void exec(
+		await exec(
 			`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`,
 		)
-			.then(handleCreatedAccount)
+			.then(async ({ stdout }) => handleCreatedAccount({ stdout }))
 			.catch((err) => {
 				throw Error(err)
 			})
