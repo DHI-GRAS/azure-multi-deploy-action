@@ -51,8 +51,14 @@ const getMissingFunctionApps = async (
 	})
 }
 
-const createMissingResources = async (localConfig: Package[]) => {
+const createMissingResources = async (
+	localConfig: Package[],
+	subscriptionId: string,
+) => {
 	console.log('Creating missing Azure services...')
+	console.log('\nSetting the subscription for creating services...')
+	await exec(`az account set --subscription ${subscriptionId}`)
+	console.log(`subscription set to ${subscriptionId}`)
 	const missingStorageAccounts = await getMissingStorageAccounts(localConfig)
 	const missingFunctionApps = await getMissingFunctionApps(localConfig)
 	console.log(
@@ -85,19 +91,14 @@ const createServices = async (): Promise<void> => {
 
 	const createAzureServicesPromise = Object.keys(groupBySubscription).map(
 		async (subsId) => {
-			console.log('\n')
-			console.log('Setting the subscription for creating services...')
-			await exec(`az account set --subscription ${subsId}`)
-				.then(() => console.log(`subscription set to ${subsId}`))
-				.catch((err) => {
-					throw Error(err)
-				})
 			const localConfig = groupBySubscription[subsId]
-			await createMissingResources(localConfig)
+			await createMissingResources(localConfig, subsId)
 		},
 	)
 
-	await Promise.all(createAzureServicesPromise)
+	for (const localPromise of createAzureServicesPromise) {
+		await localPromise
+	}
 }
 
 export default createServices

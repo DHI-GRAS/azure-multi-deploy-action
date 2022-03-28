@@ -19,8 +19,7 @@ const deployToStag = async (prNumber: number): Promise<void> => {
 
 	const createAzureServicesPromise = Object.keys(groupBySubscription).map(
 		async (subsId) => {
-			console.log('\n')
-			console.log('Setting the subscription for PR deployment...')
+			console.log('\nSetting the subscription for PR deployment...')
 			await exec(`az account set --subscription ${subsId}`)
 				.then(() => console.log(`subscription set to ${subsId}`))
 				.catch((err) => {

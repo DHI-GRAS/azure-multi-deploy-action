@@ -45,8 +45,11 @@ const getMissingFunctionApps = async (packages) => {
         return !appIds.includes(configApp.id);
     });
 };
-const createMissingResources = async (localConfig) => {
+const createMissingResources = async (localConfig, subscriptionId) => {
     console.log('Creating missing Azure services...');
+    console.log('\nSetting the subscription for creating services...');
+    await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
+    console.log(`subscription set to ${subscriptionId}`);
     const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
     const missingFunctionApps = await getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0
@@ -68,17 +71,12 @@ const createServices = async () => {
         return acc;
     }, {});
     const createAzureServicesPromise = Object.keys(groupBySubscription).map(async (subsId) => {
-        console.log('\n');
-        console.log('Setting the subscription for creating services...');
-        await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`)
-            .then(() => console.log(`subscription set to ${subsId}`))
-            .catch((err) => {
-            throw Error(err);
-        });
         const localConfig = groupBySubscription[subsId];
-        await createMissingResources(localConfig);
+        await createMissingResources(localConfig, subsId);
     });
-    await Promise.all(createAzureServicesPromise);
+    for (const localPromise of createAzureServicesPromise) {
+        await localPromise;
+    }
 };
 exports.default = createServices;
 
@@ -191,8 +189,7 @@ const deployToStag = async (prNumber) => {
         return acc;
     }, {});
     const createAzureServicesPromise = Object.keys(groupBySubscription).map(async (subsId) => {
-        console.log('\n');
-        console.log('Setting the subscription for PR deployment...');
+        console.log('\nSetting the subscription for PR deployment...');
         await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`)
             .then(() => console.log(`subscription set to ${subsId}`))
             .catch((err) => {
@@ -721,6 +718,7 @@ const run = async () => {
     // `)
     await (0, az_login_1.default)();
     await (0, create_services_1.default)();
+    throw Error('stop');
     // Deploy to stag
     if (isPR && ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
         console.log('Deploying to staging...');

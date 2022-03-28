@@ -44,7 +44,7 @@ const run = async () => {
 
 	await azLogin()
 	await createServices()
-
+	throw Error('stop')
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
 		console.log('Deploying to staging...')
