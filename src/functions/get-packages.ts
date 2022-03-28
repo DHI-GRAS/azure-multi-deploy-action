@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import chalk from 'chalk'
 import { Packages, Package, PackageJSON } from '../types'
 
 const packageTypes = ['apps', 'func-apis', 'libs'] as const
@@ -92,7 +93,9 @@ const isMonorepo = packageTypes
 	.includes(true)
 
 console.log(
-	isMonorepo ? 'Repository is monorepo' : 'Repository is single web app',
+	`${chalk.bold.blue('info')}: ${
+		isMonorepo ? 'Repository is monorepo' : 'Repository is single web app'
+	}`,
 )
 const packages = isMonorepo
 	? getMonorepoPackages()

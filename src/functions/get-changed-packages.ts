@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 import { Packages, Package, PackageJSON } from '../types'
 import packages from './get-packages'
 
@@ -63,7 +64,11 @@ export default async (): Promise<Packages> => {
 		const changedPackageIdString = changedPackages
 			.map((pkg) => pkg.id)
 			.join(', ')
-		console.log(`Changed packages: ${changedPackageIdString}`)
+		console.log(
+			`${chalk.blue.bold('Info')}:  ${chalk.bold(
+				changedPackageIdString,
+			)} changed packages`,
+		)
 
 		return changedPackages
 	} catch (err) {

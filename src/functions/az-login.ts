@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 
 interface AzureCredentials {
 	clientId: string
@@ -9,7 +10,7 @@ interface AzureCredentials {
 }
 
 export default async (): Promise<void> => {
-	console.log('Logging into Azure CLI...')
+	console.log(`chalk.blue.bold('Info'): Logging into Azure CLI...`)
 	const azureCredentialsInput = core.getInput('azureCredentials', {
 		required: true,
 	})

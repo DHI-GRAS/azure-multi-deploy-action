@@ -1,4 +1,5 @@
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 import { Packages, StorageAccounts, FunctionApps, Package } from './types'
 import createFunctionApp from './functions/create-function-app'
 import createStorageAccount from './functions/create-storage-account'
@@ -9,7 +10,7 @@ const getMissingStorageAccounts = async (
 ): Promise<Packages> => {
 	const webAppPackages = packages.filter((item) => item.type === 'app')
 	if (webAppPackages.length === 0) {
-		console.log('No web app packages in project')
+		console.log(`${chalk.bold.blue('info')}: No web app packages in project`)
 		return []
 	}
 
@@ -20,7 +21,11 @@ const getMissingStorageAccounts = async (
 	}
 
 	const accounts = JSON.parse(stdout) as StorageAccounts
-	console.log(`Retrieved ${accounts.length} storage accounts`)
+	console.log(
+		`${chalk.bold.blue('info')}: Retrieved ${chalk.bold.green(
+			accounts.length,
+		)} storage accounts`,
+	)
 
 	return webAppPackages.filter(
 		(item) => !accounts.map((account) => account.name).includes(item.id),
@@ -33,7 +38,9 @@ const getMissingFunctionApps = async (
 	const configFuncApps = packages.filter((item) => item.type === 'func-api')
 
 	if (configFuncApps.length === 0) {
-		console.log('No function app packages in project')
+		console.log(
+			`${chalk.bold.blue('info')}: No function app packages in project`,
+		)
 		return []
 	}
 
@@ -43,7 +50,11 @@ const getMissingFunctionApps = async (
 	}
 
 	const apps = JSON.parse(stdout) as FunctionApps
-	console.log(`Retrieved ${apps.length} function apps`)
+	console.log(
+		`${chalk.bold.blue('info')}: Retrieved ${chalk.bold.green(
+			apps.length,
+		)} function apps`,
+	)
 
 	return configFuncApps.filter((configApp) => {
 		const appIds = apps.map((app) => app.name)
@@ -55,26 +66,42 @@ const createMissingResources = async (
 	localConfig: Package[],
 	subscriptionId: string,
 ) => {
-	console.log('\nSetting the subscription for creating services...')
-	console.log('Creating missing Azure services...')
+	console.log('\n')
+	console.log(
+		`${chalk.bold.blue(
+			'Info',
+		)} :Setting the subscription for creating services...`,
+	)
+	console.log(`chalk.bold.blue("info"): Creating missing Azure services...`)
+
 	await exec(`az account set --subscription ${subscriptionId}`)
-	console.log(`subscription set to ${subscriptionId}`)
+
+	console.log(
+		`chalk.bold.blue("info"): Subscription set to ${chalk.bold.green(
+			subscriptionId,
+		)}`,
+	)
+
 	const missingStorageAccounts = await getMissingStorageAccounts(localConfig)
 	const missingFunctionApps = await getMissingFunctionApps(localConfig)
 	console.log(
 		missingStorageAccounts.length > 0
-			? `Creating storage accounts: ${missingStorageAccounts
+			? `${chalk.bold.blue(
+					'info',
+			  )}: Creating storage accounts: ${missingStorageAccounts
 					.map((pkg) => pkg.id)
 					.join()}`
-			: 'No storage accounts to create',
+			: `${chalk.bold.blue('info')}: No storage accounts to create`,
 	)
 
 	console.log(
 		missingFunctionApps.length > 0
-			? `Creating function apps: ${missingFunctionApps
+			? `${chalk.bold.blue(
+					'info',
+			  )}: Creating function apps: ${missingFunctionApps
 					.map((pkg) => pkg.id)
 					.join()}`
-			: 'No function apps to create',
+			: `${chalk.bold.blue('info')}: No function apps to create`,
 	)
 
 	for (const pkg of missingStorageAccounts) {
@@ -85,7 +112,11 @@ const createMissingResources = async (
 		await createFunctionApp(pkg)
 	}
 
-	console.log(`Completed for subscriptionID ${subscriptionId}`)
+	console.log(
+		`${chalk.bold.blue(
+			'info',
+		)}: Completed for subscriptionID ${subscriptionId}`,
+	)
 }
 
 const createServices = async (): Promise<void> => {

@@ -1,4 +1,5 @@
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 import { Package, FunctionApp } from '../types'
 
 export default async (pkg: Package): Promise<void> => {
@@ -13,7 +14,11 @@ export default async (pkg: Package): Promise<void> => {
 			.then(({ stdout }) => {
 				const newAccountData = JSON.parse(stdout) as FunctionApp
 				console.log(
-					`Created function app: ${pkg.id}: ${newAccountData.defaultHostName}`,
+					`${chalk.bold.green(
+						'Success',
+					)}: Created function app: ${chalk.bold.blue(
+						pkg.id,
+					)}: ${chalk.bold.blue(newAccountData.defaultHostName)}`,
 				)
 			})
 			.catch((err) => {

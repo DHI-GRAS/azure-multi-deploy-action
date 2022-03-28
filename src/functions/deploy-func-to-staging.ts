@@ -1,6 +1,7 @@
 import { exec } from 'child-process-promise'
 import path from 'path'
 import fs from 'fs'
+import chalk from 'chalk'
 import { Package } from '../types'
 
 const msgFile = path.join('github_message.txt')
@@ -52,7 +53,11 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		)
 		if (uploadErr) console.log(uploadErr, uploadOut)
 
-		console.log(`Deployed functionapp ${pkg.id}-${slotName}`)
+		console.log(
+			`${chalk.bold.green('Success')}: Deployed functionapp ${
+				pkg.id
+			}-${slotName}`,
+		)
 
 		// Don't think the deployment url gets returned from upload - hopefully this stays static?
 		const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`
