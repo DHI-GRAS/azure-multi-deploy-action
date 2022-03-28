@@ -1,5 +1,5 @@
 import { exec } from 'child-process-promise'
-import { Packages, StorageAccounts, FunctionApps } from './types'
+import { Packages, StorageAccounts, FunctionApps, Package } from './types'
 import createFunctionApp from './functions/create-function-app'
 import createStorageAccount from './functions/create-storage-account'
 import config from './functions/get-packages'
@@ -52,7 +52,11 @@ const getMissingFunctionApps = async (
 }
 const createServices = async (): Promise<void> => {
 	console.log('config packages', config)
-
+	const groupBySubscription = config.reduce((acc, item) => {
+		acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
+		return acc
+	})
+	console.log(groupBySubscription)
 	console.log('Creating missing Azure services...')
 	throw Error('stop here')
 	const missingStorageAccounts = await getMissingStorageAccounts(config)

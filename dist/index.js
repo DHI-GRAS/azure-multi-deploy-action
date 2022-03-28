@@ -47,6 +47,11 @@ const getMissingFunctionApps = async (packages) => {
 };
 const createServices = async () => {
     console.log('config packages', get_packages_1.default);
+    const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
+        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
+        return acc;
+    });
+    console.log(groupBySubscription);
     console.log('Creating missing Azure services...');
     throw Error('stop here');
     const missingStorageAccounts = await getMissingStorageAccounts(get_packages_1.default);
