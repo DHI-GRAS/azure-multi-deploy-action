@@ -23,8 +23,9 @@ const deployToStag = async (prNumber) => {
             .catch((err) => {
             throw Error(err);
         });
-        const webPackages = changedPackages.filter((pkg) => pkg.type === 'app');
-        const funcPackages = changedPackages.filter((pkg) => pkg.type === 'func-api');
+        const localChangedPackages = groupBySubscription[subsId];
+        const webPackages = localChangedPackages.filter((pkg) => pkg.type === 'app');
+        const funcPackages = localChangedPackages.filter((pkg) => pkg.type === 'func-api');
         if (webPackages.length + funcPackages.length === 0) {
             const deployMsg = `ℹ️ No changed packages were detected`;
             console.log(deployMsg);

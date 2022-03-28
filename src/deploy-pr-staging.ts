@@ -26,9 +26,11 @@ const deployToStag = async (prNumber: number): Promise<void> => {
 				.catch((err) => {
 					throw Error(err)
 				})
-
-			const webPackages = changedPackages.filter((pkg) => pkg.type === 'app')
-			const funcPackages = changedPackages.filter(
+			const localChangedPackages = groupBySubscription[subsId]
+			const webPackages = localChangedPackages.filter(
+				(pkg) => pkg.type === 'app',
+			)
+			const funcPackages = localChangedPackages.filter(
 				(pkg) => pkg.type === 'func-api',
 			)
 
