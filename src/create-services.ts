@@ -50,20 +50,11 @@ const getMissingFunctionApps = async (
 		return !appIds.includes(configApp.id)
 	})
 }
-const createServices = async (): Promise<void> => {
-	console.log('config packages', config)
-	const groupBySubscription = config.reduce(
-		(acc: Record<string, Package[]>, item) => {
-			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
-			return acc
-		},
-		{},
-	)
-	console.log(groupBySubscription)
+
+const createMissingResources = async (localConfig: Package[]) => {
 	console.log('Creating missing Azure services...')
-	throw Error('stop here')
-	const missingStorageAccounts = await getMissingStorageAccounts(config)
-	const missingFunctionApps = await getMissingFunctionApps(config)
+	const missingStorageAccounts = await getMissingStorageAccounts(localConfig)
+	const missingFunctionApps = await getMissingFunctionApps(localConfig)
 	console.log(
 		missingStorageAccounts.length > 0
 			? `Creating storage accounts: ${missingStorageAccounts
@@ -81,6 +72,31 @@ const createServices = async (): Promise<void> => {
 	)
 	missingStorageAccounts.forEach((pkg) => createStorageAccount(pkg))
 	missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
+}
+
+const createServices = async (): Promise<void> => {
+	const groupBySubscription = config.reduce(
+		(acc: Record<string, Package[]>, item) => {
+			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
+			return acc
+		},
+		{},
+	)
+
+	const createAzureServicesPromise = Object.keys(groupBySubscription).map(
+		async (subsId) => {
+			console.log('Setting the subscription...')
+			void exec(`az account set --subscription ${subsId}`)
+				.then(() => console.log(`subscription set to ${subsId}`))
+				.catch((err) => {
+					throw Error(err)
+				})
+			const localConfig = groupBySubscription[subsId]
+			await createMissingResources(localConfig)
+		},
+	)
+
+	await Promise.all(createAzureServicesPromise)
 }
 
 export default createServices

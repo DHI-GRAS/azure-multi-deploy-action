@@ -38,17 +38,10 @@ const getMissingFunctionApps = async (packages) => {
         return !appIds.includes(configApp.id);
     });
 };
-const createServices = async () => {
-    console.log('config packages', get_packages_1.default);
-    const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    console.log(groupBySubscription);
+const createMissingResources = async (localConfig) => {
     console.log('Creating missing Azure services...');
-    throw Error('stop here');
-    const missingStorageAccounts = await getMissingStorageAccounts(get_packages_1.default);
-    const missingFunctionApps = await getMissingFunctionApps(get_packages_1.default);
+    const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
+    const missingFunctionApps = await getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0
         ? `Creating storage accounts: ${missingStorageAccounts
             .map((pkg) => pkg.id)
@@ -61,5 +54,22 @@ const createServices = async () => {
         : 'No function apps to create');
     missingStorageAccounts.forEach((pkg) => (0, create_storage_account_1.default)(pkg));
     missingFunctionApps.forEach((pkg) => (0, create_function_app_1.default)(pkg));
+};
+const createServices = async () => {
+    const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
+        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
+        return acc;
+    }, {});
+    const createAzureServicesPromise = Object.keys(groupBySubscription).map(async (subsId) => {
+        console.log('Setting the subscription...');
+        void (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`)
+            .then(() => console.log(`subscription set to ${subsId}`))
+            .catch((err) => {
+            throw Error(err);
+        });
+        const localConfig = groupBySubscription[subsId];
+        await createMissingResources(localConfig);
+    });
+    await Promise.all(createAzureServicesPromise);
 };
 exports.default = createServices;
