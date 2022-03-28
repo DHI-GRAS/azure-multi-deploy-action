@@ -6,6 +6,15 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -14,27 +23,27 @@ const child_process_promise_1 = __nccwpck_require__(4858);
 const create_function_app_1 = __importDefault(__nccwpck_require__(2237));
 const create_storage_account_1 = __importDefault(__nccwpck_require__(9753));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
-const getMissingStorageAccounts = async (packages) => {
+const getMissingStorageAccounts = (packages) => __awaiter(void 0, void 0, void 0, function* () {
     const webAppPackages = packages.filter((item) => item.type === 'app');
     if (webAppPackages.length === 0) {
         console.log('No web app packages in project');
         return [];
     }
-    const { stdout, stderr } = await (0, child_process_promise_1.exec)('az storage account list');
+    const { stdout, stderr } = yield (0, child_process_promise_1.exec)('az storage account list');
     if (stderr) {
         throw Error(stderr);
     }
     const accounts = JSON.parse(stdout);
     console.log(`Retrieved ${accounts.length} storage accounts`);
     return webAppPackages.filter((item) => !accounts.map((account) => account.name).includes(item.id));
-};
-const getMissingFunctionApps = async (packages) => {
+});
+const getMissingFunctionApps = (packages) => __awaiter(void 0, void 0, void 0, function* () {
     const configFuncApps = packages.filter((item) => item.type === 'func-api');
     if (configFuncApps.length === 0) {
         console.log('No function app packages in project');
         return [];
     }
-    const { stdout, stderr } = await (0, child_process_promise_1.exec)('az functionapp list');
+    const { stdout, stderr } = yield (0, child_process_promise_1.exec)('az functionapp list');
     if (stderr) {
         throw Error(stderr);
     }
@@ -44,14 +53,14 @@ const getMissingFunctionApps = async (packages) => {
         const appIds = apps.map((app) => app.name);
         return !appIds.includes(configApp.id);
     });
-};
-const createMissingResources = async (localConfig, subscriptionId) => {
+});
+const createMissingResources = (localConfig, subscriptionId) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('\nSetting the subscription for creating services...');
     console.log('Creating missing Azure services...');
-    await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
+    yield (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
     console.log(`subscription set to ${subscriptionId}`);
-    const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
-    const missingFunctionApps = await getMissingFunctionApps(localConfig);
+    const missingStorageAccounts = yield getMissingStorageAccounts(localConfig);
+    const missingFunctionApps = yield getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0
         ? `Creating storage accounts: ${missingStorageAccounts
             .map((pkg) => pkg.id)
@@ -63,22 +72,22 @@ const createMissingResources = async (localConfig, subscriptionId) => {
             .join()}`
         : 'No function apps to create');
     for (const pkg of missingStorageAccounts) {
-        await (0, create_storage_account_1.default)(pkg);
+        yield (0, create_storage_account_1.default)(pkg);
     }
     for (const pkg of missingFunctionApps) {
-        await (0, create_function_app_1.default)(pkg);
+        yield (0, create_function_app_1.default)(pkg);
     }
     console.log(`Completed for subscriptionID ${subscriptionId}`);
-};
-const createServices = async () => {
+});
+const createServices = () => __awaiter(void 0, void 0, void 0, function* () {
     const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
         acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
         return acc;
     }, {});
     for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId);
+        yield createMissingResources(groupBySubscription[subsId], subsId);
     }
-};
+});
 exports.default = createServices;
 
 
@@ -108,6 +117,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -116,25 +134,25 @@ const child_process_promise_1 = __nccwpck_require__(4858);
 const github = __importStar(__nccwpck_require__(5438));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
 const commitSha = github.context.sha.substr(0, 7);
-const deployWebApp = async (pkg) => {
+const deployWebApp = (pkg) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     console.log(`Building webapp: ${pkg.name}`);
-    const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
+    const { stdout, stderr } = yield (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
     const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
     if (stderr)
         console.log(stderr, stdout);
     console.log(`Build finished, uploading webapp: ${pkg.name}`);
-    await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`).catch((err) => {
+    yield (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
+    yield (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`).catch((err) => {
         throw Error(err);
     });
-};
-const deployFuncApp = async (pkg) => {
+});
+const deployFuncApp = (pkg) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const pkgPathSplit = pkg.path.split('/');
         const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1];
         console.log(`Deploying functionapp: ${pkg.name}`);
-        await (0, child_process_promise_1.exec)(`
+        yield (0, child_process_promise_1.exec)(`
 		cd ${pkg.path} &&
 		yarn build ;
 		cp -r -L ../${pkgDirname} ../../../ &&
@@ -142,7 +160,7 @@ const deployFuncApp = async (pkg) => {
 		rm -rf node_modules &&
 		yarn install --production &&
 		zip -r ${pkg.path}/dist.zip . > /dev/null`);
-        const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
+        const { stderr: uploadErr } = yield (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
         if (uploadErr)
             console.log(uploadErr);
         console.log(`Deployed functionapp: ${pkg.id}`);
@@ -150,31 +168,31 @@ const deployFuncApp = async (pkg) => {
     catch (err) {
         console.log(`ERROR: could not deploy ${pkg.id} - ${String(err)}`);
     }
-};
-const createMissingResources = async (localConfig, subscriptionId) => {
+});
+const createMissingResources = (localConfig, subscriptionId) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('\nSetting the subscription for production deployment...');
-    await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
+    yield (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
     console.log(`subscription set to ${subscriptionId}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     const allPackages = [...webPackages, ...funcPackages];
     for (const pkg of allPackages) {
         if (pkg.type === 'app')
-            await deployWebApp(pkg);
+            yield deployWebApp(pkg);
         if (pkg.type === 'func-api')
-            await deployFuncApp(pkg);
+            yield deployFuncApp(pkg);
     }
-};
-const deployToProd = async () => {
-    const changedPackages = await (0, get_changed_packages_1.default)();
+});
+const deployToProd = () => __awaiter(void 0, void 0, void 0, function* () {
+    const changedPackages = yield (0, get_changed_packages_1.default)();
     const groupBySubscription = changedPackages.reduce((acc, item) => {
         acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
         return acc;
     }, {});
     for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId);
+        yield createMissingResources(groupBySubscription[subsId], subsId);
     }
-};
+});
 exports.default = deployToProd;
 
 
@@ -185,6 +203,15 @@ exports.default = deployToProd;
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -195,9 +222,9 @@ const fs_1 = __importDefault(__nccwpck_require__(5747));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
 const deploy_web_to_staging_1 = __importDefault(__nccwpck_require__(811));
 const deploy_func_to_staging_1 = __importDefault(__nccwpck_require__(8363));
-const createMissingResources = async (localConfig, subsId, prNumber) => {
+const createMissingResources = (localConfig, subsId, prNumber) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('\nSetting the subscription for PR deployment...');
-    await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
+    yield (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
     console.log(`subscription set to ${subsId}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
@@ -208,21 +235,21 @@ const createMissingResources = async (localConfig, subsId, prNumber) => {
         fs_1.default.appendFileSync(msgFile, `\n${deployMsg}  `);
     }
     for (const webApp of webPackages)
-        await (0, deploy_web_to_staging_1.default)(webApp, prNumber);
+        yield (0, deploy_web_to_staging_1.default)(webApp, prNumber);
     for (const funcApp of funcPackages)
-        await (0, deploy_func_to_staging_1.default)(funcApp, prNumber);
+        yield (0, deploy_func_to_staging_1.default)(funcApp, prNumber);
     console.log(`Completed for subscriptionID ${subsId}`);
-};
-const deployToStag = async (prNumber) => {
-    const changedPackages = await (0, get_changed_packages_1.default)();
+});
+const deployToStag = (prNumber) => __awaiter(void 0, void 0, void 0, function* () {
+    const changedPackages = yield (0, get_changed_packages_1.default)();
     const groupBySubscription = changedPackages.reduce((acc, item) => {
         acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
         return acc;
     }, {});
     for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId, prNumber);
+        yield createMissingResources(groupBySubscription[subsId], subsId, prNumber);
     }
-};
+});
 exports.default = deployToStag;
 
 
@@ -252,10 +279,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const child_process_promise_1 = __nccwpck_require__(4858);
-exports.default = async () => {
+exports.default = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('Logging into Azure CLI...');
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
@@ -263,25 +299,34 @@ exports.default = async () => {
     const azureCredentials = JSON.parse(azureCredentialsInput);
     Object.keys(azureCredentials).forEach((key) => core.setSecret(azureCredentials[key]));
     const { clientId, tenantId, clientSecret } = azureCredentials;
-    await (0, child_process_promise_1.exec)(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
-};
+    yield (0, child_process_promise_1.exec)(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
+});
 
 
 /***/ }),
 
 /***/ 2237:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
-exports.default = async (pkg) => {
+exports.default = (pkg) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!pkg.storageAccount) {
             throw Error(`${pkg.id} needs to specify storageAccount`);
         }
-        await (0, child_process_promise_1.exec)(`az functionapp create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --storage-account ${pkg.storageAccount} --runtime node --consumption-plan-location northeurope --functions-version 3 --disable-app-insights true`)
+        yield (0, child_process_promise_1.exec)(`az functionapp create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --storage-account ${pkg.storageAccount} --runtime node --consumption-plan-location northeurope --functions-version 3 --disable-app-insights true`)
             .then(({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
             console.log(`Created function app: ${pkg.id}: ${newAccountData.defaultHostName}`);
@@ -293,33 +338,42 @@ exports.default = async (pkg) => {
     catch (err) {
         throw Error(err);
     }
-};
+});
 
 
 /***/ }),
 
 /***/ 9753:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
-exports.default = async (pkg) => {
+exports.default = (pkg) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const handleCreatedAccount = async ({ stdout }) => {
+        const handleCreatedAccount = ({ stdout }) => __awaiter(void 0, void 0, void 0, function* () {
             const newAccountData = JSON.parse(stdout);
             console.log(`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`);
-            await (0, child_process_promise_1.exec)(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
+            yield (0, child_process_promise_1.exec)(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
             console.log(`Enabled web container for storage account: ${newAccountData.name}`);
-        };
-        await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`)
+        });
+        yield (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`)
             .then(handleCreatedAccount)
             .catch((err) => {
             throw Error(err);
         });
-        await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`)
-            .then(async ({ stdout }) => handleCreatedAccount({ stdout }))
+        yield (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`)
+            .then(({ stdout }) => __awaiter(void 0, void 0, void 0, function* () { return handleCreatedAccount({ stdout }); }))
             .catch((err) => {
             throw Error(err);
         });
@@ -327,7 +381,7 @@ exports.default = async (pkg) => {
     catch (err) {
         throw Error(err);
     }
-};
+});
 
 
 /***/ }),
@@ -337,6 +391,15 @@ exports.default = async (pkg) => {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -345,9 +408,9 @@ const child_process_promise_1 = __nccwpck_require__(4858);
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const msgFile = path_1.default.join('github_message.txt');
-exports.default = async (pkg, pullNumber) => {
+exports.default = (pkg, pullNumber) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { stdout: listOut, stderr: listErr } = await (0, child_process_promise_1.exec)(`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`);
+        const { stdout: listOut, stderr: listErr } = yield (0, child_process_promise_1.exec)(`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`);
         if (listErr)
             throw Error(listErr);
         const slots = JSON.parse(listOut);
@@ -357,12 +420,12 @@ exports.default = async (pkg, pullNumber) => {
         const slotNames = slots.map((slot) => slot.name);
         const slotExists = slotNames.includes(slotName);
         if (!slotExists) {
-            await (0, child_process_promise_1.exec)(`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
+            yield (0, child_process_promise_1.exec)(`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         }
         const pkgPathSplit = pkg.path.split('/');
         const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1];
         // Has to be built with dev deps, then zipped with unhoisted prod deps
-        const { stderr: buildErr } = await (0, child_process_promise_1.exec)(`
+        const { stderr: buildErr } = yield (0, child_process_promise_1.exec)(`
 		cd ${pkg.path} &&
 		yarn build ;
 		cp -r -L ../${pkgDirname} ../../../ &&
@@ -372,7 +435,7 @@ exports.default = async (pkg, pullNumber) => {
 		zip -r -b ../ ${pkg.path}/dist.zip . > /dev/null ; echo "zipped to ${pkg.path}/dist.zip"`);
         if (buildErr)
             console.log(buildErr);
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
+        const { stdout: uploadOut, stderr: uploadErr } = yield (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
         console.log(`Deployed functionapp ${pkg.id}-${slotName}`);
@@ -386,7 +449,7 @@ exports.default = async (pkg, pullNumber) => {
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.error(err);
     }
-};
+});
 
 
 /***/ }),
@@ -415,6 +478,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -425,7 +497,7 @@ const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const msgFile = path_1.default.join('github_message.txt');
 const commitSha = github.context.sha.substr(0, 7);
-exports.default = async (pkg, pullNumber) => {
+exports.default = (pkg, pullNumber) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         if (!pullNumber)
@@ -433,13 +505,13 @@ exports.default = async (pkg, pullNumber) => {
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
         console.log(`Building webapp: ${pkg.name}`);
-        const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
+        const { stdout, stderr } = yield (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
         console.log(`Build finished, uploading webapp: ${pkg.name}`);
-        await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
+        yield (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
+        const { stdout: uploadOut, stderr: uploadErr } = yield (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
             throw Error(err);
         });
         if (stdout)
@@ -454,7 +526,7 @@ exports.default = async (pkg, pullNumber) => {
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.log(deployMsg, err);
     }
-};
+});
 
 
 /***/ }),
@@ -464,6 +536,15 @@ exports.default = async (pkg, pullNumber) => {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -473,23 +554,23 @@ const path_1 = __importDefault(__nccwpck_require__(5622));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
-exports.default = async () => {
+exports.default = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { stdout: branchName, stderr: branchErr } = await (0, child_process_promise_1.exec)(`git branch --show-current`);
+        const { stdout: branchName, stderr: branchErr } = yield (0, child_process_promise_1.exec)(`git branch --show-current`);
         if (branchErr)
             throw Error(branchErr);
         const deployablePkgs = get_packages_1.default.filter((pkg) => pkg.type === 'app' || pkg.type === 'func-api');
         if (branchName.trim() === 'main')
             return deployablePkgs;
-        await (0, child_process_promise_1.exec)('git fetch --all');
-        const checkChanged = async (pkg) => {
-            const { stdout: diffOut, stdout: diffErr } = await (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo changed`);
+        yield (0, child_process_promise_1.exec)('git fetch --all');
+        const checkChanged = (pkg) => __awaiter(void 0, void 0, void 0, function* () {
+            const { stdout: diffOut, stdout: diffErr } = yield (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo changed`);
             if (diffErr)
                 console.log(diffErr);
             return diffOut.includes('changed') ? pkg : null;
-        };
+        });
         const changedPromises = get_packages_1.default.map(checkChanged);
-        const changedDiffPackages = (await Promise.all(changedPromises)).filter((item) => item);
+        const changedDiffPackages = (yield Promise.all(changedPromises)).filter((item) => item);
         const changedLibPackeges = changedDiffPackages.filter((pkg) => pkg.type === 'lib');
         const libDepPackages = get_packages_1.default.filter((pkg) => pkg.type === 'app');
         const changedPackagesWithLibDeps = libDepPackages.filter((pkg) => {
@@ -515,7 +596,7 @@ exports.default = async () => {
     catch (err) {
         throw Error(err);
     }
-};
+});
 
 
 /***/ }),
@@ -551,30 +632,23 @@ const getPackageObject = (pkgDir, pkgType) => {
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
             throw Error(`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
-        return { ...fieldAcc, [field]: fieldValue };
+        return Object.assign(Object.assign({}, fieldAcc), { [field]: fieldValue });
     }, {});
     const notReqPropertiesFromPckJson = appNotRequiredFields.reduce((fieldAcc, field) => {
         var _a;
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
-            return { ...fieldAcc };
-        return { ...fieldAcc, [field]: fieldValue };
+            return Object.assign({}, fieldAcc);
+        return Object.assign(Object.assign({}, fieldAcc), { [field]: fieldValue });
     }, {});
-    const propertiesFromPckJson = {
-        ...requiredPropertiesFromPkgJson,
-        ...notReqPropertiesFromPckJson,
-    };
+    const propertiesFromPckJson = Object.assign(Object.assign({}, requiredPropertiesFromPkgJson), notReqPropertiesFromPckJson);
     // Enforce only lowecase letters for storage account syntax
     const lowercaseRe = /^[a-z0-9]{1,20}$/;
     if (pkgType === 'apps' &&
         ((_a = lowercaseRe.exec(pkgObj.azureDeployConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !==
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
         throw Error(`"id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
-    return {
-        ...propertiesFromPckJson,
-        type: pkgType.substring(0, pkgType.length - 1),
-        path: fullPath,
-    };
+    return Object.assign(Object.assign({}, propertiesFromPckJson), { type: pkgType.substring(0, pkgType.length - 1), path: fullPath });
 };
 const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
     if (!fs_1.default.existsSync(path_1.default.join(pkgType)))
@@ -622,6 +696,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -633,7 +716,7 @@ const path_1 = __importDefault(__nccwpck_require__(5622));
 const date_fns_1 = __nccwpck_require__(3314);
 const { context: { issue: { number }, repo: { repo, owner }, }, } = github;
 const messageFile = 'github_message.txt';
-exports.default = async (startTime) => {
+exports.default = (startTime) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const token = core.getInput('githubToken', { required: true });
         const octokit = github.getOctokit(token);
@@ -652,7 +735,7 @@ exports.default = async (startTime) => {
         fs_1.default.appendFileSync(path_1.default.join(messageFile), durationMessage);
         // Writing to text file was a workaround, could now be done better (eventually)
         const body = String(fs_1.default.readFileSync(path_1.default.join(messageFile)));
-        await octokit.rest.issues.createComment({
+        yield octokit.rest.issues.createComment({
             issue_number: number,
             repo,
             owner,
@@ -662,7 +745,7 @@ exports.default = async (startTime) => {
     catch (err) {
         throw Error(err);
     }
-};
+});
 
 
 /***/ }),
@@ -691,6 +774,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -714,11 +806,11 @@ const splitRef = context.ref.split('/');
 const currentBranch = splitRef[splitRef.length - 1];
 const isPR = context.eventName === 'pull_request';
 const prNumber = (_c = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.number) !== null && _c !== void 0 ? _c : 0;
-const run = async () => {
-    var _a, _b;
+const run = () => __awaiter(void 0, void 0, void 0, function* () {
+    var _d, _e;
     const startTime = new Date();
     console.log(`${chalk_1.default.bold.blue('info')}: Installing azure CLI...`);
-    await (0, child_process_promise_1.exec)('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
+    yield (0, child_process_promise_1.exec)('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
     // Use the below version in case specific version has to be installed
     // await exec(`
     // 	sudo apt-get update ;
@@ -729,13 +821,13 @@ const run = async () => {
     // 	sudo apt-get update ;
     // 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
     // `)
-    await (0, az_login_1.default)();
-    await (0, create_services_1.default)();
+    yield (0, az_login_1.default)();
+    yield (0, create_services_1.default)();
     // throw Error('stop')
     // Deploy to stag
-    if (isPR && ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
+    if (isPR && ((_d = payload.pull_request) === null || _d === void 0 ? void 0 : _d.state) === 'open') {
         console.log('Deploying to staging...');
-        await (0, deploy_pr_staging_1.default)(prNumber);
+        yield (0, deploy_pr_staging_1.default)(prNumber);
     }
     // Deploy to prod
     const preventProdDeploy = core.getInput('preventProdDeploy');
@@ -748,15 +840,15 @@ const run = async () => {
         currentBranch === defaultBranch &&
         !preventProdDeploy) {
         console.log('Deploying to production...');
-        await (0, deploy_main_1.default)();
+        yield (0, deploy_main_1.default)();
     }
-    if (isPR && ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'closed') {
+    if (isPR && ((_e = payload.pull_request) === null || _e === void 0 ? void 0 : _e.state) === 'closed') {
         console.log('PR closed. Cleaning up deployments...');
-        await (0, pr_close_cleanup_1.default)(prNumber);
+        yield (0, pr_close_cleanup_1.default)(prNumber);
     }
     if (isPR)
-        await (0, post_comment_1.default)(startTime);
-};
+        yield (0, post_comment_1.default)(startTime);
+});
 void run();
 
 
@@ -767,32 +859,41 @@ void run();
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
-const removeWebStagingDeployment = async (pkg, pullNumber) => {
+const removeWebStagingDeployment = (pkg, pullNumber) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!pullNumber)
             throw Error('No PR number');
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
-        await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-        await (0, child_process_promise_1.exec)(`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`);
+        yield (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
+        yield (0, child_process_promise_1.exec)(`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`);
         console.log(`Deleted web app: ${stagName}-${slotName}`);
     }
     catch (err) {
         throw Error(err);
     }
-};
-const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
+});
+const removeFuncAppStagingDeployment = (pkg, pullNumber) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!pullNumber)
             throw Error('No PR number');
         const slotName = `stag-${pullNumber}`;
-        const { stdout: deleteOut, stderr: deleteErr } = await (0, child_process_promise_1.exec)(`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
+        const { stdout: deleteOut, stderr: deleteErr } = yield (0, child_process_promise_1.exec)(`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         if (deleteErr)
             console.log(deleteOut, deleteErr);
         console.log(`Deleted function app: ${pkg.id}-${slotName}`);
@@ -800,17 +901,17 @@ const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
     catch (err) {
         throw Error(err);
     }
-};
-const cleanDeployments = async (prNumber) => {
+});
+const cleanDeployments = (prNumber) => __awaiter(void 0, void 0, void 0, function* () {
     const webPackages = get_packages_1.default.filter((pkg) => pkg.type === 'app');
     const funcPackages = get_packages_1.default.filter((pkg) => pkg.type === 'func-api');
     for (const pkg of webPackages) {
-        await removeWebStagingDeployment(pkg, prNumber);
+        yield removeWebStagingDeployment(pkg, prNumber);
     }
     for (const pkg of funcPackages) {
-        await removeFuncAppStagingDeployment(pkg, prNumber);
+        yield removeFuncAppStagingDeployment(pkg, prNumber);
     }
-};
+});
 exports.default = cleanDeployments;
 
 
