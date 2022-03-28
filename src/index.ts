@@ -71,7 +71,7 @@ const run = async () => {
 
 	if (isPR && payload.pull_request?.state === 'closed') {
 		console.log('PR closed. Cleaning up deployments...')
-		cleanDeployments(prNumber)
+		await cleanDeployments(prNumber)
 	}
 
 	if (isPR) await postComment(startTime)

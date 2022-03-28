@@ -49,17 +49,37 @@ const deployFuncApp = async (pkg: Package) => {
 	}
 }
 
-const deployToProd = async (): Promise<void> => {
-	const changedPackages = await getChangedPackages()
-
-	const webPackages = changedPackages.filter((pkg) => pkg.type === 'app')
-	const funcPackages = changedPackages.filter((pkg) => pkg.type === 'func-api')
+const createMissingResources = async (
+	localConfig: Package[],
+	subscriptionId: string,
+) => {
+	console.log('\nSetting the subscription for production deployment...')
+	await exec(`az account set --subscription ${subscriptionId}`)
+	console.log(`subscription set to ${subscriptionId}`)
+	const webPackages = localConfig.filter((pkg) => pkg.type === 'app')
+	const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api')
 
 	const allPackages = [...webPackages, ...funcPackages]
 
 	for (const pkg of allPackages) {
 		if (pkg.type === 'app') await deployWebApp(pkg)
 		if (pkg.type === 'func-api') await deployFuncApp(pkg)
+	}
+}
+
+const deployToProd = async (): Promise<void> => {
+	const changedPackages = await getChangedPackages()
+
+	const groupBySubscription = changedPackages.reduce(
+		(acc: Record<string, Package[]>, item) => {
+			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
+			return acc
+		},
+		{},
+	)
+
+	for (const subsId of Object.keys(groupBySubscription)) {
+		await createMissingResources(groupBySubscription[subsId], subsId)
 	}
 }
 

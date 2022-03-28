@@ -36,16 +36,17 @@ const removeFuncAppStagingDeployment = async (
 	}
 }
 
-const cleanDeployments = (prNumber: number): void => {
+const cleanDeployments = async (prNumber: number): Promise<void> => {
 	const webPackages = packages.filter((pkg) => pkg.type === 'app')
 	const funcPackages = packages.filter((pkg) => pkg.type === 'func-api')
 
-	void Promise.all(
-		webPackages.map((pkg) => removeWebStagingDeployment(pkg, prNumber)),
-	)
-	void Promise.all(
-		funcPackages.map((pkg) => removeFuncAppStagingDeployment(pkg, prNumber)),
-	)
+	for (const pkg of webPackages) {
+		await removeWebStagingDeployment(pkg, prNumber)
+	}
+
+	for (const pkg of funcPackages) {
+		await removeFuncAppStagingDeployment(pkg, prNumber)
+	}
 }
 
 export default cleanDeployments
