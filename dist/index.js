@@ -68,8 +68,9 @@ const createServices = async () => {
         return acc;
     }, {});
     const createAzureServicesPromise = Object.keys(groupBySubscription).map(async (subsId) => {
-        console.log('Setting the subscription...');
-        void (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`)
+        console.log('\n');
+        console.log('Setting the subscription for creating services...');
+        await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`)
             .then(() => console.log(`subscription set to ${subsId}`))
             .catch((err) => {
             throw Error(err);
@@ -177,6 +178,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const child_process_promise_1 = __nccwpck_require__(4858);
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
@@ -184,18 +186,32 @@ const deploy_web_to_staging_1 = __importDefault(__nccwpck_require__(811));
 const deploy_func_to_staging_1 = __importDefault(__nccwpck_require__(8363));
 const deployToStag = async (prNumber) => {
     const changedPackages = await (0, get_changed_packages_1.default)();
-    const webPackages = changedPackages.filter((pkg) => pkg.type === 'app');
-    const funcPackages = changedPackages.filter((pkg) => pkg.type === 'func-api');
-    if (webPackages.length + funcPackages.length === 0) {
-        const deployMsg = `ℹ️ No changed packages were detected`;
-        console.log(deployMsg);
-        const msgFile = path_1.default.join('github_message.txt');
-        fs_1.default.appendFileSync(msgFile, `\n${deployMsg}  `);
-    }
-    for (const webApp of webPackages)
-        await (0, deploy_web_to_staging_1.default)(webApp, prNumber);
-    for (const funcApp of funcPackages)
-        await (0, deploy_func_to_staging_1.default)(funcApp, prNumber);
+    const groupBySubscription = changedPackages.reduce((acc, item) => {
+        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
+        return acc;
+    }, {});
+    const createAzureServicesPromise = Object.keys(groupBySubscription).map(async (subsId) => {
+        console.log('\n');
+        console.log('Setting the subscription for PR deployment...');
+        await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`)
+            .then(() => console.log(`subscription set to ${subsId}`))
+            .catch((err) => {
+            throw Error(err);
+        });
+        const webPackages = changedPackages.filter((pkg) => pkg.type === 'app');
+        const funcPackages = changedPackages.filter((pkg) => pkg.type === 'func-api');
+        if (webPackages.length + funcPackages.length === 0) {
+            const deployMsg = `ℹ️ No changed packages were detected`;
+            console.log(deployMsg);
+            const msgFile = path_1.default.join('github_message.txt');
+            fs_1.default.appendFileSync(msgFile, `\n${deployMsg}  `);
+        }
+        for (const webApp of webPackages)
+            await (0, deploy_web_to_staging_1.default)(webApp, prNumber);
+        for (const funcApp of funcPackages)
+            await (0, deploy_func_to_staging_1.default)(funcApp, prNumber);
+    });
+    await Promise.all(createAzureServicesPromise);
 };
 exports.default = deployToStag;
 

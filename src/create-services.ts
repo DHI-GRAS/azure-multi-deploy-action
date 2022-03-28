@@ -85,8 +85,9 @@ const createServices = async (): Promise<void> => {
 
 	const createAzureServicesPromise = Object.keys(groupBySubscription).map(
 		async (subsId) => {
-			console.log('Setting the subscription...')
-			void exec(`az account set --subscription ${subsId}`)
+			console.log('\n')
+			console.log('Setting the subscription for creating services...')
+			await exec(`az account set --subscription ${subsId}`)
 				.then(() => console.log(`subscription set to ${subsId}`))
 				.catch((err) => {
 					throw Error(err)
