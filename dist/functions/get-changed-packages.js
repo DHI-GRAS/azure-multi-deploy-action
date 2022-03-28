@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const child_process_promise_1 = require("child-process-promise");
+const chalk_1 = __importDefault(require("chalk"));
 const get_packages_1 = __importDefault(require("./get-packages"));
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
 exports.default = async () => {
@@ -44,7 +45,7 @@ exports.default = async () => {
         const changedPackageIdString = changedPackages
             .map((pkg) => pkg.id)
             .join(', ');
-        console.log(`Changed packages: ${changedPackageIdString}`);
+        console.log(`${chalk_1.default.blue.bold('Info')}:  ${chalk_1.default.bold(changedPackageIdString)} changed packages`);
         return changedPackages;
     }
     catch (err) {

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const chalk_1 = __importDefault(require("chalk"));
 const msgFile = path_1.default.join('github_message.txt');
 exports.default = async (pkg, pullNumber) => {
     try {
@@ -37,7 +38,7 @@ exports.default = async (pkg, pullNumber) => {
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
-        console.log(`Deployed functionapp ${pkg.id}-${slotName}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp ${pkg.id}-${slotName}`);
         // Don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`;
         console.log(deployMsg);

@@ -22,7 +22,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(require("@actions/core"));
 const child_process_promise_1 = require("child-process-promise");
 exports.default = async () => {
-    console.log('Logging into Azure CLI...');
+    console.log(`chalk.blue.bold('Info'): Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });

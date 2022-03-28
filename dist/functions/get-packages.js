@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const chalk_1 = __importDefault(require("chalk"));
 const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup', 'subscriptionId'];
 const appNotRequiredFields = ['outputDir'];
@@ -63,7 +64,7 @@ const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
 const isMonorepo = packageTypes
     .map((pkg) => fs_1.default.existsSync(path_1.default.join(pkg)))
     .includes(true);
-console.log(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app');
+console.log(`${chalk_1.default.bold.blue('info')}: ${isMonorepo ? 'Repository is monorepo' : 'Repository is single web app'}`);
 const packages = isMonorepo
     ? getMonorepoPackages()
     : [getPackageObject('.', 'apps')];

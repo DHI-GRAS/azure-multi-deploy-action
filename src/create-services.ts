@@ -51,7 +51,7 @@ const getMissingFunctionApps = async (
 
 	const apps = JSON.parse(stdout) as FunctionApps
 	console.log(
-		`${chalk.bold.blue('info')}: Retrieved ${chalk.bold.green(
+		`${chalk.bold.blue('info')}: Retrieved ${chalk.bold(
 			apps.length,
 		)} function apps`,
 	)
@@ -77,7 +77,7 @@ const createMissingResources = async (
 	await exec(`az account set --subscription ${subscriptionId}`)
 
 	console.log(
-		`chalk.bold.blue("info"): Subscription set to ${chalk.bold.green(
+		`chalk.bold.blue("info"): Subscription set to ${chalk.bold(
 			subscriptionId,
 		)}`,
 	)

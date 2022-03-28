@@ -11,13 +11,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 const create_function_app_1 = __importDefault(__nccwpck_require__(2237));
 const create_storage_account_1 = __importDefault(__nccwpck_require__(9753));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
 const getMissingStorageAccounts = async (packages) => {
     const webAppPackages = packages.filter((item) => item.type === 'app');
     if (webAppPackages.length === 0) {
-        console.log('No web app packages in project');
+        console.log(`${chalk_1.default.bold.blue('info')}: No web app packages in project`);
         return [];
     }
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az storage account list');
@@ -25,13 +26,13 @@ const getMissingStorageAccounts = async (packages) => {
         throw Error(stderr);
     }
     const accounts = JSON.parse(stdout);
-    console.log(`Retrieved ${accounts.length} storage accounts`);
+    console.log(`${chalk_1.default.bold.blue('info')}: Retrieved ${chalk_1.default.bold.green(accounts.length)} storage accounts`);
     return webAppPackages.filter((item) => !accounts.map((account) => account.name).includes(item.id));
 };
 const getMissingFunctionApps = async (packages) => {
     const configFuncApps = packages.filter((item) => item.type === 'func-api');
     if (configFuncApps.length === 0) {
-        console.log('No function app packages in project');
+        console.log(`${chalk_1.default.bold.blue('info')}: No function app packages in project`);
         return [];
     }
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az functionapp list');
@@ -39,36 +40,37 @@ const getMissingFunctionApps = async (packages) => {
         throw Error(stderr);
     }
     const apps = JSON.parse(stdout);
-    console.log(`Retrieved ${apps.length} function apps`);
+    console.log(`${chalk_1.default.bold.blue('info')}: Retrieved ${chalk_1.default.bold(apps.length)} function apps`);
     return configFuncApps.filter((configApp) => {
         const appIds = apps.map((app) => app.name);
         return !appIds.includes(configApp.id);
     });
 };
 const createMissingResources = async (localConfig, subscriptionId) => {
-    console.log('\nSetting the subscription for creating services...');
-    console.log('Creating missing Azure services...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')} :Setting the subscription for creating services...`);
+    console.log(`chalk.bold.blue("info"): Creating missing Azure services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
-    console.log(`subscription set to ${subscriptionId}`);
+    console.log(`chalk.bold.blue("info"): Subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
     const missingFunctionApps = await getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0
-        ? `Creating storage accounts: ${missingStorageAccounts
+        ? `${chalk_1.default.bold.blue('info')}: Creating storage accounts: ${missingStorageAccounts
             .map((pkg) => pkg.id)
             .join()}`
-        : 'No storage accounts to create');
+        : `${chalk_1.default.bold.blue('info')}: No storage accounts to create`);
     console.log(missingFunctionApps.length > 0
-        ? `Creating function apps: ${missingFunctionApps
+        ? `${chalk_1.default.bold.blue('info')}: Creating function apps: ${missingFunctionApps
             .map((pkg) => pkg.id)
             .join()}`
-        : 'No function apps to create');
+        : `${chalk_1.default.bold.blue('info')}: No function apps to create`);
     for (const pkg of missingStorageAccounts) {
         await (0, create_storage_account_1.default)(pkg);
     }
     for (const pkg of missingFunctionApps) {
         await (0, create_function_app_1.default)(pkg);
     }
-    console.log(`Completed for subscriptionID ${subscriptionId}`);
+    console.log(`${chalk_1.default.bold.blue('info')}: Completed for subscriptionID ${subscriptionId}`);
 };
 const createServices = async () => {
     const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
@@ -245,7 +247,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const child_process_promise_1 = __nccwpck_require__(4858);
 exports.default = async () => {
-    console.log('Logging into Azure CLI...');
+    console.log(`chalk.blue.bold('Info'): Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });
@@ -259,12 +261,16 @@ exports.default = async () => {
 /***/ }),
 
 /***/ 2237:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 exports.default = async (pkg) => {
     try {
         if (!pkg.storageAccount) {
@@ -273,7 +279,7 @@ exports.default = async (pkg) => {
         await (0, child_process_promise_1.exec)(`az functionapp create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --storage-account ${pkg.storageAccount} --runtime node --consumption-plan-location northeurope --functions-version 3 --disable-app-insights true`)
             .then(({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
-            console.log(`Created function app: ${pkg.id}: ${newAccountData.defaultHostName}`);
+            console.log(`${chalk_1.default.bold.green('Success')}: Created function app: ${chalk_1.default.bold.blue(pkg.id)}: ${chalk_1.default.bold.blue(newAccountData.defaultHostName)}`);
         })
             .catch((err) => {
             throw Error(err);
@@ -288,19 +294,23 @@ exports.default = async (pkg) => {
 /***/ }),
 
 /***/ 9753:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 exports.default = async (pkg) => {
     try {
         const handleCreatedAccount = async ({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
-            console.log(`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`);
+            console.log(`${chalk_1.default.bold.green('Success')}: Created storage account for ${chalk_1.default.bold(newAccountData.name)}: ${chalk_1.default.bold(newAccountData.primaryEndpoints.web)}`);
             await (0, child_process_promise_1.exec)(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
-            console.log(`Enabled web container for storage account: ${newAccountData.name}`);
+            console.log(`${chalk_1.default.bold.blue('info')}: Enabled web container for storage account: ${chalk_1.default.bold(newAccountData.name)}`);
         };
         await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`)
             .then(handleCreatedAccount)
@@ -333,6 +343,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 const msgFile = path_1.default.join('github_message.txt');
 exports.default = async (pkg, pullNumber) => {
     try {
@@ -364,7 +375,7 @@ exports.default = async (pkg, pullNumber) => {
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
-        console.log(`Deployed functionapp ${pkg.id}-${slotName}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp ${pkg.id}-${slotName}`);
         // Don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`;
         console.log(deployMsg);
@@ -412,6 +423,7 @@ const child_process_promise_1 = __nccwpck_require__(4858);
 const github = __importStar(__nccwpck_require__(5438));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 const msgFile = path_1.default.join('github_message.txt');
 const commitSha = github.context.sha.substr(0, 7);
 exports.default = async (pkg, pullNumber) => {
@@ -421,11 +433,11 @@ exports.default = async (pkg, pullNumber) => {
             throw Error('PR number is undefined');
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
-        console.log(`Building webapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${pkg.name}`);
         const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
-        console.log(`Build finished, uploading webapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${pkg.name}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
@@ -460,6 +472,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
 exports.default = async () => {
@@ -498,7 +511,7 @@ exports.default = async () => {
         const changedPackageIdString = changedPackages
             .map((pkg) => pkg.id)
             .join(', ');
-        console.log(`Changed packages: ${changedPackageIdString}`);
+        console.log(`${chalk_1.default.blue.bold('Info')}:  ${chalk_1.default.bold(changedPackageIdString)} changed packages`);
         return changedPackages;
     }
     catch (err) {
@@ -520,6 +533,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup', 'subscriptionId'];
 const appNotRequiredFields = ['outputDir'];
@@ -578,7 +592,7 @@ const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
 const isMonorepo = packageTypes
     .map((pkg) => fs_1.default.existsSync(path_1.default.join(pkg)))
     .includes(true);
-console.log(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app');
+console.log(`${chalk_1.default.bold.blue('info')}: ${isMonorepo ? 'Repository is monorepo' : 'Repository is single web app'}`);
 const packages = isMonorepo
     ? getMonorepoPackages()
     : [getPackageObject('.', 'apps')];
@@ -688,6 +702,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(7777));
 const deploy_pr_staging_1 = __importDefault(__nccwpck_require__(9151));
 const deploy_main_1 = __importDefault(__nccwpck_require__(9607));
 const pr_close_cleanup_1 = __importDefault(__nccwpck_require__(1986));
@@ -705,7 +720,7 @@ const prNumber = (_c = (_b = payload.pull_request) === null || _b === void 0 ? v
 const run = async () => {
     var _a, _b;
     const startTime = new Date();
-    console.log('Installing azure CLI...');
+    console.log(`${chalk_1.default.blue.bold('info')}: Installing azure CLI...`);
     await (0, child_process_promise_1.exec)('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
     // Use the below version in case specific version has to be installed
     // await exec(`
@@ -4847,6 +4862,272 @@ function removeHook(state, name, method) {
 
   state.registry[name].splice(index, 1);
 }
+
+
+/***/ }),
+
+/***/ 7777:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+// ESM COMPAT FLAG
+__nccwpck_require__.r(__webpack_exports__);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "Chalk": () => (/* binding */ Chalk),
+  "chalkStderr": () => (/* binding */ chalkStderr),
+  "default": () => (/* binding */ source),
+  "supportsColor": () => (/* binding */ stdoutColor),
+  "supportsColorStderr": () => (/* binding */ stderrColor)
+});
+
+// EXTERNAL MODULE: ./node_modules/@vercel/ncc/dist/ncc/@@notfound.js?#ansi-styles
+var _notfound_ansi_styles = __nccwpck_require__(16);
+// EXTERNAL MODULE: ./node_modules/@vercel/ncc/dist/ncc/@@notfound.js?#supports-color
+var _notfound_supports_color = __nccwpck_require__(5210);
+;// CONCATENATED MODULE: ./node_modules/chalk/source/utilities.js
+// TODO: When targeting Node.js 16, use `String.prototype.replaceAll`.
+function stringReplaceAll(string, substring, replacer) {
+	let index = string.indexOf(substring);
+	if (index === -1) {
+		return string;
+	}
+
+	const substringLength = substring.length;
+	let endIndex = 0;
+	let returnValue = '';
+	do {
+		returnValue += string.substr(endIndex, index - endIndex) + substring + replacer;
+		endIndex = index + substringLength;
+		index = string.indexOf(substring, endIndex);
+	} while (index !== -1);
+
+	returnValue += string.slice(endIndex);
+	return returnValue;
+}
+
+function stringEncaseCRLFWithFirstIndex(string, prefix, postfix, index) {
+	let endIndex = 0;
+	let returnValue = '';
+	do {
+		const gotCR = string[index - 1] === '\r';
+		returnValue += string.substr(endIndex, (gotCR ? index - 1 : index) - endIndex) + prefix + (gotCR ? '\r\n' : '\n') + postfix;
+		endIndex = index + 1;
+		index = string.indexOf('\n', endIndex);
+	} while (index !== -1);
+
+	returnValue += string.slice(endIndex);
+	return returnValue;
+}
+
+;// CONCATENATED MODULE: ./node_modules/chalk/source/index.js
+
+
+
+
+const {stdout: stdoutColor, stderr: stderrColor} = _notfound_supports_color;
+
+const GENERATOR = Symbol('GENERATOR');
+const STYLER = Symbol('STYLER');
+const IS_EMPTY = Symbol('IS_EMPTY');
+
+// `supportsColor.level` → `ansiStyles.color[name]` mapping
+const levelMapping = [
+	'ansi',
+	'ansi',
+	'ansi256',
+	'ansi16m',
+];
+
+const styles = Object.create(null);
+
+const applyOptions = (object, options = {}) => {
+	if (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {
+		throw new Error('The `level` option should be an integer from 0 to 3');
+	}
+
+	// Detect level if not set manually
+	const colorLevel = stdoutColor ? stdoutColor.level : 0;
+	object.level = options.level === undefined ? colorLevel : options.level;
+};
+
+class Chalk {
+	constructor(options) {
+		// eslint-disable-next-line no-constructor-return
+		return chalkFactory(options);
+	}
+}
+
+const chalkFactory = options => {
+	const chalk = (...strings) => strings.join(' ');
+	applyOptions(chalk, options);
+
+	Object.setPrototypeOf(chalk, createChalk.prototype);
+
+	return chalk;
+};
+
+function createChalk(options) {
+	return chalkFactory(options);
+}
+
+Object.setPrototypeOf(createChalk.prototype, Function.prototype);
+
+for (const [styleName, style] of Object.entries(_notfound_ansi_styles)) {
+	styles[styleName] = {
+		get() {
+			const builder = createBuilder(this, createStyler(style.open, style.close, this[STYLER]), this[IS_EMPTY]);
+			Object.defineProperty(this, styleName, {value: builder});
+			return builder;
+		},
+	};
+}
+
+styles.visible = {
+	get() {
+		const builder = createBuilder(this, this[STYLER], true);
+		Object.defineProperty(this, 'visible', {value: builder});
+		return builder;
+	},
+};
+
+const getModelAnsi = (model, level, type, ...arguments_) => {
+	if (model === 'rgb') {
+		if (level === 'ansi16m') {
+			return _notfound_ansi_styles[type].ansi16m(...arguments_);
+		}
+
+		if (level === 'ansi256') {
+			return _notfound_ansi_styles[type].ansi256(_notfound_ansi_styles.rgbToAnsi256(...arguments_));
+		}
+
+		return _notfound_ansi_styles[type].ansi(_notfound_ansi_styles.rgbToAnsi(...arguments_));
+	}
+
+	if (model === 'hex') {
+		return getModelAnsi('rgb', level, type, ..._notfound_ansi_styles.hexToRgb(...arguments_));
+	}
+
+	return _notfound_ansi_styles[type][model](...arguments_);
+};
+
+const usedModels = ['rgb', 'hex', 'ansi256'];
+
+for (const model of usedModels) {
+	styles[model] = {
+		get() {
+			const {level} = this;
+			return function (...arguments_) {
+				const styler = createStyler(getModelAnsi(model, levelMapping[level], 'color', ...arguments_), _notfound_ansi_styles.color.close, this[STYLER]);
+				return createBuilder(this, styler, this[IS_EMPTY]);
+			};
+		},
+	};
+
+	const bgModel = 'bg' + model[0].toUpperCase() + model.slice(1);
+	styles[bgModel] = {
+		get() {
+			const {level} = this;
+			return function (...arguments_) {
+				const styler = createStyler(getModelAnsi(model, levelMapping[level], 'bgColor', ...arguments_), _notfound_ansi_styles.bgColor.close, this[STYLER]);
+				return createBuilder(this, styler, this[IS_EMPTY]);
+			};
+		},
+	};
+}
+
+const proto = Object.defineProperties(() => {}, {
+	...styles,
+	level: {
+		enumerable: true,
+		get() {
+			return this[GENERATOR].level;
+		},
+		set(level) {
+			this[GENERATOR].level = level;
+		},
+	},
+});
+
+const createStyler = (open, close, parent) => {
+	let openAll;
+	let closeAll;
+	if (parent === undefined) {
+		openAll = open;
+		closeAll = close;
+	} else {
+		openAll = parent.openAll + open;
+		closeAll = close + parent.closeAll;
+	}
+
+	return {
+		open,
+		close,
+		openAll,
+		closeAll,
+		parent,
+	};
+};
+
+const createBuilder = (self, _styler, _isEmpty) => {
+	// Single argument is hot path, implicit coercion is faster than anything
+	// eslint-disable-next-line no-implicit-coercion
+	const builder = (...arguments_) => applyStyle(builder, (arguments_.length === 1) ? ('' + arguments_[0]) : arguments_.join(' '));
+
+	// We alter the prototype because we must return a function, but there is
+	// no way to create a function with a different prototype
+	Object.setPrototypeOf(builder, proto);
+
+	builder[GENERATOR] = self;
+	builder[STYLER] = _styler;
+	builder[IS_EMPTY] = _isEmpty;
+
+	return builder;
+};
+
+const applyStyle = (self, string) => {
+	if (self.level <= 0 || !string) {
+		return self[IS_EMPTY] ? '' : string;
+	}
+
+	let styler = self[STYLER];
+
+	if (styler === undefined) {
+		return string;
+	}
+
+	const {openAll, closeAll} = styler;
+	if (string.includes('\u001B')) {
+		while (styler !== undefined) {
+			// Replace any instances already present with a re-opening code
+			// otherwise only the part of the string until said closing code
+			// will be colored, and the rest will simply be 'plain'.
+			string = stringReplaceAll(string, styler.close, styler.open);
+
+			styler = styler.parent;
+		}
+	}
+
+	// We can move both next actions out of loop, because remaining actions in loop won't have
+	// any/visible effect on parts we add here. Close the styling before a linebreak and reopen
+	// after next line to fix a bleed issue on macOS: https://github.com/chalk/chalk/pull/92
+	const lfIndex = string.indexOf('\n');
+	if (lfIndex !== -1) {
+		string = stringEncaseCRLFWithFirstIndex(string, closeAll, openAll, lfIndex);
+	}
+
+	return openAll + string + closeAll;
+};
+
+Object.defineProperties(createChalk.prototype, styles);
+
+const chalk = createChalk();
+const chalkStderr = createChalk({level: stderrColor ? stderrColor.level : 0});
+
+
+
+/* harmony default export */ const source = (chalk);
 
 
 /***/ }),
@@ -37357,6 +37638,22 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 16:
+/***/ ((module) => {
+
+module.exports = eval("require")("");
+
+
+/***/ }),
+
+/***/ 5210:
+/***/ ((module) => {
+
+module.exports = eval("require")("");
+
+
+/***/ }),
+
 /***/ 5500:
 /***/ ((module) => {
 
@@ -37606,6 +37903,34 @@ module.exports = require("zlib");
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
