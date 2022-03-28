@@ -52,10 +52,13 @@ const getMissingFunctionApps = async (
 }
 const createServices = async (): Promise<void> => {
 	console.log('config packages', config)
-	const groupBySubscription = config.reduce((acc, item) => {
-		acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
-		return acc
-	})
+	const groupBySubscription = config.reduce(
+		(acc: Record<string, Package[]>, item) => {
+			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
+			return acc
+		},
+		{},
+	)
 	console.log(groupBySubscription)
 	console.log('Creating missing Azure services...')
 	throw Error('stop here')
