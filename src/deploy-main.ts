@@ -18,9 +18,11 @@ const deployWebApp = async (pkg: Package) => {
 	await exec('az extension add --name storage-preview').catch()
 	await exec(
 		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`,
-	).catch((err) => {
-		throw Error(err)
-	})
+	)
+		.then(() => console.log(`Deployed storage account ${pkg.id}`))
+		.catch((err) => {
+			throw Error(err)
+		})
 }
 
 const deployFuncApp = async (pkg: Package) => {
