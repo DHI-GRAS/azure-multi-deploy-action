@@ -6,6 +6,31 @@ import deployWebApp from './functions/deploy-web-to-staging'
 import deployFuncApp from './functions/deploy-func-to-staging'
 import { Package } from './types'
 
+const createMissingResources = async (
+	localConfig: Package[],
+	subsId: string,
+	prNumber: number,
+) => {
+	console.log('\nSetting the subscription for PR deployment...')
+	await exec(`az account set --subscription ${subsId}`)
+	console.log(`subscription set to ${subsId}`)
+
+	const webPackages = localConfig.filter((pkg) => pkg.type === 'app')
+	const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api')
+
+	if (webPackages.length + funcPackages.length === 0) {
+		const deployMsg = `ℹ️ No changed packages were detected`
+		console.log(deployMsg)
+		const msgFile = path.join('github_message.txt')
+		fs.appendFileSync(msgFile, `\n${deployMsg}  `)
+	}
+
+	for (const webApp of webPackages) await deployWebApp(webApp, prNumber)
+	for (const funcApp of funcPackages) await deployFuncApp(funcApp, prNumber)
+
+	console.log(`Completed for subscriptionID ${subsId}`)
+}
+
 const deployToStag = async (prNumber: number): Promise<void> => {
 	const changedPackages = await getChangedPackages()
 
@@ -17,35 +42,9 @@ const deployToStag = async (prNumber: number): Promise<void> => {
 		{},
 	)
 
-	const createAzureServicesPromise = Object.keys(groupBySubscription).map(
-		async (subsId) => {
-			console.log('\nSetting the subscription for PR deployment...')
-			await exec(`az account set --subscription ${subsId}`)
-				.then(() => console.log(`subscription set to ${subsId}`))
-				.catch((err) => {
-					throw Error(err)
-				})
-			const localChangedPackages = groupBySubscription[subsId]
-			const webPackages = localChangedPackages.filter(
-				(pkg) => pkg.type === 'app',
-			)
-			const funcPackages = localChangedPackages.filter(
-				(pkg) => pkg.type === 'func-api',
-			)
-
-			if (webPackages.length + funcPackages.length === 0) {
-				const deployMsg = `ℹ️ No changed packages were detected`
-				console.log(deployMsg)
-				const msgFile = path.join('github_message.txt')
-				fs.appendFileSync(msgFile, `\n${deployMsg}  `)
-			}
-
-			for (const webApp of webPackages) await deployWebApp(webApp, prNumber)
-			for (const funcApp of funcPackages) await deployFuncApp(funcApp, prNumber)
-		},
-	)
-
-	await Promise.all(createAzureServicesPromise)
+	for (const subsId of Object.keys(groupBySubscription)) {
+		await createMissingResources(groupBySubscription[subsId], subsId, prNumber)
+	}
 }
 
 export default deployToStag
