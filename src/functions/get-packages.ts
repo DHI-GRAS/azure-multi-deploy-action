@@ -4,7 +4,7 @@ import { Packages, Package, PackageJSON } from '../types'
 
 const packageTypes = ['apps', 'func-apis', 'libs'] as const
 
-const appRequiredFields = ['name', 'id', 'resourceGroup']
+const appRequiredFields = ['name', 'id', 'resourceGroup', 'subscriptionId']
 const appNotRequiredFields = ['outputDir']
 const apiRequiredFields = [...appRequiredFields, 'storageAccount']
 

@@ -6,6 +6,7 @@ export interface Package {
 	storageAccount?: string
 	outputDir?: string
 	path: string
+	subscriptionId: string
 }
 
 export type Packages = Package[]
@@ -35,6 +36,7 @@ export interface PackageJSON {
 		id: string
 		resourceGroup: string
 		storageAccount: string
+		subscriptionId: string
 		outputDir?: string
 	}
 }

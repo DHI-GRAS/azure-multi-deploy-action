@@ -20,9 +20,8 @@ export default async (): Promise<void> => {
 		core.setSecret(azureCredentials[key]),
 	)
 
-	const { clientId, tenantId, clientSecret, subscriptionId } = azureCredentials
+	const { clientId, tenantId, clientSecret } = azureCredentials
 	await exec(
 		`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`,
 	)
-	await exec(`az account set --subscription ${subscriptionId}`)
 }

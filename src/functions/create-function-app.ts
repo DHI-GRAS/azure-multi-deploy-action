@@ -1,13 +1,13 @@
 import { exec } from 'child-process-promise'
 import { Package, FunctionApp } from '../types'
 
-export default (pkg: Package): void => {
+export default async (pkg: Package): Promise<void> => {
 	try {
 		if (!pkg.storageAccount) {
 			throw Error(`${pkg.id} needs to specify storageAccount`)
 		}
 
-		void exec(
+		await exec(
 			`az functionapp create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --storage-account ${pkg.storageAccount} --runtime node --consumption-plan-location northeurope --functions-version 3 --disable-app-insights true`,
 		)
 			.then(({ stdout }) => {

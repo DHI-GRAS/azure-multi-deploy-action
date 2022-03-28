@@ -1,5 +1,5 @@
 import { exec } from 'child-process-promise'
-import { Packages, StorageAccounts, FunctionApps } from './types'
+import { Packages, StorageAccounts, FunctionApps, Package } from './types'
 import createFunctionApp from './functions/create-function-app'
 import createStorageAccount from './functions/create-storage-account'
 import config from './functions/get-packages'
@@ -50,11 +50,17 @@ const getMissingFunctionApps = async (
 		return !appIds.includes(configApp.id)
 	})
 }
-const createServices = async (): Promise<void> => {
-	console.log('Creating missing Azure services...')
-	const missingStorageAccounts = await getMissingStorageAccounts(config)
-	const missingFunctionApps = await getMissingFunctionApps(config)
 
+const createMissingResources = async (
+	localConfig: Package[],
+	subscriptionId: string,
+) => {
+	console.log('\nSetting the subscription for creating services...')
+	console.log('Creating missing Azure services...')
+	await exec(`az account set --subscription ${subscriptionId}`)
+	console.log(`subscription set to ${subscriptionId}`)
+	const missingStorageAccounts = await getMissingStorageAccounts(localConfig)
+	const missingFunctionApps = await getMissingFunctionApps(localConfig)
 	console.log(
 		missingStorageAccounts.length > 0
 			? `Creating storage accounts: ${missingStorageAccounts
@@ -70,8 +76,30 @@ const createServices = async (): Promise<void> => {
 					.join()}`
 			: 'No function apps to create',
 	)
-	missingStorageAccounts.forEach((pkg) => createStorageAccount(pkg))
-	missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
+
+	for (const pkg of missingStorageAccounts) {
+		await createStorageAccount(pkg)
+	}
+
+	for (const pkg of missingFunctionApps) {
+		await createFunctionApp(pkg)
+	}
+
+	console.log(`Completed for subscriptionID ${subscriptionId}`)
+}
+
+const createServices = async (): Promise<void> => {
+	const groupBySubscription = config.reduce(
+		(acc: Record<string, Package[]>, item) => {
+			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
+			return acc
+		},
+		{},
+	)
+
+	for (const subsId of Object.keys(groupBySubscription)) {
+		await createMissingResources(groupBySubscription[subsId], subsId)
+	}
 }
 
 export default createServices

@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const packageTypes = ['apps', 'func-apis', 'libs'];
-const appRequiredFields = ['name', 'id', 'resourceGroup'];
+const appRequiredFields = ['name', 'id', 'resourceGroup', 'subscriptionId'];
 const appNotRequiredFields = ['outputDir'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const pkgTypeRequiredFieldMap = {

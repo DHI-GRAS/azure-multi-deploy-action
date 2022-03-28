@@ -44,7 +44,6 @@ const run = async () => {
 
 	await azLogin()
 	await createServices()
-
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
 		console.log('Deploying to staging...')
@@ -71,7 +70,7 @@ const run = async () => {
 
 	if (isPR && payload.pull_request?.state === 'closed') {
 		console.log('PR closed. Cleaning up deployments...')
-		cleanDeployments(prNumber)
+		await cleanDeployments(prNumber)
 	}
 
 	if (isPR) await postComment(startTime)
