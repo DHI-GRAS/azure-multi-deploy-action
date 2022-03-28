@@ -57,18 +57,15 @@ const createMissingResources = async (localConfig, subscriptionId) => {
         : 'No function apps to create');
     missingStorageAccounts.forEach((pkg) => (0, create_storage_account_1.default)(pkg));
     missingFunctionApps.forEach((pkg) => (0, create_function_app_1.default)(pkg));
+    console.log(`Completed for subscriptionID ${subscriptionId}`);
 };
 const createServices = async () => {
     const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
         acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
         return acc;
     }, {});
-    const createAzureServicesPromise = Object.keys(groupBySubscription).map(async (subsId) => {
-        const localConfig = groupBySubscription[subsId];
-        await createMissingResources(localConfig, subsId);
-    });
-    for (const localPromise of createAzureServicesPromise) {
-        await localPromise;
+    for (const subsId of Object.keys(groupBySubscription)) {
+        await createMissingResources(groupBySubscription[subsId], subsId);
     }
 };
 exports.default = createServices;
