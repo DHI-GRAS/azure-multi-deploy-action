@@ -78,6 +78,8 @@ const createMissingResources = async (
 	)
 	missingStorageAccounts.forEach((pkg) => createStorageAccount(pkg))
 	missingFunctionApps.forEach((pkg) => createFunctionApp(pkg))
+
+	console.log(`Completed for subscriptionID ${subscriptionId}`)
 }
 
 const createServices = async (): Promise<void> => {
@@ -89,15 +91,8 @@ const createServices = async (): Promise<void> => {
 		{},
 	)
 
-	const createAzureServicesPromise = Object.keys(groupBySubscription).map(
-		async (subsId) => {
-			const localConfig = groupBySubscription[subsId]
-			await createMissingResources(localConfig, subsId)
-		},
-	)
-
-	for (const localPromise of createAzureServicesPromise) {
-		await localPromise
+	for (const subsId of Object.keys(groupBySubscription)) {
+		await createMissingResources(groupBySubscription[subsId], subsId)
 	}
 }
 
