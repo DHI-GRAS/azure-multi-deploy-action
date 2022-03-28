@@ -33,14 +33,26 @@ const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
         throw Error(err);
     }
 };
-const cleanDeployments = async (prNumber) => {
-    const webPackages = get_packages_1.default.filter((pkg) => pkg.type === 'app');
-    const funcPackages = get_packages_1.default.filter((pkg) => pkg.type === 'func-api');
+const removeResources = async (localConfig, subsId, prNumber) => {
+    console.log('\nSetting the subscription for creating services...');
+    await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
+    console.log(`subscription set to ${subsId}`);
+    const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
+    const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     for (const pkg of webPackages) {
         await removeWebStagingDeployment(pkg, prNumber);
     }
     for (const pkg of funcPackages) {
         await removeFuncAppStagingDeployment(pkg, prNumber);
+    }
+};
+const cleanDeployments = async (prNumber) => {
+    const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
+        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
+        return acc;
+    }, {});
+    for (const subsId of Object.keys(groupBySubscription)) {
+        await removeResources(groupBySubscription[subsId], subsId, prNumber);
     }
 };
 exports.default = cleanDeployments;

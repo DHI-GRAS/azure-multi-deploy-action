@@ -36,9 +36,17 @@ const removeFuncAppStagingDeployment = async (
 	}
 }
 
-const cleanDeployments = async (prNumber: number): Promise<void> => {
-	const webPackages = packages.filter((pkg) => pkg.type === 'app')
-	const funcPackages = packages.filter((pkg) => pkg.type === 'func-api')
+const removeResources = async (
+	localConfig: Package[],
+	subsId: string,
+	prNumber: number,
+) => {
+	console.log('\nSetting the subscription for creating services...')
+	await exec(`az account set --subscription ${subsId}`)
+	console.log(`subscription set to ${subsId}`)
+
+	const webPackages = localConfig.filter((pkg) => pkg.type === 'app')
+	const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api')
 
 	for (const pkg of webPackages) {
 		await removeWebStagingDeployment(pkg, prNumber)
@@ -46,6 +54,20 @@ const cleanDeployments = async (prNumber: number): Promise<void> => {
 
 	for (const pkg of funcPackages) {
 		await removeFuncAppStagingDeployment(pkg, prNumber)
+	}
+}
+
+const cleanDeployments = async (prNumber: number): Promise<void> => {
+	const groupBySubscription = packages.reduce(
+		(acc: Record<string, Package[]>, item) => {
+			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
+			return acc
+		},
+		{},
+	)
+
+	for (const subsId of Object.keys(groupBySubscription)) {
+		await removeResources(groupBySubscription[subsId], subsId, prNumber)
 	}
 }
 
