@@ -97,6 +97,9 @@ const createServices = async (): Promise<void> => {
 		{},
 	)
 
+	console.log('config', config)
+	console.log('groupedBySubscription', groupBySubscription)
+
 	for (const subsId of Object.keys(groupBySubscription)) {
 		await createMissingResources(groupBySubscription[subsId], subsId)
 	}
