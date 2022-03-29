@@ -75,6 +75,8 @@ const createServices = async () => {
         acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
         return acc;
     }, {});
+    console.log('config', get_packages_1.default);
+    console.log('groupedBySubscription', groupBySubscription);
     for (const subsId of Object.keys(groupBySubscription)) {
         await createMissingResources(groupBySubscription[subsId], subsId);
     }
