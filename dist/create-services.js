@@ -7,8 +7,9 @@ const child_process_promise_1 = require("child-process-promise");
 const create_function_app_1 = __importDefault(require("./functions/create-function-app"));
 const create_storage_account_1 = __importDefault(require("./functions/create-storage-account"));
 const get_packages_1 = __importDefault(require("./functions/get-packages"));
-const getMissingStorageAccounts = async (packages) => {
-    const webAppPackages = packages.filter((item) => item.type === 'app');
+const group_by_subscription_1 = __importDefault(require("./functions/group-by-subscription"));
+const getMissingStorageAccounts = async (localPackages) => {
+    const webAppPackages = localPackages.filter((item) => item.type === 'app');
     if (webAppPackages.length === 0) {
         console.log('No web app packages in project');
         return [];
@@ -21,8 +22,8 @@ const getMissingStorageAccounts = async (packages) => {
     console.log(`Retrieved ${accounts.length} storage accounts`);
     return webAppPackages.filter((item) => !accounts.map((account) => account.name).includes(item.id));
 };
-const getMissingFunctionApps = async (packages) => {
-    const configFuncApps = packages.filter((item) => item.type === 'func-api');
+const getMissingFunctionApps = async (localPackages) => {
+    const configFuncApps = localPackages.filter((item) => item.type === 'func-api');
     if (configFuncApps.length === 0) {
         console.log('No function app packages in project');
         return [];
@@ -64,14 +65,9 @@ const createMissingResources = async (localConfig, subscriptionId) => {
     console.log(`Completed for subscriptionID ${subscriptionId}`);
 };
 const createServices = async () => {
-    const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    console.log('config', get_packages_1.default);
-    console.log('groupedBySubscription', groupBySubscription);
-    for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId);
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
+    for (const subsId of Object.keys(azureResourcesBySubId)) {
+        await createMissingResources(azureResourcesBySubId[subsId], subsId);
     }
 };
 exports.default = createServices;

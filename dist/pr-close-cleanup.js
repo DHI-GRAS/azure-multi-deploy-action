@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
 const get_packages_1 = __importDefault(require("./functions/get-packages"));
+const group_by_subscription_1 = __importDefault(require("./functions/group-by-subscription"));
 const removeWebStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
@@ -47,12 +48,9 @@ const removeResources = async (localConfig, subsId, prNumber) => {
     }
 };
 const cleanDeployments = async (prNumber) => {
-    const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    for (const subsId of Object.keys(groupBySubscription)) {
-        await removeResources(groupBySubscription[subsId], subsId, prNumber);
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
+    for (const subsId of Object.keys(azureResourcesBySubId)) {
+        await removeResources(azureResourcesBySubId[subsId], subsId, prNumber);
     }
 };
 exports.default = cleanDeployments;

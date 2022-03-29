@@ -5,6 +5,7 @@ import getChangedPackages from './functions/get-changed-packages'
 import deployWebApp from './functions/deploy-web-to-staging'
 import deployFuncApp from './functions/deploy-func-to-staging'
 import { Package } from './types'
+import groupBySubscription from './functions/group-by-subscription'
 
 const createMissingResources = async (
 	localConfig: Package[],
@@ -34,16 +35,14 @@ const createMissingResources = async (
 const deployToStag = async (prNumber: number): Promise<void> => {
 	const changedPackages = await getChangedPackages()
 
-	const groupBySubscription = changedPackages.reduce(
-		(acc: Record<string, Package[]>, item) => {
-			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
-			return acc
-		},
-		{},
-	)
+	const azureResourcesBySubId = groupBySubscription(changedPackages)
 
-	for (const subsId of Object.keys(groupBySubscription)) {
-		await createMissingResources(groupBySubscription[subsId], subsId, prNumber)
+	for (const subsId of Object.keys(azureResourcesBySubId)) {
+		await createMissingResources(
+			azureResourcesBySubId[subsId],
+			subsId,
+			prNumber,
+		)
 	}
 }
 

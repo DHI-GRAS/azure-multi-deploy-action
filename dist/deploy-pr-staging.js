@@ -9,6 +9,7 @@ const fs_1 = __importDefault(require("fs"));
 const get_changed_packages_1 = __importDefault(require("./functions/get-changed-packages"));
 const deploy_web_to_staging_1 = __importDefault(require("./functions/deploy-web-to-staging"));
 const deploy_func_to_staging_1 = __importDefault(require("./functions/deploy-func-to-staging"));
+const group_by_subscription_1 = __importDefault(require("./functions/group-by-subscription"));
 const createMissingResources = async (localConfig, subsId, prNumber) => {
     console.log('\nSetting the subscription for PR deployment...');
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
@@ -29,12 +30,9 @@ const createMissingResources = async (localConfig, subsId, prNumber) => {
 };
 const deployToStag = async (prNumber) => {
     const changedPackages = await (0, get_changed_packages_1.default)();
-    const groupBySubscription = changedPackages.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId, prNumber);
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(changedPackages);
+    for (const subsId of Object.keys(azureResourcesBySubId)) {
+        await createMissingResources(azureResourcesBySubId[subsId], subsId, prNumber);
     }
 };
 exports.default = deployToStag;

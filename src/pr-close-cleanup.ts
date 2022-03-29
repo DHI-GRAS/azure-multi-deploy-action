@@ -1,6 +1,7 @@
 import { exec } from 'child-process-promise'
 import { Package } from './types'
 import packages from './functions/get-packages'
+import groupBySubscription from './functions/group-by-subscription'
 
 const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 	try {
@@ -58,16 +59,10 @@ const removeResources = async (
 }
 
 const cleanDeployments = async (prNumber: number): Promise<void> => {
-	const groupBySubscription = packages.reduce(
-		(acc: Record<string, Package[]>, item) => {
-			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
-			return acc
-		},
-		{},
-	)
+	const azureResourcesBySubId = groupBySubscription(packages)
 
-	for (const subsId of Object.keys(groupBySubscription)) {
-		await removeResources(groupBySubscription[subsId], subsId, prNumber)
+	for (const subsId of Object.keys(azureResourcesBySubId)) {
+		await removeResources(azureResourcesBySubId[subsId], subsId, prNumber)
 	}
 }
 

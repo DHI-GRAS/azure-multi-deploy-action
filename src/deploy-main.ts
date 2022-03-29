@@ -2,6 +2,7 @@ import { exec } from 'child-process-promise'
 import * as github from '@actions/github'
 import { Package } from './types'
 import getChangedPackages from './functions/get-changed-packages'
+import groupBySubscription from './functions/group-by-subscription'
 
 const commitSha = github.context.sha.substr(0, 7)
 
@@ -72,16 +73,10 @@ const createMissingResources = async (
 const deployToProd = async (): Promise<void> => {
 	const changedPackages = await getChangedPackages()
 
-	const groupBySubscription = changedPackages.reduce(
-		(acc: Record<string, Package[]>, item) => {
-			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
-			return acc
-		},
-		{},
-	)
+	const azureResourcesBySubId = groupBySubscription(changedPackages)
 
-	for (const subsId of Object.keys(groupBySubscription)) {
-		await createMissingResources(groupBySubscription[subsId], subsId)
+	for (const subsId of Object.keys(azureResourcesBySubId)) {
+		await createMissingResources(azureResourcesBySubId[subsId], subsId)
 	}
 }
 

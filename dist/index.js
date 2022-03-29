@@ -14,8 +14,9 @@ const child_process_promise_1 = __nccwpck_require__(4858);
 const create_function_app_1 = __importDefault(__nccwpck_require__(2237));
 const create_storage_account_1 = __importDefault(__nccwpck_require__(9753));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
-const getMissingStorageAccounts = async (packages) => {
-    const webAppPackages = packages.filter((item) => item.type === 'app');
+const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
+const getMissingStorageAccounts = async (localPackages) => {
+    const webAppPackages = localPackages.filter((item) => item.type === 'app');
     if (webAppPackages.length === 0) {
         console.log('No web app packages in project');
         return [];
@@ -28,8 +29,8 @@ const getMissingStorageAccounts = async (packages) => {
     console.log(`Retrieved ${accounts.length} storage accounts`);
     return webAppPackages.filter((item) => !accounts.map((account) => account.name).includes(item.id));
 };
-const getMissingFunctionApps = async (packages) => {
-    const configFuncApps = packages.filter((item) => item.type === 'func-api');
+const getMissingFunctionApps = async (localPackages) => {
+    const configFuncApps = localPackages.filter((item) => item.type === 'func-api');
     if (configFuncApps.length === 0) {
         console.log('No function app packages in project');
         return [];
@@ -71,14 +72,9 @@ const createMissingResources = async (localConfig, subscriptionId) => {
     console.log(`Completed for subscriptionID ${subscriptionId}`);
 };
 const createServices = async () => {
-    const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    console.log('config', get_packages_1.default);
-    console.log('groupedBySubscription', groupBySubscription);
-    for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId);
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
+    for (const subsId of Object.keys(azureResourcesBySubId)) {
+        await createMissingResources(azureResourcesBySubId[subsId], subsId);
     }
 };
 exports.default = createServices;
@@ -117,6 +113,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const github = __importStar(__nccwpck_require__(5438));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
+const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
 const commitSha = github.context.sha.substr(0, 7);
 const deployWebApp = async (pkg) => {
     var _a;
@@ -171,12 +168,9 @@ const createMissingResources = async (localConfig, subscriptionId) => {
 };
 const deployToProd = async () => {
     const changedPackages = await (0, get_changed_packages_1.default)();
-    const groupBySubscription = changedPackages.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId);
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(changedPackages);
+    for (const subsId of Object.keys(azureResourcesBySubId)) {
+        await createMissingResources(azureResourcesBySubId[subsId], subsId);
     }
 };
 exports.default = deployToProd;
@@ -199,6 +193,7 @@ const fs_1 = __importDefault(__nccwpck_require__(5747));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
 const deploy_web_to_staging_1 = __importDefault(__nccwpck_require__(811));
 const deploy_func_to_staging_1 = __importDefault(__nccwpck_require__(8363));
+const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
 const createMissingResources = async (localConfig, subsId, prNumber) => {
     console.log('\nSetting the subscription for PR deployment...');
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
@@ -219,12 +214,9 @@ const createMissingResources = async (localConfig, subsId, prNumber) => {
 };
 const deployToStag = async (prNumber) => {
     const changedPackages = await (0, get_changed_packages_1.default)();
-    const groupBySubscription = changedPackages.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId, prNumber);
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(changedPackages);
+    for (const subsId of Object.keys(azureResourcesBySubId)) {
+        await createMissingResources(azureResourcesBySubId[subsId], subsId, prNumber);
     }
 };
 exports.default = deployToStag;
@@ -602,6 +594,24 @@ exports.default = packages;
 
 /***/ }),
 
+/***/ 5229:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.default = (config) => config
+    // exclude libs as libs aren't an azure resource
+    .filter((item) => item.type !== 'lib')
+    // group resources by subscription
+    .reduce((acc, item) => {
+    acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
+    return acc;
+}, {});
+
+
+/***/ }),
+
 /***/ 803:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -775,6 +785,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
+const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
 const removeWebStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
@@ -817,12 +828,9 @@ const removeResources = async (localConfig, subsId, prNumber) => {
     }
 };
 const cleanDeployments = async (prNumber) => {
-    const groupBySubscription = get_packages_1.default.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    for (const subsId of Object.keys(groupBySubscription)) {
-        await removeResources(groupBySubscription[subsId], subsId, prNumber);
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
+    for (const subsId of Object.keys(azureResourcesBySubId)) {
+        await removeResources(azureResourcesBySubId[subsId], subsId, prNumber);
     }
 };
 exports.default = cleanDeployments;
