@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { exec } from 'child-process-promise'
+import supportsColor from 'supports-color'
 import deployToStag from './deploy-pr-staging'
 import deployToProd from './deploy-main'
 import cleanDeployments from './pr-close-cleanup'
@@ -21,6 +22,18 @@ const prNumber = payload.pull_request?.number ?? 0
 
 const run = async () => {
 	const startTime = new Date()
+
+	if (supportsColor.stdout) {
+		console.log('Terminal stdout supports color')
+	}
+
+	if ((supportsColor.stdout as any).has256) {
+		console.log('Terminal stdout supports 256 colors')
+	}
+
+	if ((supportsColor.stdout as any).has16m) {
+		console.log('Terminal stdout supports 16 million colors (truecolor)')
+	}
 
 	console.log('Installing azure CLI...')
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')

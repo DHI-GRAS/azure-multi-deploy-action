@@ -38,6 +38,7 @@
 		"child-process-promise": "^2.2.1",
 		"date-fns": "^2.23.0",
 		"eslint-import-resolver-typescript": "^2.4.0",
+		"supports-color": "^9.2.2",
 		"yaml": "^1.10.2"
 	}
 }
