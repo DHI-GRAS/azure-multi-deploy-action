@@ -25,6 +25,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
 const github = __importStar(require("@actions/github"));
 const get_changed_packages_1 = __importDefault(require("./functions/get-changed-packages"));
+const group_by_subscription_1 = __importDefault(require("./functions/group-by-subscription"));
 const commitSha = github.context.sha.substr(0, 7);
 const deployWebApp = async (pkg) => {
     var _a;
@@ -79,12 +80,9 @@ const createMissingResources = async (localConfig, subscriptionId) => {
 };
 const deployToProd = async () => {
     const changedPackages = await (0, get_changed_packages_1.default)();
-    const groupBySubscription = changedPackages.reduce((acc, item) => {
-        acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item];
-        return acc;
-    }, {});
-    for (const subsId of Object.keys(groupBySubscription)) {
-        await createMissingResources(groupBySubscription[subsId], subsId);
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(changedPackages);
+    for (const subsId of Object.keys(azureResourcesBySubId)) {
+        await createMissingResources(azureResourcesBySubId[subsId], subsId);
     }
 };
 exports.default = deployToProd;

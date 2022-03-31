@@ -2,12 +2,13 @@ import { exec } from 'child-process-promise'
 import { Packages, StorageAccounts, FunctionApps, Package } from './types'
 import createFunctionApp from './functions/create-function-app'
 import createStorageAccount from './functions/create-storage-account'
-import config from './functions/get-packages'
+import packages from './functions/get-packages'
+import groupBySubscription from './functions/group-by-subscription'
 
 const getMissingStorageAccounts = async (
-	packages: Packages,
+	localPackages: Packages,
 ): Promise<Packages> => {
-	const webAppPackages = packages.filter((item) => item.type === 'app')
+	const webAppPackages = localPackages.filter((item) => item.type === 'app')
 	if (webAppPackages.length === 0) {
 		console.log('No web app packages in project')
 		return []
@@ -28,9 +29,11 @@ const getMissingStorageAccounts = async (
 }
 
 const getMissingFunctionApps = async (
-	packages: Packages,
+	localPackages: Packages,
 ): Promise<Packages> => {
-	const configFuncApps = packages.filter((item) => item.type === 'func-api')
+	const configFuncApps = localPackages.filter(
+		(item) => item.type === 'func-api',
+	)
 
 	if (configFuncApps.length === 0) {
 		console.log('No function app packages in project')
@@ -89,16 +92,10 @@ const createMissingResources = async (
 }
 
 const createServices = async (): Promise<void> => {
-	const groupBySubscription = config.reduce(
-		(acc: Record<string, Package[]>, item) => {
-			acc[item.subscriptionId] = [...(acc[item.subscriptionId] || []), item]
-			return acc
-		},
-		{},
-	)
+	const azureResourcesBySubId = groupBySubscription(packages)
 
-	for (const subsId of Object.keys(groupBySubscription)) {
-		await createMissingResources(groupBySubscription[subsId], subsId)
+	for (const subsId of Object.keys(azureResourcesBySubId)) {
+		await createMissingResources(azureResourcesBySubId[subsId], subsId)
 	}
 }
 
