@@ -25,11 +25,6 @@ const run = async () => {
 	chalk.level = 1
 	console.log(`${chalk.bold.blue('Info')}Installing azure CLI...`)
 
-	chalk.level = 2
-	console.log(`${chalk.bold.blue('Info')}Installing azure CLI...`)
-
-	chalk.level = 3
-	console.log(`${chalk.bold.blue('Info')}Installing azure CLI...`)
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 
 	// Use the below version in case specific version has to be installed
@@ -53,7 +48,7 @@ const run = async () => {
 	await createServices()
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
-		console.log('Deploying to staging...')
+		console.log(`${chalk.bold.blue('Info')}: Deploying to staging...`)
 		await deployToStag(prNumber)
 	}
 
@@ -61,7 +56,7 @@ const run = async () => {
 	const preventProdDeploy = core.getInput('preventProdDeploy')
 	if (preventProdDeploy && currentBranch === defaultBranch) {
 		const errorMsg =
-			'Production deployment skipped! Code quality checks have failed'
+			`${chalk.bold.yellow('Info')}: Deploying to production...Production deployment skipped! Code quality checks have failed`
 		console.error(errorMsg)
 		core.setFailed(errorMsg)
 	}
@@ -71,14 +66,16 @@ const run = async () => {
 		currentBranch === defaultBranch &&
 		!preventProdDeploy
 	) {
-		console.log('Deploying to production...')
+		console.log(`${chalk.bold.blue('Info')}: Deploying to production...`)
 		await deployToProd()
 	}
 
 	if (isPR && payload.pull_request?.state === 'closed') {
-		console.log('PR closed. Cleaning up deployments...')
+		console.log(`${chalk.bold.blue('Info')}: PR closed. Cleaning up deployments...`)
 		await cleanDeployments(prNumber)
 	}
+
+	console.log(`${chalk.bold.green('Success')}: You are lucky, the action finished!`)
 
 	if (isPR) await postComment(startTime)
 }
