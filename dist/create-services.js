@@ -46,7 +46,7 @@ const createMissingResources = async (localConfig, subscriptionId) => {
     console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for creating services...`);
     console.log(`${chalk_1.default.bold.blue('Info')}: Creating missing Azure services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
-    console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subscriptionId)}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
     const missingFunctionApps = await getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0

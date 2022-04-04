@@ -43,8 +43,11 @@ const run = async () => {
 	// 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
 
 	// `)
+	console.log('\n')
 
 	await azLogin()
+	console.log('\n')
+
 	await createServices()
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
@@ -57,7 +60,7 @@ const run = async () => {
 	if (preventProdDeploy && currentBranch === defaultBranch) {
 		const errorMsg = `${chalk.bold.yellow(
 			'Info',
-		)}: Deploying to production...Production deployment skipped! Code quality checks have failed`
+		)}: Production deployment skipped! Code quality checks have failed`
 		console.error(errorMsg)
 		core.setFailed(errorMsg)
 	}

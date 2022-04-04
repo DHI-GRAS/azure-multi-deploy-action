@@ -82,7 +82,7 @@ const createMissingResources = async (
 	console.log(`${chalk.bold.blue('Info')}: Creating missing Azure services...`)
 	await exec(`az account set --subscription ${subscriptionId}`)
 	console.log(
-		`${chalk.bold.green('Success')}: subscription set to ${chalk.bold(
+		`${chalk.bold.green('Success')}: Subscription set to ${chalk.bold(
 			subscriptionId,
 		)}`,
 	)

@@ -53,7 +53,7 @@ const createMissingResources = async (localConfig, subscriptionId) => {
     console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for creating services...`);
     console.log(`${chalk_1.default.bold.blue('Info')}: Creating missing Azure services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
-    console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subscriptionId)}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
     const missingFunctionApps = await getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0
@@ -253,11 +253,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
+chalk_1.default.level = 1;
 exports.default = async () => {
-    console.log('Logging into Azure CLI...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });
@@ -767,7 +773,9 @@ const run = async () => {
     // 	sudo apt-get update ;
     // 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
     // `)
+    console.log('\n');
     await (0, az_login_1.default)();
+    console.log('\n');
     await (0, create_services_1.default)();
     // Deploy to stag
     if (isPR && ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
@@ -777,7 +785,7 @@ const run = async () => {
     // Deploy to prod
     const preventProdDeploy = core.getInput('preventProdDeploy');
     if (preventProdDeploy && currentBranch === defaultBranch) {
-        const errorMsg = `${chalk_1.default.bold.yellow('Info')}: Deploying to production...Production deployment skipped! Code quality checks have failed`;
+        const errorMsg = `${chalk_1.default.bold.yellow('Info')}: Production deployment skipped! Code quality checks have failed`;
         console.error(errorMsg);
         core.setFailed(errorMsg);
     }
