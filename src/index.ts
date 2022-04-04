@@ -55,8 +55,9 @@ const run = async () => {
 	// Deploy to prod
 	const preventProdDeploy = core.getInput('preventProdDeploy')
 	if (preventProdDeploy && currentBranch === defaultBranch) {
-		const errorMsg =
-			`${chalk.bold.yellow('Info')}: Deploying to production...Production deployment skipped! Code quality checks have failed`
+		const errorMsg = `${chalk.bold.yellow(
+			'Info',
+		)}: Deploying to production...Production deployment skipped! Code quality checks have failed`
 		console.error(errorMsg)
 		core.setFailed(errorMsg)
 	}
@@ -71,11 +72,15 @@ const run = async () => {
 	}
 
 	if (isPR && payload.pull_request?.state === 'closed') {
-		console.log(`${chalk.bold.blue('Info')}: PR closed. Cleaning up deployments...`)
+		console.log(
+			`${chalk.bold.blue('Info')}: PR closed. Cleaning up deployments...`,
+		)
 		await cleanDeployments(prNumber)
 	}
 
-	console.log(`${chalk.bold.green('Success')}: You are lucky, the action finished!`)
+	console.log(
+		`${chalk.bold.green('Success')}: You are lucky, the action finished!`,
+	)
 
 	if (isPR) await postComment(startTime)
 }

@@ -1,3 +1,4 @@
+import chalk from 'chalk'
 import fs from 'fs'
 import path from 'path'
 import { Packages, Package, PackageJSON } from '../types'
@@ -13,7 +14,7 @@ const pkgTypeRequiredFieldMap = {
 	'func-apis': apiRequiredFields,
 	libs: [],
 }
-
+chalk.level = 1
 const getPackageObject = (
 	pkgDir: string,
 	pkgType: typeof packageTypes[number],
@@ -35,7 +36,9 @@ const getPackageObject = (
 			const fieldValue = pkgObj.azureDeployConfig?.[field]
 			if (!fieldValue)
 				throw Error(
-					`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`,
+					`${chalk.bold.red(
+						'Error',
+					)}: "${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`,
 				)
 			return { ...fieldAcc, [field]: fieldValue }
 		},
@@ -64,7 +67,9 @@ const getPackageObject = (
 			pkgObj.azureDeployConfig.id?.length
 	)
 		throw Error(
-			`"id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`,
+			`${chalk.bold.red(
+				'Error',
+			)}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`,
 		)
 	return {
 		...propertiesFromPckJson,
@@ -92,7 +97,9 @@ const isMonorepo = packageTypes
 	.includes(true)
 
 console.log(
-	isMonorepo ? 'Repository is monorepo' : 'Repository is single web app',
+	`${chalk.bold.blue('Info')}: ${chalk.bold(
+		isMonorepo ? 'Repository is monorepo' : 'Repository is single web app',
+	)}`,
 )
 const packages = isMonorepo
 	? getMonorepoPackages()

@@ -113,9 +113,9 @@ const createMissingResources = async (
 	}
 
 	console.log(
-		`${chalk.bold.green(
-			'Success',
-		)}: Completed for subscriptionID ${subscriptionId}`,
+		`${chalk.bold.green('Success')}: Completed for subscriptionID ${chalk.bold(
+			subscriptionId,
+		)}`,
 	)
 }
 

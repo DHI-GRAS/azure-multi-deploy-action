@@ -1,8 +1,10 @@
 import { exec } from 'child-process-promise'
 import path from 'path'
 import fs from 'fs'
+import chalk from 'chalk'
 import { Package } from '../types'
 
+chalk.level = 1
 const msgFile = path.join('github_message.txt')
 
 interface DeploymentSlot {
@@ -19,7 +21,11 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const slots = JSON.parse(listOut) as DeploymentSlots
 
 		if (!pullNumber)
-			throw Error('The environment variable GITHUB_PR_NUMBER must be defined')
+			throw Error(
+				`${chalk.bold.red(
+					'Error',
+				)}: The environment variable GITHUB_PR_NUMBER must be defined`,
+			)
 
 		const slotName = `stag-${pullNumber}`
 
@@ -52,9 +58,13 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		)
 		if (uploadErr) console.log(uploadErr, uploadOut)
 
-		console.log(`Deployed functionapp ${pkg.id}-${slotName}`)
+		console.log(
+			`${chalk.bold.green('Success')}: Deployed functionapp ${chalk.bold(
+				`${pkg.id}-${slotName}`,
+			)}`,
+		)
 
-		// Don't think the deployment url gets returned from upload - hopefully this stays static?
+		// I don't think the deployment url gets returned from upload - hopefully this stays static?
 		const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`
 		console.log(deployMsg)
 		fs.appendFileSync(msgFile, deployMsg)

@@ -1,26 +1,39 @@
 import { exec } from 'child-process-promise'
 import * as github from '@actions/github'
+import chalk from 'chalk'
 import { Package } from './types'
 import getChangedPackages from './functions/get-changed-packages'
 import groupBySubscription from './functions/group-by-subscription'
 
 const commitSha = github.context.sha.substr(0, 7)
-
+chalk.level = 1
 const deployWebApp = async (pkg: Package) => {
-	console.log(`Building webapp: ${pkg.name}`)
+	console.log(
+		`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(pkg.name)}`,
+	)
 	const { stdout, stderr } = await exec(
 		`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 	)
 	const outputDir = pkg.outputDir ?? './dist'
 	if (stderr) console.log(stderr, stdout)
 
-	console.log(`Build finished, uploading webapp: ${pkg.name}`)
+	console.log(
+		`${chalk.bold.blue('Info')}: Build finished, uploading webapp: ${chalk.bold(
+			pkg.name,
+		)}`,
+	)
 
 	await exec('az extension add --name storage-preview').catch()
 	await exec(
 		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`,
 	)
-		.then(() => console.log(`Deployed storage account ${pkg.id}`))
+		.then(() =>
+			console.log(
+				`${chalk.bold.green('Success')}: Deployed storage account ${chalk.bold(
+					pkg.id,
+				)}`,
+			),
+		)
 		.catch((err) => {
 			throw Error(err)
 		})
@@ -31,7 +44,11 @@ const deployFuncApp = async (pkg: Package) => {
 		const pkgPathSplit = pkg.path.split('/')
 		const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1]
 
-		console.log(`Deploying functionapp: ${pkg.name}`)
+		console.log(
+			`${chalk.bold.blue('Info')}: Deploying functionapp: ${chalk.bold(
+				pkg.name,
+			)}`,
+		)
 		await exec(`
 		cd ${pkg.path} &&
 		yarn build ;
@@ -46,9 +63,15 @@ const deployFuncApp = async (pkg: Package) => {
 		)
 
 		if (uploadErr) console.log(uploadErr)
-		console.log(`Deployed functionapp: ${pkg.id}`)
+		console.log(
+			`${chalk.bold.green('Success')}: Deployed functionapp: ${chalk.bold(
+				pkg.id,
+			)}`,
+		)
 	} catch (err) {
-		console.log(`ERROR: could not deploy ${pkg.id} - ${String(err)}`)
+		console.log(
+			`${chalk.bold.red('Error')}: Could not deploy ${pkg.id} - ${String(err)}`,
+		)
 	}
 }
 
@@ -56,9 +79,18 @@ const createMissingResources = async (
 	localConfig: Package[],
 	subscriptionId: string,
 ) => {
-	console.log('\nSetting the subscription for production deployment...')
+	console.log('\n')
+	console.log(
+		`${chalk.bold.blue(
+			'Info',
+		)}: Setting the subscription for production deployment...`,
+	)
 	await exec(`az account set --subscription ${subscriptionId}`)
-	console.log(`subscription set to ${subscriptionId}`)
+	console.log(
+		`${chalk.bold.green('Success')}: subscription set to ${chalk.bold(
+			subscriptionId,
+		)}`,
+	)
 	const webPackages = localConfig.filter((pkg) => pkg.type === 'app')
 	const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api')
 
