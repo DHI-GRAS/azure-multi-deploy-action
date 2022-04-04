@@ -11,14 +11,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const create_function_app_1 = __importDefault(__nccwpck_require__(2237));
 const create_storage_account_1 = __importDefault(__nccwpck_require__(9753));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
 const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
+chalk_1.default.level = 1;
 const getMissingStorageAccounts = async (localPackages) => {
     const webAppPackages = localPackages.filter((item) => item.type === 'app');
     if (webAppPackages.length === 0) {
-        console.log('No web app packages in project');
+        console.log(`${chalk_1.default.bold.yellow('Warning')}: No web app packages in project`);
         return [];
     }
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az storage account list');
@@ -26,13 +28,13 @@ const getMissingStorageAccounts = async (localPackages) => {
         throw Error(stderr);
     }
     const accounts = JSON.parse(stdout);
-    console.log(`Retrieved ${accounts.length} storage accounts`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(accounts.length)} storage accounts`);
     return webAppPackages.filter((item) => !accounts.map((account) => account.name).includes(item.id));
 };
 const getMissingFunctionApps = async (localPackages) => {
     const configFuncApps = localPackages.filter((item) => item.type === 'func-api');
     if (configFuncApps.length === 0) {
-        console.log('No function app packages in project');
+        console.log(`${chalk_1.default.bold.yellow('Warning')}: No function app packages in project`);
         return [];
     }
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az functionapp list');
@@ -40,36 +42,33 @@ const getMissingFunctionApps = async (localPackages) => {
         throw Error(stderr);
     }
     const apps = JSON.parse(stdout);
-    console.log(`Retrieved ${apps.length} function apps`);
+    console.log(`${chalk_1.default.bold.yellow('Warning')}: Retrieved ${chalk_1.default.bold(apps.length)} function apps`);
     return configFuncApps.filter((configApp) => {
         const appIds = apps.map((app) => app.name);
         return !appIds.includes(configApp.id);
     });
 };
 const createMissingResources = async (localConfig, subscriptionId) => {
-    console.log('\nSetting the subscription for creating services...');
-    console.log('Creating missing Azure services...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for creating services...`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Creating missing Azure services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
-    console.log(`subscription set to ${subscriptionId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
     const missingFunctionApps = await getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0
-        ? `Creating storage accounts: ${missingStorageAccounts
-            .map((pkg) => pkg.id)
-            .join()}`
-        : 'No storage accounts to create');
+        ? `${chalk_1.default.bold.blue('Info')}: Creating storage accounts: ${chalk_1.default.bold(missingStorageAccounts.map((pkg) => pkg.id).join())}`
+        : `${chalk_1.default.bold.yellow('Warning')}: No storage accounts to create`);
     console.log(missingFunctionApps.length > 0
-        ? `Creating function apps: ${missingFunctionApps
-            .map((pkg) => pkg.id)
-            .join()}`
-        : 'No function apps to create');
+        ? `${chalk_1.default.bold.blue('Info')}: Creating function apps: ${chalk_1.default.bold(missingFunctionApps.map((pkg) => pkg.id).join())}`
+        : `${chalk_1.default.bold.yellow('Warning')}: No function apps to create`);
     for (const pkg of missingStorageAccounts) {
         await (0, create_storage_account_1.default)(pkg);
     }
     for (const pkg of missingFunctionApps) {
         await (0, create_function_app_1.default)(pkg);
     }
-    console.log(`Completed for subscriptionID ${subscriptionId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subscriptionId)}`);
 };
 const createServices = async () => {
     const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
@@ -112,20 +111,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const github = __importStar(__nccwpck_require__(5438));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
 const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
 const commitSha = github.context.sha.substr(0, 7);
+chalk_1.default.level = 1;
 const deployWebApp = async (pkg) => {
     var _a;
-    console.log(`Building webapp: ${pkg.name}`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(pkg.name)}`);
     const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
     const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
     if (stderr)
         console.log(stderr, stdout);
-    console.log(`Build finished, uploading webapp: ${pkg.name}`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
     await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
     await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`)
-        .then(() => console.log(`Deployed storage account ${pkg.id}`))
+        .then(() => console.log(`${chalk_1.default.bold.green('Success')}: Deployed storage account ${chalk_1.default.bold(pkg.id)}`))
         .catch((err) => {
         throw Error(err);
     });
@@ -134,7 +135,7 @@ const deployFuncApp = async (pkg) => {
     try {
         const pkgPathSplit = pkg.path.split('/');
         const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1];
-        console.log(`Deploying functionapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Deploying functionapp: ${chalk_1.default.bold(pkg.name)}`);
         await (0, child_process_promise_1.exec)(`
 		cd ${pkg.path} &&
 		yarn build ;
@@ -146,16 +147,17 @@ const deployFuncApp = async (pkg) => {
         const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
         if (uploadErr)
             console.log(uploadErr);
-        console.log(`Deployed functionapp: ${pkg.id}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp: ${chalk_1.default.bold(pkg.id)}`);
     }
     catch (err) {
-        console.log(`ERROR: could not deploy ${pkg.id} - ${String(err)}`);
+        console.log(`${chalk_1.default.bold.red('Error')}: Could not deploy ${pkg.id} - ${String(err)}`);
     }
 };
 const createMissingResources = async (localConfig, subscriptionId) => {
-    console.log('\nSetting the subscription for production deployment...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for production deployment...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
-    console.log(`subscription set to ${subscriptionId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     const allPackages = [...webPackages, ...funcPackages];
@@ -190,18 +192,21 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
 const deploy_web_to_staging_1 = __importDefault(__nccwpck_require__(811));
 const deploy_func_to_staging_1 = __importDefault(__nccwpck_require__(8363));
 const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
+chalk_1.default.level = 1;
 const createMissingResources = async (localConfig, subsId, prNumber) => {
-    console.log('\nSetting the subscription for PR deployment...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for PR deployment...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
-    console.log(`subscription set to ${subsId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subsId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     if (webPackages.length + funcPackages.length === 0) {
-        const deployMsg = `ℹ️ No changed packages were detected`;
+        const deployMsg = `${chalk_1.default.bold.yellow('Warning')}: No changed packages were detected`;
         console.log(deployMsg);
         const msgFile = path_1.default.join('github_message.txt');
         fs_1.default.appendFileSync(msgFile, `\n${deployMsg}  `);
@@ -210,7 +215,7 @@ const createMissingResources = async (localConfig, subsId, prNumber) => {
         await (0, deploy_web_to_staging_1.default)(webApp, prNumber);
     for (const funcApp of funcPackages)
         await (0, deploy_func_to_staging_1.default)(funcApp, prNumber);
-    console.log(`Completed for subscriptionID ${subsId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subsId)}`);
 };
 const deployToStag = async (prNumber) => {
     const changedPackages = await (0, get_changed_packages_1.default)();
@@ -248,11 +253,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
+chalk_1.default.level = 1;
 exports.default = async () => {
-    console.log('Logging into Azure CLI...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });
@@ -266,21 +277,26 @@ exports.default = async () => {
 /***/ }),
 
 /***/ 2237:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
+chalk_1.default.level = 1;
 exports.default = async (pkg) => {
     try {
         if (!pkg.storageAccount) {
-            throw Error(`${pkg.id} needs to specify storageAccount`);
+            throw Error(`${chalk_1.default.bold.red('Error')}: ${chalk_1.default.bold(pkg.id)} needs to specify storageAccount`);
         }
         await (0, child_process_promise_1.exec)(`az functionapp create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --storage-account ${pkg.storageAccount} --runtime node --consumption-plan-location northeurope --functions-version 3 --disable-app-insights true`)
             .then(({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
-            console.log(`Created function app: ${pkg.id}: ${newAccountData.defaultHostName}`);
+            console.log(`${chalk_1.default.bold.green('Success')}: Created function app: ${chalk_1.default.bold(pkg.id)}: ${chalk_1.default.bold(newAccountData.defaultHostName)}`);
         })
             .catch((err) => {
             throw Error(err);
@@ -295,19 +311,24 @@ exports.default = async (pkg) => {
 /***/ }),
 
 /***/ 9753:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
+chalk_1.default.level = 1;
 exports.default = async (pkg) => {
     try {
         const handleCreatedAccount = async ({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
-            console.log(`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`);
+            console.log(`${chalk_1.default.bold.green('Success')}: Created storage account for ${chalk_1.default.bold(newAccountData.name)}: ${chalk_1.default.bold(newAccountData.primaryEndpoints.web)}`);
             await (0, child_process_promise_1.exec)(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
-            console.log(`Enabled web container for storage account: ${newAccountData.name}`);
+            console.log(`${chalk_1.default.bold.blue('Info')}: Enabled web container for storage account: ${newAccountData.name}`);
         };
         await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`)
             .then(handleCreatedAccount)
@@ -340,6 +361,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
+chalk_1.default.level = 1;
 const msgFile = path_1.default.join('github_message.txt');
 exports.default = async (pkg, pullNumber) => {
     try {
@@ -348,7 +371,7 @@ exports.default = async (pkg, pullNumber) => {
             throw Error(listErr);
         const slots = JSON.parse(listOut);
         if (!pullNumber)
-            throw Error('The environment variable GITHUB_PR_NUMBER must be defined');
+            throw Error(`${chalk_1.default.bold.red('Error')}: The environment variable GITHUB_PR_NUMBER must be defined`);
         const slotName = `stag-${pullNumber}`;
         const slotNames = slots.map((slot) => slot.name);
         const slotExists = slotNames.includes(slotName);
@@ -371,8 +394,8 @@ exports.default = async (pkg, pullNumber) => {
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
-        console.log(`Deployed functionapp ${pkg.id}-${slotName}`);
-        // Don't think the deployment url gets returned from upload - hopefully this stays static?
+        console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp ${chalk_1.default.bold(`${pkg.id}-${slotName}`)}`);
+        // I don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`;
         console.log(deployMsg);
         fs_1.default.appendFileSync(msgFile, deployMsg);
@@ -419,20 +442,22 @@ const child_process_promise_1 = __nccwpck_require__(4858);
 const github = __importStar(__nccwpck_require__(5438));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const msgFile = path_1.default.join('github_message.txt');
 const commitSha = github.context.sha.substr(0, 7);
+chalk_1.default.level = 1;
 exports.default = async (pkg, pullNumber) => {
     var _a;
     try {
         if (!pullNumber)
-            throw Error('PR number is undefined');
+            throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
-        console.log(`Building webapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(pkg.name)}`);
         const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
-        console.log(`Build finished, uploading webapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
@@ -467,7 +492,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
+chalk_1.default.level = 1;
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
 exports.default = async () => {
     try {
@@ -479,10 +506,10 @@ exports.default = async () => {
             return deployablePkgs;
         await (0, child_process_promise_1.exec)('git fetch --all');
         const checkChanged = async (pkg) => {
-            const { stdout: diffOut, stdout: diffErr } = await (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo changed`);
+            const { stdout: diffOut, stdout: diffErr } = await (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo ${pkg.id} changed`);
             if (diffErr)
                 console.log(diffErr);
-            return diffOut.includes('changed') ? pkg : null;
+            return diffOut.includes(`${pkg.id} changed`) ? pkg : null;
         };
         const changedPromises = get_packages_1.default.map(checkChanged);
         const changedDiffPackages = (await Promise.all(changedPromises)).filter((item) => item);
@@ -505,7 +532,7 @@ exports.default = async () => {
         const changedPackageIdString = changedPackages
             .map((pkg) => pkg.id)
             .join(', ');
-        console.log(`Changed packages: ${changedPackageIdString}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Changed packages: ${chalk_1.default.bold(changedPackageIdString)}`);
         return changedPackages;
     }
     catch (err) {
@@ -525,6 +552,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const packageTypes = ['apps', 'func-apis', 'libs'];
@@ -536,6 +564,7 @@ const pkgTypeRequiredFieldMap = {
     'func-apis': apiRequiredFields,
     libs: [],
 };
+chalk_1.default.level = 1;
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
     const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '.' : pkgType, pkgDir));
@@ -546,7 +575,7 @@ const getPackageObject = (pkgDir, pkgType) => {
         var _a;
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
-            throw Error(`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
+            throw Error(`${chalk_1.default.bold.red('Error')}: "${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
     const notReqPropertiesFromPckJson = appNotRequiredFields.reduce((fieldAcc, field) => {
@@ -565,7 +594,7 @@ const getPackageObject = (pkgDir, pkgType) => {
     if (pkgType === 'apps' &&
         ((_a = lowercaseRe.exec(pkgObj.azureDeployConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !==
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
-        throw Error(`"id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
+        throw Error(`${chalk_1.default.bold.red('Error')}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
     return {
         ...propertiesFromPckJson,
         type: pkgType.substring(0, pkgType.length - 1),
@@ -585,7 +614,7 @@ const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
 const isMonorepo = packageTypes
     .map((pkg) => fs_1.default.existsSync(path_1.default.join(pkg)))
     .includes(true);
-console.log(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app');
+console.log(`${chalk_1.default.bold.blue('Info')}: ${chalk_1.default.bold(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app')}`);
 const packages = isMonorepo
     ? getMonorepoPackages()
     : [getPackageObject('.', 'apps')];
@@ -713,6 +742,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const deploy_pr_staging_1 = __importDefault(__nccwpck_require__(9151));
 const deploy_main_1 = __importDefault(__nccwpck_require__(9607));
 const pr_close_cleanup_1 = __importDefault(__nccwpck_require__(1986));
@@ -727,10 +757,11 @@ const splitRef = context.ref.split('/');
 const currentBranch = splitRef[splitRef.length - 1];
 const isPR = context.eventName === 'pull_request';
 const prNumber = (_c = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.number) !== null && _c !== void 0 ? _c : 0;
+chalk_1.default.level = 1;
 const run = async () => {
     var _a, _b;
     const startTime = new Date();
-    console.log('Installing azure CLI...');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Installing azure CLI...`);
     await (0, child_process_promise_1.exec)('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
     // Use the below version in case specific version has to be installed
     // await exec(`
@@ -742,30 +773,33 @@ const run = async () => {
     // 	sudo apt-get update ;
     // 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
     // `)
+    console.log('\n');
     await (0, az_login_1.default)();
+    console.log('\n');
     await (0, create_services_1.default)();
     // Deploy to stag
     if (isPR && ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
-        console.log('Deploying to staging...');
+        console.log(`${chalk_1.default.bold.blue('Info')}: Deploying to staging...`);
         await (0, deploy_pr_staging_1.default)(prNumber);
     }
     // Deploy to prod
     const preventProdDeploy = core.getInput('preventProdDeploy');
     if (preventProdDeploy && currentBranch === defaultBranch) {
-        const errorMsg = 'Production deployment skipped! Code quality checks have failed';
+        const errorMsg = `${chalk_1.default.bold.yellow('Info')}: Production deployment skipped! Code quality checks have failed`;
         console.error(errorMsg);
         core.setFailed(errorMsg);
     }
     if (!payload.pull_request &&
         currentBranch === defaultBranch &&
         !preventProdDeploy) {
-        console.log('Deploying to production...');
+        console.log(`${chalk_1.default.bold.blue('Info')}: Deploying to production...`);
         await (0, deploy_main_1.default)();
     }
     if (isPR && ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'closed') {
-        console.log('PR closed. Cleaning up deployments...');
+        console.log(`${chalk_1.default.bold.blue('Info')}: PR closed. Cleaning up deployments...`);
         await (0, pr_close_cleanup_1.default)(prNumber);
     }
+    console.log(`${chalk_1.default.bold.green('Success')}: You are lucky, the action finished!`);
     if (isPR)
         await (0, post_comment_1.default)(startTime);
 };
@@ -784,8 +818,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
 const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
+chalk_1.default.level = 1;
 const removeWebStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
@@ -794,7 +830,7 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
         const stagName = `${pkg.id}stag`;
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         await (0, child_process_promise_1.exec)(`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`);
-        console.log(`Deleted web app: ${stagName}-${slotName}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}-${slotName}`)}`);
     }
     catch (err) {
         throw Error(err);
@@ -803,21 +839,22 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
 const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
-            throw Error('No PR number');
+            throw Error(`${chalk_1.default.bold.red('Error')}: No PR number`);
         const slotName = `stag-${pullNumber}`;
         const { stdout: deleteOut, stderr: deleteErr } = await (0, child_process_promise_1.exec)(`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         if (deleteErr)
             console.log(deleteOut, deleteErr);
-        console.log(`Deleted function app: ${pkg.id}-${slotName}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deleted function app: ${chalk_1.default.bold(`${pkg.id}-${slotName}`)}`);
     }
     catch (err) {
         throw Error(err);
     }
 };
 const removeResources = async (localConfig, subsId, prNumber) => {
-    console.log('\nSetting the subscription for creating services...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for creating services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
-    console.log(`subscription set to ${subsId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Subscription set to ${chalk_1.default.bold(subsId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     for (const pkg of webPackages) {
@@ -4712,6 +4749,178 @@ exports.request = request;
 
 /***/ }),
 
+/***/ 2068:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+/* module decorator */ module = __nccwpck_require__.nmd(module);
+
+
+const wrapAnsi16 = (fn, offset) => (...args) => {
+	const code = fn(...args);
+	return `\u001B[${code + offset}m`;
+};
+
+const wrapAnsi256 = (fn, offset) => (...args) => {
+	const code = fn(...args);
+	return `\u001B[${38 + offset};5;${code}m`;
+};
+
+const wrapAnsi16m = (fn, offset) => (...args) => {
+	const rgb = fn(...args);
+	return `\u001B[${38 + offset};2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
+};
+
+const ansi2ansi = n => n;
+const rgb2rgb = (r, g, b) => [r, g, b];
+
+const setLazyProperty = (object, property, get) => {
+	Object.defineProperty(object, property, {
+		get: () => {
+			const value = get();
+
+			Object.defineProperty(object, property, {
+				value,
+				enumerable: true,
+				configurable: true
+			});
+
+			return value;
+		},
+		enumerable: true,
+		configurable: true
+	});
+};
+
+/** @type {typeof import('color-convert')} */
+let colorConvert;
+const makeDynamicStyles = (wrap, targetSpace, identity, isBackground) => {
+	if (colorConvert === undefined) {
+		colorConvert = __nccwpck_require__(6931);
+	}
+
+	const offset = isBackground ? 10 : 0;
+	const styles = {};
+
+	for (const [sourceSpace, suite] of Object.entries(colorConvert)) {
+		const name = sourceSpace === 'ansi16' ? 'ansi' : sourceSpace;
+		if (sourceSpace === targetSpace) {
+			styles[name] = wrap(identity, offset);
+		} else if (typeof suite === 'object') {
+			styles[name] = wrap(suite[targetSpace], offset);
+		}
+	}
+
+	return styles;
+};
+
+function assembleStyles() {
+	const codes = new Map();
+	const styles = {
+		modifier: {
+			reset: [0, 0],
+			// 21 isn't widely supported and 22 does the same thing
+			bold: [1, 22],
+			dim: [2, 22],
+			italic: [3, 23],
+			underline: [4, 24],
+			inverse: [7, 27],
+			hidden: [8, 28],
+			strikethrough: [9, 29]
+		},
+		color: {
+			black: [30, 39],
+			red: [31, 39],
+			green: [32, 39],
+			yellow: [33, 39],
+			blue: [34, 39],
+			magenta: [35, 39],
+			cyan: [36, 39],
+			white: [37, 39],
+
+			// Bright color
+			blackBright: [90, 39],
+			redBright: [91, 39],
+			greenBright: [92, 39],
+			yellowBright: [93, 39],
+			blueBright: [94, 39],
+			magentaBright: [95, 39],
+			cyanBright: [96, 39],
+			whiteBright: [97, 39]
+		},
+		bgColor: {
+			bgBlack: [40, 49],
+			bgRed: [41, 49],
+			bgGreen: [42, 49],
+			bgYellow: [43, 49],
+			bgBlue: [44, 49],
+			bgMagenta: [45, 49],
+			bgCyan: [46, 49],
+			bgWhite: [47, 49],
+
+			// Bright color
+			bgBlackBright: [100, 49],
+			bgRedBright: [101, 49],
+			bgGreenBright: [102, 49],
+			bgYellowBright: [103, 49],
+			bgBlueBright: [104, 49],
+			bgMagentaBright: [105, 49],
+			bgCyanBright: [106, 49],
+			bgWhiteBright: [107, 49]
+		}
+	};
+
+	// Alias bright black as gray (and grey)
+	styles.color.gray = styles.color.blackBright;
+	styles.bgColor.bgGray = styles.bgColor.bgBlackBright;
+	styles.color.grey = styles.color.blackBright;
+	styles.bgColor.bgGrey = styles.bgColor.bgBlackBright;
+
+	for (const [groupName, group] of Object.entries(styles)) {
+		for (const [styleName, style] of Object.entries(group)) {
+			styles[styleName] = {
+				open: `\u001B[${style[0]}m`,
+				close: `\u001B[${style[1]}m`
+			};
+
+			group[styleName] = styles[styleName];
+
+			codes.set(style[0], style[1]);
+		}
+
+		Object.defineProperty(styles, groupName, {
+			value: group,
+			enumerable: false
+		});
+	}
+
+	Object.defineProperty(styles, 'codes', {
+		value: codes,
+		enumerable: false
+	});
+
+	styles.color.close = '\u001B[39m';
+	styles.bgColor.close = '\u001B[49m';
+
+	setLazyProperty(styles.color, 'ansi', () => makeDynamicStyles(wrapAnsi16, 'ansi16', ansi2ansi, false));
+	setLazyProperty(styles.color, 'ansi256', () => makeDynamicStyles(wrapAnsi256, 'ansi256', ansi2ansi, false));
+	setLazyProperty(styles.color, 'ansi16m', () => makeDynamicStyles(wrapAnsi16m, 'rgb', rgb2rgb, false));
+	setLazyProperty(styles.bgColor, 'ansi', () => makeDynamicStyles(wrapAnsi16, 'ansi16', ansi2ansi, true));
+	setLazyProperty(styles.bgColor, 'ansi256', () => makeDynamicStyles(wrapAnsi256, 'ansi256', ansi2ansi, true));
+	setLazyProperty(styles.bgColor, 'ansi16m', () => makeDynamicStyles(wrapAnsi16m, 'rgb', rgb2rgb, true));
+
+	return styles;
+}
+
+// Make the export immutable
+Object.defineProperty(module, 'exports', {
+	enumerable: true,
+	get: assembleStyles
+});
+
+
+/***/ }),
+
 /***/ 3682:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -4885,6 +5094,432 @@ function removeHook(state, name, method) {
 
   state.registry[name].splice(index, 1);
 }
+
+
+/***/ }),
+
+/***/ 8818:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const ansiStyles = __nccwpck_require__(2068);
+const {stdout: stdoutColor, stderr: stderrColor} = __nccwpck_require__(9318);
+const {
+	stringReplaceAll,
+	stringEncaseCRLFWithFirstIndex
+} = __nccwpck_require__(2415);
+
+const {isArray} = Array;
+
+// `supportsColor.level` → `ansiStyles.color[name]` mapping
+const levelMapping = [
+	'ansi',
+	'ansi',
+	'ansi256',
+	'ansi16m'
+];
+
+const styles = Object.create(null);
+
+const applyOptions = (object, options = {}) => {
+	if (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {
+		throw new Error('The `level` option should be an integer from 0 to 3');
+	}
+
+	// Detect level if not set manually
+	const colorLevel = stdoutColor ? stdoutColor.level : 0;
+	object.level = options.level === undefined ? colorLevel : options.level;
+};
+
+class ChalkClass {
+	constructor(options) {
+		// eslint-disable-next-line no-constructor-return
+		return chalkFactory(options);
+	}
+}
+
+const chalkFactory = options => {
+	const chalk = {};
+	applyOptions(chalk, options);
+
+	chalk.template = (...arguments_) => chalkTag(chalk.template, ...arguments_);
+
+	Object.setPrototypeOf(chalk, Chalk.prototype);
+	Object.setPrototypeOf(chalk.template, chalk);
+
+	chalk.template.constructor = () => {
+		throw new Error('`chalk.constructor()` is deprecated. Use `new chalk.Instance()` instead.');
+	};
+
+	chalk.template.Instance = ChalkClass;
+
+	return chalk.template;
+};
+
+function Chalk(options) {
+	return chalkFactory(options);
+}
+
+for (const [styleName, style] of Object.entries(ansiStyles)) {
+	styles[styleName] = {
+		get() {
+			const builder = createBuilder(this, createStyler(style.open, style.close, this._styler), this._isEmpty);
+			Object.defineProperty(this, styleName, {value: builder});
+			return builder;
+		}
+	};
+}
+
+styles.visible = {
+	get() {
+		const builder = createBuilder(this, this._styler, true);
+		Object.defineProperty(this, 'visible', {value: builder});
+		return builder;
+	}
+};
+
+const usedModels = ['rgb', 'hex', 'keyword', 'hsl', 'hsv', 'hwb', 'ansi', 'ansi256'];
+
+for (const model of usedModels) {
+	styles[model] = {
+		get() {
+			const {level} = this;
+			return function (...arguments_) {
+				const styler = createStyler(ansiStyles.color[levelMapping[level]][model](...arguments_), ansiStyles.color.close, this._styler);
+				return createBuilder(this, styler, this._isEmpty);
+			};
+		}
+	};
+}
+
+for (const model of usedModels) {
+	const bgModel = 'bg' + model[0].toUpperCase() + model.slice(1);
+	styles[bgModel] = {
+		get() {
+			const {level} = this;
+			return function (...arguments_) {
+				const styler = createStyler(ansiStyles.bgColor[levelMapping[level]][model](...arguments_), ansiStyles.bgColor.close, this._styler);
+				return createBuilder(this, styler, this._isEmpty);
+			};
+		}
+	};
+}
+
+const proto = Object.defineProperties(() => {}, {
+	...styles,
+	level: {
+		enumerable: true,
+		get() {
+			return this._generator.level;
+		},
+		set(level) {
+			this._generator.level = level;
+		}
+	}
+});
+
+const createStyler = (open, close, parent) => {
+	let openAll;
+	let closeAll;
+	if (parent === undefined) {
+		openAll = open;
+		closeAll = close;
+	} else {
+		openAll = parent.openAll + open;
+		closeAll = close + parent.closeAll;
+	}
+
+	return {
+		open,
+		close,
+		openAll,
+		closeAll,
+		parent
+	};
+};
+
+const createBuilder = (self, _styler, _isEmpty) => {
+	const builder = (...arguments_) => {
+		if (isArray(arguments_[0]) && isArray(arguments_[0].raw)) {
+			// Called as a template literal, for example: chalk.red`2 + 3 = {bold ${2+3}}`
+			return applyStyle(builder, chalkTag(builder, ...arguments_));
+		}
+
+		// Single argument is hot path, implicit coercion is faster than anything
+		// eslint-disable-next-line no-implicit-coercion
+		return applyStyle(builder, (arguments_.length === 1) ? ('' + arguments_[0]) : arguments_.join(' '));
+	};
+
+	// We alter the prototype because we must return a function, but there is
+	// no way to create a function with a different prototype
+	Object.setPrototypeOf(builder, proto);
+
+	builder._generator = self;
+	builder._styler = _styler;
+	builder._isEmpty = _isEmpty;
+
+	return builder;
+};
+
+const applyStyle = (self, string) => {
+	if (self.level <= 0 || !string) {
+		return self._isEmpty ? '' : string;
+	}
+
+	let styler = self._styler;
+
+	if (styler === undefined) {
+		return string;
+	}
+
+	const {openAll, closeAll} = styler;
+	if (string.indexOf('\u001B') !== -1) {
+		while (styler !== undefined) {
+			// Replace any instances already present with a re-opening code
+			// otherwise only the part of the string until said closing code
+			// will be colored, and the rest will simply be 'plain'.
+			string = stringReplaceAll(string, styler.close, styler.open);
+
+			styler = styler.parent;
+		}
+	}
+
+	// We can move both next actions out of loop, because remaining actions in loop won't have
+	// any/visible effect on parts we add here. Close the styling before a linebreak and reopen
+	// after next line to fix a bleed issue on macOS: https://github.com/chalk/chalk/pull/92
+	const lfIndex = string.indexOf('\n');
+	if (lfIndex !== -1) {
+		string = stringEncaseCRLFWithFirstIndex(string, closeAll, openAll, lfIndex);
+	}
+
+	return openAll + string + closeAll;
+};
+
+let template;
+const chalkTag = (chalk, ...strings) => {
+	const [firstString] = strings;
+
+	if (!isArray(firstString) || !isArray(firstString.raw)) {
+		// If chalk() was called by itself or with a string,
+		// return the string itself as a string.
+		return strings.join(' ');
+	}
+
+	const arguments_ = strings.slice(1);
+	const parts = [firstString.raw[0]];
+
+	for (let i = 1; i < firstString.length; i++) {
+		parts.push(
+			String(arguments_[i - 1]).replace(/[{}\\]/g, '\\$&'),
+			String(firstString.raw[i])
+		);
+	}
+
+	if (template === undefined) {
+		template = __nccwpck_require__(500);
+	}
+
+	return template(chalk, parts.join(''));
+};
+
+Object.defineProperties(Chalk.prototype, styles);
+
+const chalk = Chalk(); // eslint-disable-line new-cap
+chalk.supportsColor = stdoutColor;
+chalk.stderr = Chalk({level: stderrColor ? stderrColor.level : 0}); // eslint-disable-line new-cap
+chalk.stderr.supportsColor = stderrColor;
+
+module.exports = chalk;
+
+
+/***/ }),
+
+/***/ 500:
+/***/ ((module) => {
+
+"use strict";
+
+const TEMPLATE_REGEX = /(?:\\(u(?:[a-f\d]{4}|\{[a-f\d]{1,6}\})|x[a-f\d]{2}|.))|(?:\{(~)?(\w+(?:\([^)]*\))?(?:\.\w+(?:\([^)]*\))?)*)(?:[ \t]|(?=\r?\n)))|(\})|((?:.|[\r\n\f])+?)/gi;
+const STYLE_REGEX = /(?:^|\.)(\w+)(?:\(([^)]*)\))?/g;
+const STRING_REGEX = /^(['"])((?:\\.|(?!\1)[^\\])*)\1$/;
+const ESCAPE_REGEX = /\\(u(?:[a-f\d]{4}|{[a-f\d]{1,6}})|x[a-f\d]{2}|.)|([^\\])/gi;
+
+const ESCAPES = new Map([
+	['n', '\n'],
+	['r', '\r'],
+	['t', '\t'],
+	['b', '\b'],
+	['f', '\f'],
+	['v', '\v'],
+	['0', '\0'],
+	['\\', '\\'],
+	['e', '\u001B'],
+	['a', '\u0007']
+]);
+
+function unescape(c) {
+	const u = c[0] === 'u';
+	const bracket = c[1] === '{';
+
+	if ((u && !bracket && c.length === 5) || (c[0] === 'x' && c.length === 3)) {
+		return String.fromCharCode(parseInt(c.slice(1), 16));
+	}
+
+	if (u && bracket) {
+		return String.fromCodePoint(parseInt(c.slice(2, -1), 16));
+	}
+
+	return ESCAPES.get(c) || c;
+}
+
+function parseArguments(name, arguments_) {
+	const results = [];
+	const chunks = arguments_.trim().split(/\s*,\s*/g);
+	let matches;
+
+	for (const chunk of chunks) {
+		const number = Number(chunk);
+		if (!Number.isNaN(number)) {
+			results.push(number);
+		} else if ((matches = chunk.match(STRING_REGEX))) {
+			results.push(matches[2].replace(ESCAPE_REGEX, (m, escape, character) => escape ? unescape(escape) : character));
+		} else {
+			throw new Error(`Invalid Chalk template style argument: ${chunk} (in style '${name}')`);
+		}
+	}
+
+	return results;
+}
+
+function parseStyle(style) {
+	STYLE_REGEX.lastIndex = 0;
+
+	const results = [];
+	let matches;
+
+	while ((matches = STYLE_REGEX.exec(style)) !== null) {
+		const name = matches[1];
+
+		if (matches[2]) {
+			const args = parseArguments(name, matches[2]);
+			results.push([name].concat(args));
+		} else {
+			results.push([name]);
+		}
+	}
+
+	return results;
+}
+
+function buildStyle(chalk, styles) {
+	const enabled = {};
+
+	for (const layer of styles) {
+		for (const style of layer.styles) {
+			enabled[style[0]] = layer.inverse ? null : style.slice(1);
+		}
+	}
+
+	let current = chalk;
+	for (const [styleName, styles] of Object.entries(enabled)) {
+		if (!Array.isArray(styles)) {
+			continue;
+		}
+
+		if (!(styleName in current)) {
+			throw new Error(`Unknown Chalk style: ${styleName}`);
+		}
+
+		current = styles.length > 0 ? current[styleName](...styles) : current[styleName];
+	}
+
+	return current;
+}
+
+module.exports = (chalk, temporary) => {
+	const styles = [];
+	const chunks = [];
+	let chunk = [];
+
+	// eslint-disable-next-line max-params
+	temporary.replace(TEMPLATE_REGEX, (m, escapeCharacter, inverse, style, close, character) => {
+		if (escapeCharacter) {
+			chunk.push(unescape(escapeCharacter));
+		} else if (style) {
+			const string = chunk.join('');
+			chunk = [];
+			chunks.push(styles.length === 0 ? string : buildStyle(chalk, styles)(string));
+			styles.push({inverse, styles: parseStyle(style)});
+		} else if (close) {
+			if (styles.length === 0) {
+				throw new Error('Found extraneous } in Chalk template literal');
+			}
+
+			chunks.push(buildStyle(chalk, styles)(chunk.join('')));
+			chunk = [];
+			styles.pop();
+		} else {
+			chunk.push(character);
+		}
+	});
+
+	chunks.push(chunk.join(''));
+
+	if (styles.length > 0) {
+		const errMessage = `Chalk template literal is missing ${styles.length} closing bracket${styles.length === 1 ? '' : 's'} (\`}\`)`;
+		throw new Error(errMessage);
+	}
+
+	return chunks.join('');
+};
+
+
+/***/ }),
+
+/***/ 2415:
+/***/ ((module) => {
+
+"use strict";
+
+
+const stringReplaceAll = (string, substring, replacer) => {
+	let index = string.indexOf(substring);
+	if (index === -1) {
+		return string;
+	}
+
+	const substringLength = substring.length;
+	let endIndex = 0;
+	let returnValue = '';
+	do {
+		returnValue += string.substr(endIndex, index - endIndex) + substring + replacer;
+		endIndex = index + substringLength;
+		index = string.indexOf(substring, endIndex);
+	} while (index !== -1);
+
+	returnValue += string.substr(endIndex);
+	return returnValue;
+};
+
+const stringEncaseCRLFWithFirstIndex = (string, prefix, postfix, index) => {
+	let endIndex = 0;
+	let returnValue = '';
+	do {
+		const gotCR = string[index - 1] === '\r';
+		returnValue += string.substr(endIndex, (gotCR ? index - 1 : index) - endIndex) + prefix + (gotCR ? '\r\n' : '\n') + postfix;
+		endIndex = index + 1;
+		index = string.indexOf('\n', endIndex);
+	} while (index !== -1);
+
+	returnValue += string.substr(endIndex);
+	return returnValue;
+};
+
+module.exports = {
+	stringReplaceAll,
+	stringEncaseCRLFWithFirstIndex
+};
 
 
 /***/ }),
@@ -6823,6 +7458,1204 @@ function Node (value, prev, next, list) {
 
 /***/ }),
 
+/***/ 7391:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/* MIT license */
+/* eslint-disable no-mixed-operators */
+const cssKeywords = __nccwpck_require__(8510);
+
+// NOTE: conversions should only return primitive values (i.e. arrays, or
+//       values that give correct `typeof` results).
+//       do not use box values types (i.e. Number(), String(), etc.)
+
+const reverseKeywords = {};
+for (const key of Object.keys(cssKeywords)) {
+	reverseKeywords[cssKeywords[key]] = key;
+}
+
+const convert = {
+	rgb: {channels: 3, labels: 'rgb'},
+	hsl: {channels: 3, labels: 'hsl'},
+	hsv: {channels: 3, labels: 'hsv'},
+	hwb: {channels: 3, labels: 'hwb'},
+	cmyk: {channels: 4, labels: 'cmyk'},
+	xyz: {channels: 3, labels: 'xyz'},
+	lab: {channels: 3, labels: 'lab'},
+	lch: {channels: 3, labels: 'lch'},
+	hex: {channels: 1, labels: ['hex']},
+	keyword: {channels: 1, labels: ['keyword']},
+	ansi16: {channels: 1, labels: ['ansi16']},
+	ansi256: {channels: 1, labels: ['ansi256']},
+	hcg: {channels: 3, labels: ['h', 'c', 'g']},
+	apple: {channels: 3, labels: ['r16', 'g16', 'b16']},
+	gray: {channels: 1, labels: ['gray']}
+};
+
+module.exports = convert;
+
+// Hide .channels and .labels properties
+for (const model of Object.keys(convert)) {
+	if (!('channels' in convert[model])) {
+		throw new Error('missing channels property: ' + model);
+	}
+
+	if (!('labels' in convert[model])) {
+		throw new Error('missing channel labels property: ' + model);
+	}
+
+	if (convert[model].labels.length !== convert[model].channels) {
+		throw new Error('channel and label counts mismatch: ' + model);
+	}
+
+	const {channels, labels} = convert[model];
+	delete convert[model].channels;
+	delete convert[model].labels;
+	Object.defineProperty(convert[model], 'channels', {value: channels});
+	Object.defineProperty(convert[model], 'labels', {value: labels});
+}
+
+convert.rgb.hsl = function (rgb) {
+	const r = rgb[0] / 255;
+	const g = rgb[1] / 255;
+	const b = rgb[2] / 255;
+	const min = Math.min(r, g, b);
+	const max = Math.max(r, g, b);
+	const delta = max - min;
+	let h;
+	let s;
+
+	if (max === min) {
+		h = 0;
+	} else if (r === max) {
+		h = (g - b) / delta;
+	} else if (g === max) {
+		h = 2 + (b - r) / delta;
+	} else if (b === max) {
+		h = 4 + (r - g) / delta;
+	}
+
+	h = Math.min(h * 60, 360);
+
+	if (h < 0) {
+		h += 360;
+	}
+
+	const l = (min + max) / 2;
+
+	if (max === min) {
+		s = 0;
+	} else if (l <= 0.5) {
+		s = delta / (max + min);
+	} else {
+		s = delta / (2 - max - min);
+	}
+
+	return [h, s * 100, l * 100];
+};
+
+convert.rgb.hsv = function (rgb) {
+	let rdif;
+	let gdif;
+	let bdif;
+	let h;
+	let s;
+
+	const r = rgb[0] / 255;
+	const g = rgb[1] / 255;
+	const b = rgb[2] / 255;
+	const v = Math.max(r, g, b);
+	const diff = v - Math.min(r, g, b);
+	const diffc = function (c) {
+		return (v - c) / 6 / diff + 1 / 2;
+	};
+
+	if (diff === 0) {
+		h = 0;
+		s = 0;
+	} else {
+		s = diff / v;
+		rdif = diffc(r);
+		gdif = diffc(g);
+		bdif = diffc(b);
+
+		if (r === v) {
+			h = bdif - gdif;
+		} else if (g === v) {
+			h = (1 / 3) + rdif - bdif;
+		} else if (b === v) {
+			h = (2 / 3) + gdif - rdif;
+		}
+
+		if (h < 0) {
+			h += 1;
+		} else if (h > 1) {
+			h -= 1;
+		}
+	}
+
+	return [
+		h * 360,
+		s * 100,
+		v * 100
+	];
+};
+
+convert.rgb.hwb = function (rgb) {
+	const r = rgb[0];
+	const g = rgb[1];
+	let b = rgb[2];
+	const h = convert.rgb.hsl(rgb)[0];
+	const w = 1 / 255 * Math.min(r, Math.min(g, b));
+
+	b = 1 - 1 / 255 * Math.max(r, Math.max(g, b));
+
+	return [h, w * 100, b * 100];
+};
+
+convert.rgb.cmyk = function (rgb) {
+	const r = rgb[0] / 255;
+	const g = rgb[1] / 255;
+	const b = rgb[2] / 255;
+
+	const k = Math.min(1 - r, 1 - g, 1 - b);
+	const c = (1 - r - k) / (1 - k) || 0;
+	const m = (1 - g - k) / (1 - k) || 0;
+	const y = (1 - b - k) / (1 - k) || 0;
+
+	return [c * 100, m * 100, y * 100, k * 100];
+};
+
+function comparativeDistance(x, y) {
+	/*
+		See https://en.m.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance
+	*/
+	return (
+		((x[0] - y[0]) ** 2) +
+		((x[1] - y[1]) ** 2) +
+		((x[2] - y[2]) ** 2)
+	);
+}
+
+convert.rgb.keyword = function (rgb) {
+	const reversed = reverseKeywords[rgb];
+	if (reversed) {
+		return reversed;
+	}
+
+	let currentClosestDistance = Infinity;
+	let currentClosestKeyword;
+
+	for (const keyword of Object.keys(cssKeywords)) {
+		const value = cssKeywords[keyword];
+
+		// Compute comparative distance
+		const distance = comparativeDistance(rgb, value);
+
+		// Check if its less, if so set as closest
+		if (distance < currentClosestDistance) {
+			currentClosestDistance = distance;
+			currentClosestKeyword = keyword;
+		}
+	}
+
+	return currentClosestKeyword;
+};
+
+convert.keyword.rgb = function (keyword) {
+	return cssKeywords[keyword];
+};
+
+convert.rgb.xyz = function (rgb) {
+	let r = rgb[0] / 255;
+	let g = rgb[1] / 255;
+	let b = rgb[2] / 255;
+
+	// Assume sRGB
+	r = r > 0.04045 ? (((r + 0.055) / 1.055) ** 2.4) : (r / 12.92);
+	g = g > 0.04045 ? (((g + 0.055) / 1.055) ** 2.4) : (g / 12.92);
+	b = b > 0.04045 ? (((b + 0.055) / 1.055) ** 2.4) : (b / 12.92);
+
+	const x = (r * 0.4124) + (g * 0.3576) + (b * 0.1805);
+	const y = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
+	const z = (r * 0.0193) + (g * 0.1192) + (b * 0.9505);
+
+	return [x * 100, y * 100, z * 100];
+};
+
+convert.rgb.lab = function (rgb) {
+	const xyz = convert.rgb.xyz(rgb);
+	let x = xyz[0];
+	let y = xyz[1];
+	let z = xyz[2];
+
+	x /= 95.047;
+	y /= 100;
+	z /= 108.883;
+
+	x = x > 0.008856 ? (x ** (1 / 3)) : (7.787 * x) + (16 / 116);
+	y = y > 0.008856 ? (y ** (1 / 3)) : (7.787 * y) + (16 / 116);
+	z = z > 0.008856 ? (z ** (1 / 3)) : (7.787 * z) + (16 / 116);
+
+	const l = (116 * y) - 16;
+	const a = 500 * (x - y);
+	const b = 200 * (y - z);
+
+	return [l, a, b];
+};
+
+convert.hsl.rgb = function (hsl) {
+	const h = hsl[0] / 360;
+	const s = hsl[1] / 100;
+	const l = hsl[2] / 100;
+	let t2;
+	let t3;
+	let val;
+
+	if (s === 0) {
+		val = l * 255;
+		return [val, val, val];
+	}
+
+	if (l < 0.5) {
+		t2 = l * (1 + s);
+	} else {
+		t2 = l + s - l * s;
+	}
+
+	const t1 = 2 * l - t2;
+
+	const rgb = [0, 0, 0];
+	for (let i = 0; i < 3; i++) {
+		t3 = h + 1 / 3 * -(i - 1);
+		if (t3 < 0) {
+			t3++;
+		}
+
+		if (t3 > 1) {
+			t3--;
+		}
+
+		if (6 * t3 < 1) {
+			val = t1 + (t2 - t1) * 6 * t3;
+		} else if (2 * t3 < 1) {
+			val = t2;
+		} else if (3 * t3 < 2) {
+			val = t1 + (t2 - t1) * (2 / 3 - t3) * 6;
+		} else {
+			val = t1;
+		}
+
+		rgb[i] = val * 255;
+	}
+
+	return rgb;
+};
+
+convert.hsl.hsv = function (hsl) {
+	const h = hsl[0];
+	let s = hsl[1] / 100;
+	let l = hsl[2] / 100;
+	let smin = s;
+	const lmin = Math.max(l, 0.01);
+
+	l *= 2;
+	s *= (l <= 1) ? l : 2 - l;
+	smin *= lmin <= 1 ? lmin : 2 - lmin;
+	const v = (l + s) / 2;
+	const sv = l === 0 ? (2 * smin) / (lmin + smin) : (2 * s) / (l + s);
+
+	return [h, sv * 100, v * 100];
+};
+
+convert.hsv.rgb = function (hsv) {
+	const h = hsv[0] / 60;
+	const s = hsv[1] / 100;
+	let v = hsv[2] / 100;
+	const hi = Math.floor(h) % 6;
+
+	const f = h - Math.floor(h);
+	const p = 255 * v * (1 - s);
+	const q = 255 * v * (1 - (s * f));
+	const t = 255 * v * (1 - (s * (1 - f)));
+	v *= 255;
+
+	switch (hi) {
+		case 0:
+			return [v, t, p];
+		case 1:
+			return [q, v, p];
+		case 2:
+			return [p, v, t];
+		case 3:
+			return [p, q, v];
+		case 4:
+			return [t, p, v];
+		case 5:
+			return [v, p, q];
+	}
+};
+
+convert.hsv.hsl = function (hsv) {
+	const h = hsv[0];
+	const s = hsv[1] / 100;
+	const v = hsv[2] / 100;
+	const vmin = Math.max(v, 0.01);
+	let sl;
+	let l;
+
+	l = (2 - s) * v;
+	const lmin = (2 - s) * vmin;
+	sl = s * vmin;
+	sl /= (lmin <= 1) ? lmin : 2 - lmin;
+	sl = sl || 0;
+	l /= 2;
+
+	return [h, sl * 100, l * 100];
+};
+
+// http://dev.w3.org/csswg/css-color/#hwb-to-rgb
+convert.hwb.rgb = function (hwb) {
+	const h = hwb[0] / 360;
+	let wh = hwb[1] / 100;
+	let bl = hwb[2] / 100;
+	const ratio = wh + bl;
+	let f;
+
+	// Wh + bl cant be > 1
+	if (ratio > 1) {
+		wh /= ratio;
+		bl /= ratio;
+	}
+
+	const i = Math.floor(6 * h);
+	const v = 1 - bl;
+	f = 6 * h - i;
+
+	if ((i & 0x01) !== 0) {
+		f = 1 - f;
+	}
+
+	const n = wh + f * (v - wh); // Linear interpolation
+
+	let r;
+	let g;
+	let b;
+	/* eslint-disable max-statements-per-line,no-multi-spaces */
+	switch (i) {
+		default:
+		case 6:
+		case 0: r = v;  g = n;  b = wh; break;
+		case 1: r = n;  g = v;  b = wh; break;
+		case 2: r = wh; g = v;  b = n; break;
+		case 3: r = wh; g = n;  b = v; break;
+		case 4: r = n;  g = wh; b = v; break;
+		case 5: r = v;  g = wh; b = n; break;
+	}
+	/* eslint-enable max-statements-per-line,no-multi-spaces */
+
+	return [r * 255, g * 255, b * 255];
+};
+
+convert.cmyk.rgb = function (cmyk) {
+	const c = cmyk[0] / 100;
+	const m = cmyk[1] / 100;
+	const y = cmyk[2] / 100;
+	const k = cmyk[3] / 100;
+
+	const r = 1 - Math.min(1, c * (1 - k) + k);
+	const g = 1 - Math.min(1, m * (1 - k) + k);
+	const b = 1 - Math.min(1, y * (1 - k) + k);
+
+	return [r * 255, g * 255, b * 255];
+};
+
+convert.xyz.rgb = function (xyz) {
+	const x = xyz[0] / 100;
+	const y = xyz[1] / 100;
+	const z = xyz[2] / 100;
+	let r;
+	let g;
+	let b;
+
+	r = (x * 3.2406) + (y * -1.5372) + (z * -0.4986);
+	g = (x * -0.9689) + (y * 1.8758) + (z * 0.0415);
+	b = (x * 0.0557) + (y * -0.2040) + (z * 1.0570);
+
+	// Assume sRGB
+	r = r > 0.0031308
+		? ((1.055 * (r ** (1.0 / 2.4))) - 0.055)
+		: r * 12.92;
+
+	g = g > 0.0031308
+		? ((1.055 * (g ** (1.0 / 2.4))) - 0.055)
+		: g * 12.92;
+
+	b = b > 0.0031308
+		? ((1.055 * (b ** (1.0 / 2.4))) - 0.055)
+		: b * 12.92;
+
+	r = Math.min(Math.max(0, r), 1);
+	g = Math.min(Math.max(0, g), 1);
+	b = Math.min(Math.max(0, b), 1);
+
+	return [r * 255, g * 255, b * 255];
+};
+
+convert.xyz.lab = function (xyz) {
+	let x = xyz[0];
+	let y = xyz[1];
+	let z = xyz[2];
+
+	x /= 95.047;
+	y /= 100;
+	z /= 108.883;
+
+	x = x > 0.008856 ? (x ** (1 / 3)) : (7.787 * x) + (16 / 116);
+	y = y > 0.008856 ? (y ** (1 / 3)) : (7.787 * y) + (16 / 116);
+	z = z > 0.008856 ? (z ** (1 / 3)) : (7.787 * z) + (16 / 116);
+
+	const l = (116 * y) - 16;
+	const a = 500 * (x - y);
+	const b = 200 * (y - z);
+
+	return [l, a, b];
+};
+
+convert.lab.xyz = function (lab) {
+	const l = lab[0];
+	const a = lab[1];
+	const b = lab[2];
+	let x;
+	let y;
+	let z;
+
+	y = (l + 16) / 116;
+	x = a / 500 + y;
+	z = y - b / 200;
+
+	const y2 = y ** 3;
+	const x2 = x ** 3;
+	const z2 = z ** 3;
+	y = y2 > 0.008856 ? y2 : (y - 16 / 116) / 7.787;
+	x = x2 > 0.008856 ? x2 : (x - 16 / 116) / 7.787;
+	z = z2 > 0.008856 ? z2 : (z - 16 / 116) / 7.787;
+
+	x *= 95.047;
+	y *= 100;
+	z *= 108.883;
+
+	return [x, y, z];
+};
+
+convert.lab.lch = function (lab) {
+	const l = lab[0];
+	const a = lab[1];
+	const b = lab[2];
+	let h;
+
+	const hr = Math.atan2(b, a);
+	h = hr * 360 / 2 / Math.PI;
+
+	if (h < 0) {
+		h += 360;
+	}
+
+	const c = Math.sqrt(a * a + b * b);
+
+	return [l, c, h];
+};
+
+convert.lch.lab = function (lch) {
+	const l = lch[0];
+	const c = lch[1];
+	const h = lch[2];
+
+	const hr = h / 360 * 2 * Math.PI;
+	const a = c * Math.cos(hr);
+	const b = c * Math.sin(hr);
+
+	return [l, a, b];
+};
+
+convert.rgb.ansi16 = function (args, saturation = null) {
+	const [r, g, b] = args;
+	let value = saturation === null ? convert.rgb.hsv(args)[2] : saturation; // Hsv -> ansi16 optimization
+
+	value = Math.round(value / 50);
+
+	if (value === 0) {
+		return 30;
+	}
+
+	let ansi = 30
+		+ ((Math.round(b / 255) << 2)
+		| (Math.round(g / 255) << 1)
+		| Math.round(r / 255));
+
+	if (value === 2) {
+		ansi += 60;
+	}
+
+	return ansi;
+};
+
+convert.hsv.ansi16 = function (args) {
+	// Optimization here; we already know the value and don't need to get
+	// it converted for us.
+	return convert.rgb.ansi16(convert.hsv.rgb(args), args[2]);
+};
+
+convert.rgb.ansi256 = function (args) {
+	const r = args[0];
+	const g = args[1];
+	const b = args[2];
+
+	// We use the extended greyscale palette here, with the exception of
+	// black and white. normal palette only has 4 greyscale shades.
+	if (r === g && g === b) {
+		if (r < 8) {
+			return 16;
+		}
+
+		if (r > 248) {
+			return 231;
+		}
+
+		return Math.round(((r - 8) / 247) * 24) + 232;
+	}
+
+	const ansi = 16
+		+ (36 * Math.round(r / 255 * 5))
+		+ (6 * Math.round(g / 255 * 5))
+		+ Math.round(b / 255 * 5);
+
+	return ansi;
+};
+
+convert.ansi16.rgb = function (args) {
+	let color = args % 10;
+
+	// Handle greyscale
+	if (color === 0 || color === 7) {
+		if (args > 50) {
+			color += 3.5;
+		}
+
+		color = color / 10.5 * 255;
+
+		return [color, color, color];
+	}
+
+	const mult = (~~(args > 50) + 1) * 0.5;
+	const r = ((color & 1) * mult) * 255;
+	const g = (((color >> 1) & 1) * mult) * 255;
+	const b = (((color >> 2) & 1) * mult) * 255;
+
+	return [r, g, b];
+};
+
+convert.ansi256.rgb = function (args) {
+	// Handle greyscale
+	if (args >= 232) {
+		const c = (args - 232) * 10 + 8;
+		return [c, c, c];
+	}
+
+	args -= 16;
+
+	let rem;
+	const r = Math.floor(args / 36) / 5 * 255;
+	const g = Math.floor((rem = args % 36) / 6) / 5 * 255;
+	const b = (rem % 6) / 5 * 255;
+
+	return [r, g, b];
+};
+
+convert.rgb.hex = function (args) {
+	const integer = ((Math.round(args[0]) & 0xFF) << 16)
+		+ ((Math.round(args[1]) & 0xFF) << 8)
+		+ (Math.round(args[2]) & 0xFF);
+
+	const string = integer.toString(16).toUpperCase();
+	return '000000'.substring(string.length) + string;
+};
+
+convert.hex.rgb = function (args) {
+	const match = args.toString(16).match(/[a-f0-9]{6}|[a-f0-9]{3}/i);
+	if (!match) {
+		return [0, 0, 0];
+	}
+
+	let colorString = match[0];
+
+	if (match[0].length === 3) {
+		colorString = colorString.split('').map(char => {
+			return char + char;
+		}).join('');
+	}
+
+	const integer = parseInt(colorString, 16);
+	const r = (integer >> 16) & 0xFF;
+	const g = (integer >> 8) & 0xFF;
+	const b = integer & 0xFF;
+
+	return [r, g, b];
+};
+
+convert.rgb.hcg = function (rgb) {
+	const r = rgb[0] / 255;
+	const g = rgb[1] / 255;
+	const b = rgb[2] / 255;
+	const max = Math.max(Math.max(r, g), b);
+	const min = Math.min(Math.min(r, g), b);
+	const chroma = (max - min);
+	let grayscale;
+	let hue;
+
+	if (chroma < 1) {
+		grayscale = min / (1 - chroma);
+	} else {
+		grayscale = 0;
+	}
+
+	if (chroma <= 0) {
+		hue = 0;
+	} else
+	if (max === r) {
+		hue = ((g - b) / chroma) % 6;
+	} else
+	if (max === g) {
+		hue = 2 + (b - r) / chroma;
+	} else {
+		hue = 4 + (r - g) / chroma;
+	}
+
+	hue /= 6;
+	hue %= 1;
+
+	return [hue * 360, chroma * 100, grayscale * 100];
+};
+
+convert.hsl.hcg = function (hsl) {
+	const s = hsl[1] / 100;
+	const l = hsl[2] / 100;
+
+	const c = l < 0.5 ? (2.0 * s * l) : (2.0 * s * (1.0 - l));
+
+	let f = 0;
+	if (c < 1.0) {
+		f = (l - 0.5 * c) / (1.0 - c);
+	}
+
+	return [hsl[0], c * 100, f * 100];
+};
+
+convert.hsv.hcg = function (hsv) {
+	const s = hsv[1] / 100;
+	const v = hsv[2] / 100;
+
+	const c = s * v;
+	let f = 0;
+
+	if (c < 1.0) {
+		f = (v - c) / (1 - c);
+	}
+
+	return [hsv[0], c * 100, f * 100];
+};
+
+convert.hcg.rgb = function (hcg) {
+	const h = hcg[0] / 360;
+	const c = hcg[1] / 100;
+	const g = hcg[2] / 100;
+
+	if (c === 0.0) {
+		return [g * 255, g * 255, g * 255];
+	}
+
+	const pure = [0, 0, 0];
+	const hi = (h % 1) * 6;
+	const v = hi % 1;
+	const w = 1 - v;
+	let mg = 0;
+
+	/* eslint-disable max-statements-per-line */
+	switch (Math.floor(hi)) {
+		case 0:
+			pure[0] = 1; pure[1] = v; pure[2] = 0; break;
+		case 1:
+			pure[0] = w; pure[1] = 1; pure[2] = 0; break;
+		case 2:
+			pure[0] = 0; pure[1] = 1; pure[2] = v; break;
+		case 3:
+			pure[0] = 0; pure[1] = w; pure[2] = 1; break;
+		case 4:
+			pure[0] = v; pure[1] = 0; pure[2] = 1; break;
+		default:
+			pure[0] = 1; pure[1] = 0; pure[2] = w;
+	}
+	/* eslint-enable max-statements-per-line */
+
+	mg = (1.0 - c) * g;
+
+	return [
+		(c * pure[0] + mg) * 255,
+		(c * pure[1] + mg) * 255,
+		(c * pure[2] + mg) * 255
+	];
+};
+
+convert.hcg.hsv = function (hcg) {
+	const c = hcg[1] / 100;
+	const g = hcg[2] / 100;
+
+	const v = c + g * (1.0 - c);
+	let f = 0;
+
+	if (v > 0.0) {
+		f = c / v;
+	}
+
+	return [hcg[0], f * 100, v * 100];
+};
+
+convert.hcg.hsl = function (hcg) {
+	const c = hcg[1] / 100;
+	const g = hcg[2] / 100;
+
+	const l = g * (1.0 - c) + 0.5 * c;
+	let s = 0;
+
+	if (l > 0.0 && l < 0.5) {
+		s = c / (2 * l);
+	} else
+	if (l >= 0.5 && l < 1.0) {
+		s = c / (2 * (1 - l));
+	}
+
+	return [hcg[0], s * 100, l * 100];
+};
+
+convert.hcg.hwb = function (hcg) {
+	const c = hcg[1] / 100;
+	const g = hcg[2] / 100;
+	const v = c + g * (1.0 - c);
+	return [hcg[0], (v - c) * 100, (1 - v) * 100];
+};
+
+convert.hwb.hcg = function (hwb) {
+	const w = hwb[1] / 100;
+	const b = hwb[2] / 100;
+	const v = 1 - b;
+	const c = v - w;
+	let g = 0;
+
+	if (c < 1) {
+		g = (v - c) / (1 - c);
+	}
+
+	return [hwb[0], c * 100, g * 100];
+};
+
+convert.apple.rgb = function (apple) {
+	return [(apple[0] / 65535) * 255, (apple[1] / 65535) * 255, (apple[2] / 65535) * 255];
+};
+
+convert.rgb.apple = function (rgb) {
+	return [(rgb[0] / 255) * 65535, (rgb[1] / 255) * 65535, (rgb[2] / 255) * 65535];
+};
+
+convert.gray.rgb = function (args) {
+	return [args[0] / 100 * 255, args[0] / 100 * 255, args[0] / 100 * 255];
+};
+
+convert.gray.hsl = function (args) {
+	return [0, 0, args[0]];
+};
+
+convert.gray.hsv = convert.gray.hsl;
+
+convert.gray.hwb = function (gray) {
+	return [0, 100, gray[0]];
+};
+
+convert.gray.cmyk = function (gray) {
+	return [0, 0, 0, gray[0]];
+};
+
+convert.gray.lab = function (gray) {
+	return [gray[0], 0, 0];
+};
+
+convert.gray.hex = function (gray) {
+	const val = Math.round(gray[0] / 100 * 255) & 0xFF;
+	const integer = (val << 16) + (val << 8) + val;
+
+	const string = integer.toString(16).toUpperCase();
+	return '000000'.substring(string.length) + string;
+};
+
+convert.rgb.gray = function (rgb) {
+	const val = (rgb[0] + rgb[1] + rgb[2]) / 3;
+	return [val / 255 * 100];
+};
+
+
+/***/ }),
+
+/***/ 6931:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const conversions = __nccwpck_require__(7391);
+const route = __nccwpck_require__(880);
+
+const convert = {};
+
+const models = Object.keys(conversions);
+
+function wrapRaw(fn) {
+	const wrappedFn = function (...args) {
+		const arg0 = args[0];
+		if (arg0 === undefined || arg0 === null) {
+			return arg0;
+		}
+
+		if (arg0.length > 1) {
+			args = arg0;
+		}
+
+		return fn(args);
+	};
+
+	// Preserve .conversion property if there is one
+	if ('conversion' in fn) {
+		wrappedFn.conversion = fn.conversion;
+	}
+
+	return wrappedFn;
+}
+
+function wrapRounded(fn) {
+	const wrappedFn = function (...args) {
+		const arg0 = args[0];
+
+		if (arg0 === undefined || arg0 === null) {
+			return arg0;
+		}
+
+		if (arg0.length > 1) {
+			args = arg0;
+		}
+
+		const result = fn(args);
+
+		// We're assuming the result is an array here.
+		// see notice in conversions.js; don't use box types
+		// in conversion functions.
+		if (typeof result === 'object') {
+			for (let len = result.length, i = 0; i < len; i++) {
+				result[i] = Math.round(result[i]);
+			}
+		}
+
+		return result;
+	};
+
+	// Preserve .conversion property if there is one
+	if ('conversion' in fn) {
+		wrappedFn.conversion = fn.conversion;
+	}
+
+	return wrappedFn;
+}
+
+models.forEach(fromModel => {
+	convert[fromModel] = {};
+
+	Object.defineProperty(convert[fromModel], 'channels', {value: conversions[fromModel].channels});
+	Object.defineProperty(convert[fromModel], 'labels', {value: conversions[fromModel].labels});
+
+	const routes = route(fromModel);
+	const routeModels = Object.keys(routes);
+
+	routeModels.forEach(toModel => {
+		const fn = routes[toModel];
+
+		convert[fromModel][toModel] = wrapRounded(fn);
+		convert[fromModel][toModel].raw = wrapRaw(fn);
+	});
+});
+
+module.exports = convert;
+
+
+/***/ }),
+
+/***/ 880:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const conversions = __nccwpck_require__(7391);
+
+/*
+	This function routes a model to all other models.
+
+	all functions that are routed have a property `.conversion` attached
+	to the returned synthetic function. This property is an array
+	of strings, each with the steps in between the 'from' and 'to'
+	color models (inclusive).
+
+	conversions that are not possible simply are not included.
+*/
+
+function buildGraph() {
+	const graph = {};
+	// https://jsperf.com/object-keys-vs-for-in-with-closure/3
+	const models = Object.keys(conversions);
+
+	for (let len = models.length, i = 0; i < len; i++) {
+		graph[models[i]] = {
+			// http://jsperf.com/1-vs-infinity
+			// micro-opt, but this is simple.
+			distance: -1,
+			parent: null
+		};
+	}
+
+	return graph;
+}
+
+// https://en.wikipedia.org/wiki/Breadth-first_search
+function deriveBFS(fromModel) {
+	const graph = buildGraph();
+	const queue = [fromModel]; // Unshift -> queue -> pop
+
+	graph[fromModel].distance = 0;
+
+	while (queue.length) {
+		const current = queue.pop();
+		const adjacents = Object.keys(conversions[current]);
+
+		for (let len = adjacents.length, i = 0; i < len; i++) {
+			const adjacent = adjacents[i];
+			const node = graph[adjacent];
+
+			if (node.distance === -1) {
+				node.distance = graph[current].distance + 1;
+				node.parent = current;
+				queue.unshift(adjacent);
+			}
+		}
+	}
+
+	return graph;
+}
+
+function link(from, to) {
+	return function (args) {
+		return to(from(args));
+	};
+}
+
+function wrapConversion(toModel, graph) {
+	const path = [graph[toModel].parent, toModel];
+	let fn = conversions[graph[toModel].parent][toModel];
+
+	let cur = graph[toModel].parent;
+	while (graph[cur].parent) {
+		path.unshift(graph[cur].parent);
+		fn = link(conversions[graph[cur].parent][cur], fn);
+		cur = graph[cur].parent;
+	}
+
+	fn.conversion = path;
+	return fn;
+}
+
+module.exports = function (fromModel) {
+	const graph = deriveBFS(fromModel);
+	const conversion = {};
+
+	const models = Object.keys(graph);
+	for (let len = models.length, i = 0; i < len; i++) {
+		const toModel = models[i];
+		const node = graph[toModel];
+
+		if (node.parent === null) {
+			// No possible conversion, or this node is the source model.
+			continue;
+		}
+
+		conversion[toModel] = wrapConversion(toModel, graph);
+	}
+
+	return conversion;
+};
+
+
+
+/***/ }),
+
+/***/ 8510:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = {
+	"aliceblue": [240, 248, 255],
+	"antiquewhite": [250, 235, 215],
+	"aqua": [0, 255, 255],
+	"aquamarine": [127, 255, 212],
+	"azure": [240, 255, 255],
+	"beige": [245, 245, 220],
+	"bisque": [255, 228, 196],
+	"black": [0, 0, 0],
+	"blanchedalmond": [255, 235, 205],
+	"blue": [0, 0, 255],
+	"blueviolet": [138, 43, 226],
+	"brown": [165, 42, 42],
+	"burlywood": [222, 184, 135],
+	"cadetblue": [95, 158, 160],
+	"chartreuse": [127, 255, 0],
+	"chocolate": [210, 105, 30],
+	"coral": [255, 127, 80],
+	"cornflowerblue": [100, 149, 237],
+	"cornsilk": [255, 248, 220],
+	"crimson": [220, 20, 60],
+	"cyan": [0, 255, 255],
+	"darkblue": [0, 0, 139],
+	"darkcyan": [0, 139, 139],
+	"darkgoldenrod": [184, 134, 11],
+	"darkgray": [169, 169, 169],
+	"darkgreen": [0, 100, 0],
+	"darkgrey": [169, 169, 169],
+	"darkkhaki": [189, 183, 107],
+	"darkmagenta": [139, 0, 139],
+	"darkolivegreen": [85, 107, 47],
+	"darkorange": [255, 140, 0],
+	"darkorchid": [153, 50, 204],
+	"darkred": [139, 0, 0],
+	"darksalmon": [233, 150, 122],
+	"darkseagreen": [143, 188, 143],
+	"darkslateblue": [72, 61, 139],
+	"darkslategray": [47, 79, 79],
+	"darkslategrey": [47, 79, 79],
+	"darkturquoise": [0, 206, 209],
+	"darkviolet": [148, 0, 211],
+	"deeppink": [255, 20, 147],
+	"deepskyblue": [0, 191, 255],
+	"dimgray": [105, 105, 105],
+	"dimgrey": [105, 105, 105],
+	"dodgerblue": [30, 144, 255],
+	"firebrick": [178, 34, 34],
+	"floralwhite": [255, 250, 240],
+	"forestgreen": [34, 139, 34],
+	"fuchsia": [255, 0, 255],
+	"gainsboro": [220, 220, 220],
+	"ghostwhite": [248, 248, 255],
+	"gold": [255, 215, 0],
+	"goldenrod": [218, 165, 32],
+	"gray": [128, 128, 128],
+	"green": [0, 128, 0],
+	"greenyellow": [173, 255, 47],
+	"grey": [128, 128, 128],
+	"honeydew": [240, 255, 240],
+	"hotpink": [255, 105, 180],
+	"indianred": [205, 92, 92],
+	"indigo": [75, 0, 130],
+	"ivory": [255, 255, 240],
+	"khaki": [240, 230, 140],
+	"lavender": [230, 230, 250],
+	"lavenderblush": [255, 240, 245],
+	"lawngreen": [124, 252, 0],
+	"lemonchiffon": [255, 250, 205],
+	"lightblue": [173, 216, 230],
+	"lightcoral": [240, 128, 128],
+	"lightcyan": [224, 255, 255],
+	"lightgoldenrodyellow": [250, 250, 210],
+	"lightgray": [211, 211, 211],
+	"lightgreen": [144, 238, 144],
+	"lightgrey": [211, 211, 211],
+	"lightpink": [255, 182, 193],
+	"lightsalmon": [255, 160, 122],
+	"lightseagreen": [32, 178, 170],
+	"lightskyblue": [135, 206, 250],
+	"lightslategray": [119, 136, 153],
+	"lightslategrey": [119, 136, 153],
+	"lightsteelblue": [176, 196, 222],
+	"lightyellow": [255, 255, 224],
+	"lime": [0, 255, 0],
+	"limegreen": [50, 205, 50],
+	"linen": [250, 240, 230],
+	"magenta": [255, 0, 255],
+	"maroon": [128, 0, 0],
+	"mediumaquamarine": [102, 205, 170],
+	"mediumblue": [0, 0, 205],
+	"mediumorchid": [186, 85, 211],
+	"mediumpurple": [147, 112, 219],
+	"mediumseagreen": [60, 179, 113],
+	"mediumslateblue": [123, 104, 238],
+	"mediumspringgreen": [0, 250, 154],
+	"mediumturquoise": [72, 209, 204],
+	"mediumvioletred": [199, 21, 133],
+	"midnightblue": [25, 25, 112],
+	"mintcream": [245, 255, 250],
+	"mistyrose": [255, 228, 225],
+	"moccasin": [255, 228, 181],
+	"navajowhite": [255, 222, 173],
+	"navy": [0, 0, 128],
+	"oldlace": [253, 245, 230],
+	"olive": [128, 128, 0],
+	"olivedrab": [107, 142, 35],
+	"orange": [255, 165, 0],
+	"orangered": [255, 69, 0],
+	"orchid": [218, 112, 214],
+	"palegoldenrod": [238, 232, 170],
+	"palegreen": [152, 251, 152],
+	"paleturquoise": [175, 238, 238],
+	"palevioletred": [219, 112, 147],
+	"papayawhip": [255, 239, 213],
+	"peachpuff": [255, 218, 185],
+	"peru": [205, 133, 63],
+	"pink": [255, 192, 203],
+	"plum": [221, 160, 221],
+	"powderblue": [176, 224, 230],
+	"purple": [128, 0, 128],
+	"rebeccapurple": [102, 51, 153],
+	"red": [255, 0, 0],
+	"rosybrown": [188, 143, 143],
+	"royalblue": [65, 105, 225],
+	"saddlebrown": [139, 69, 19],
+	"salmon": [250, 128, 114],
+	"sandybrown": [244, 164, 96],
+	"seagreen": [46, 139, 87],
+	"seashell": [255, 245, 238],
+	"sienna": [160, 82, 45],
+	"silver": [192, 192, 192],
+	"skyblue": [135, 206, 235],
+	"slateblue": [106, 90, 205],
+	"slategray": [112, 128, 144],
+	"slategrey": [112, 128, 144],
+	"snow": [255, 250, 250],
+	"springgreen": [0, 255, 127],
+	"steelblue": [70, 130, 180],
+	"tan": [210, 180, 140],
+	"teal": [0, 128, 128],
+	"thistle": [216, 191, 216],
+	"tomato": [255, 99, 71],
+	"turquoise": [64, 224, 208],
+	"violet": [238, 130, 238],
+	"wheat": [245, 222, 179],
+	"white": [255, 255, 255],
+	"whitesmoke": [245, 245, 245],
+	"yellow": [255, 255, 0],
+	"yellowgreen": [154, 205, 50]
+};
+
+
+/***/ }),
+
 /***/ 8794:
 /***/ ((module, exports) => {
 
@@ -8075,6 +9908,44 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 8493:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = getUTCISOWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(3061));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(1478));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var MILLISECONDS_IN_WEEK = 604800000; // This function will be a part of public API when UTC function will be implemented.
+// See issue: https://github.com/date-fns/date-fns/issues/376
+
+function getUTCISOWeek(dirtyDate) {
+  (0, _index4.default)(1, arguments);
+  var date = (0, _index.default)(dirtyDate);
+  var diff = (0, _index2.default)(date).getTime() - (0, _index3.default)(date).getTime(); // Round the number of days to the nearest integer
+  // because the number of milliseconds in a week is not constant
+  // (e.g. it's different in the week of the daylight saving time clock shift)
+
+  return Math.round(diff / MILLISECONDS_IN_WEEK) + 1;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 7170:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -8122,7 +9993,7 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 8493:
+/***/ 5993:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8131,13 +10002,13 @@ module.exports = exports.default;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.default = getUTCISOWeek;
+exports.default = getUTCWeek;
 
 var _index = _interopRequireDefault(__nccwpck_require__(6477));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(3061));
+var _index2 = _interopRequireDefault(__nccwpck_require__(2258));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(1478));
+var _index3 = _interopRequireDefault(__nccwpck_require__(2629));
 
 var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
 
@@ -8146,10 +10017,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var MILLISECONDS_IN_WEEK = 604800000; // This function will be a part of public API when UTC function will be implemented.
 // See issue: https://github.com/date-fns/date-fns/issues/376
 
-function getUTCISOWeek(dirtyDate) {
+function getUTCWeek(dirtyDate, options) {
   (0, _index4.default)(1, arguments);
   var date = (0, _index.default)(dirtyDate);
-  var diff = (0, _index2.default)(date).getTime() - (0, _index3.default)(date).getTime(); // Round the number of days to the nearest integer
+  var diff = (0, _index2.default)(date, options).getTime() - (0, _index3.default)(date, options).getTime(); // Round the number of days to the nearest integer
   // because the number of milliseconds in a week is not constant
   // (e.g. it's different in the week of the daylight saving time clock shift)
 
@@ -8213,44 +10084,6 @@ function getUTCWeekYear(dirtyDate, dirtyOptions) {
   } else {
     return year - 1;
   }
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 5993:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = getUTCWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2258));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(2629));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var MILLISECONDS_IN_WEEK = 604800000; // This function will be a part of public API when UTC function will be implemented.
-// See issue: https://github.com/date-fns/date-fns/issues/376
-
-function getUTCWeek(dirtyDate, options) {
-  (0, _index4.default)(1, arguments);
-  var date = (0, _index.default)(dirtyDate);
-  var diff = (0, _index2.default)(date, options).getTime() - (0, _index3.default)(date, options).getTime(); // Round the number of days to the nearest integer
-  // because the number of milliseconds in a week is not constant
-  // (e.g. it's different in the week of the daylight saving time clock shift)
-
-  return Math.round(diff / MILLISECONDS_IN_WEEK) + 1;
 }
 
 module.exports = exports.default;
@@ -8504,6 +10337,40 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 3061:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = startOfUTCISOWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// This function will be a part of public API when UTC function will be implemented.
+// See issue: https://github.com/date-fns/date-fns/issues/376
+function startOfUTCISOWeek(dirtyDate) {
+  (0, _index2.default)(1, arguments);
+  var weekStartsOn = 1;
+  var date = (0, _index.default)(dirtyDate);
+  var day = date.getUTCDay();
+  var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
+  date.setUTCDate(date.getUTCDate() - diff);
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 1478:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -8539,7 +10406,7 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 3061:
+/***/ 2258:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8548,20 +10415,31 @@ module.exports = exports.default;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.default = startOfUTCISOWeek;
+exports.default = startOfUTCWeek;
 
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
+var _index = _interopRequireDefault(__nccwpck_require__(1985));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // This function will be a part of public API when UTC function will be implemented.
 // See issue: https://github.com/date-fns/date-fns/issues/376
-function startOfUTCISOWeek(dirtyDate) {
-  (0, _index2.default)(1, arguments);
-  var weekStartsOn = 1;
-  var date = (0, _index.default)(dirtyDate);
+function startOfUTCWeek(dirtyDate, dirtyOptions) {
+  (0, _index3.default)(1, arguments);
+  var options = dirtyOptions || {};
+  var locale = options.locale;
+  var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
+  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index.default)(localeWeekStartsOn);
+  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+
+  if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
+    throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
+  }
+
+  var date = (0, _index2.default)(dirtyDate);
   var day = date.getUTCDay();
   var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
   date.setUTCDate(date.getUTCDate() - diff);
@@ -8615,51 +10493,6 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 2258:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = startOfUTCWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// This function will be a part of public API when UTC function will be implemented.
-// See issue: https://github.com/date-fns/date-fns/issues/376
-function startOfUTCWeek(dirtyDate, dirtyOptions) {
-  (0, _index3.default)(1, arguments);
-  var options = dirtyOptions || {};
-  var locale = options.locale;
-  var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index.default)(localeWeekStartsOn);
-  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
-
-  if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
-    throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
-  }
-
-  var date = (0, _index2.default)(dirtyDate);
-  var day = date.getUTCDay();
-  var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
-  date.setUTCDate(date.getUTCDate() - diff);
-  date.setUTCHours(0, 0, 0, 0);
-  return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
 /***/ 1985:
 /***/ ((module, exports) => {
 
@@ -8683,6 +10516,95 @@ function toInteger(dirtyNumber) {
   }
 
   return number < 0 ? Math.ceil(number) : Math.floor(number);
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 6211:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = add;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6227));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2995));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+
+var _index5 = _interopRequireDefault(__nccwpck_require__(1985));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name add
+ * @category Common Helpers
+ * @summary Add the specified years, months, weeks, days, hours, minutes and seconds to the given date.
+ *
+ * @description
+ * Add the specified years, months, weeks, days, hours, minutes and seconds to the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Duration} duration - the object with years, months, weeks, days, hours, minutes and seconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ *
+ * | Key            | Description                        |
+ * |----------------|------------------------------------|
+ * | years          | Amount of years to be added        |
+ * | months         | Amount of months to be added       |
+ * | weeks          | Amount of weeks to be added        |
+ * | days           | Amount of days to be added         |
+ * | hours          | Amount of hours to be added        |
+ * | minutes        | Amount of minutes to be added      |
+ * | seconds        | Amount of seconds to be added      |
+ *
+ * All values default to 0
+ *
+ * @returns {Date} the new date with the seconds added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add the following duration to 1 September 2014, 10:19:50
+ * const result = add(new Date(2014, 8, 1, 10, 19, 50), {
+ *   years: 2,
+ *   months: 9,
+ *   weeks: 1,
+ *   days: 7,
+ *   hours: 5,
+ *   minutes: 9,
+ *   seconds: 30,
+ * })
+ * //=> Thu Jun 15 2017 15:29:20
+ */
+function add(dirtyDate, duration) {
+  (0, _index4.default)(2, arguments);
+  if (!duration || typeof duration !== 'object') return new Date(NaN);
+  var years = duration.years ? (0, _index5.default)(duration.years) : 0;
+  var months = duration.months ? (0, _index5.default)(duration.months) : 0;
+  var weeks = duration.weeks ? (0, _index5.default)(duration.weeks) : 0;
+  var days = duration.days ? (0, _index5.default)(duration.days) : 0;
+  var hours = duration.hours ? (0, _index5.default)(duration.hours) : 0;
+  var minutes = duration.minutes ? (0, _index5.default)(duration.minutes) : 0;
+  var seconds = duration.seconds ? (0, _index5.default)(duration.seconds) : 0; // Add years and months
+
+  var date = (0, _index3.default)(dirtyDate);
+  var dateWithMonths = months || years ? (0, _index2.default)(date, months + years * 12) : date; // Add weeks and days
+
+  var dateWithDays = days || weeks ? (0, _index.default)(dateWithMonths, days + weeks * 7) : dateWithMonths; // Add days, hours, minutes and seconds
+
+  var minutesToAdd = minutes + hours * 60;
+  var secondsToAdd = seconds + minutesToAdd * 60;
+  var msToAdd = secondsToAdd * 1000;
+  var finalDate = new Date(dateWithDays.getTime() + msToAdd);
+  return finalDate;
 }
 
 module.exports = exports.default;
@@ -9339,95 +11261,6 @@ function addYears(dirtyDate, dirtyAmount) {
   (0, _index3.default)(2, arguments);
   var amount = (0, _index.default)(dirtyAmount);
   return (0, _index2.default)(dirtyDate, amount * 12);
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 6211:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = add;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6227));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2995));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
-
-var _index5 = _interopRequireDefault(__nccwpck_require__(1985));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name add
- * @category Common Helpers
- * @summary Add the specified years, months, weeks, days, hours, minutes and seconds to the given date.
- *
- * @description
- * Add the specified years, months, weeks, days, hours, minutes and seconds to the given date.
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Duration} duration - the object with years, months, weeks, days, hours, minutes and seconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
- *
- * | Key            | Description                        |
- * |----------------|------------------------------------|
- * | years          | Amount of years to be added        |
- * | months         | Amount of months to be added       |
- * | weeks          | Amount of weeks to be added        |
- * | days           | Amount of days to be added         |
- * | hours          | Amount of hours to be added        |
- * | minutes        | Amount of minutes to be added      |
- * | seconds        | Amount of seconds to be added      |
- *
- * All values default to 0
- *
- * @returns {Date} the new date with the seconds added
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Add the following duration to 1 September 2014, 10:19:50
- * const result = add(new Date(2014, 8, 1, 10, 19, 50), {
- *   years: 2,
- *   months: 9,
- *   weeks: 1,
- *   days: 7,
- *   hours: 5,
- *   minutes: 9,
- *   seconds: 30,
- * })
- * //=> Thu Jun 15 2017 15:29:20
- */
-function add(dirtyDate, duration) {
-  (0, _index4.default)(2, arguments);
-  if (!duration || typeof duration !== 'object') return new Date(NaN);
-  var years = duration.years ? (0, _index5.default)(duration.years) : 0;
-  var months = duration.months ? (0, _index5.default)(duration.months) : 0;
-  var weeks = duration.weeks ? (0, _index5.default)(duration.weeks) : 0;
-  var days = duration.days ? (0, _index5.default)(duration.days) : 0;
-  var hours = duration.hours ? (0, _index5.default)(duration.hours) : 0;
-  var minutes = duration.minutes ? (0, _index5.default)(duration.minutes) : 0;
-  var seconds = duration.seconds ? (0, _index5.default)(duration.seconds) : 0; // Add years and months
-
-  var date = (0, _index3.default)(dirtyDate);
-  var dateWithMonths = months || years ? (0, _index2.default)(date, months + years * 12) : date; // Add weeks and days
-
-  var dateWithDays = days || weeks ? (0, _index.default)(dateWithMonths, days + weeks * 7) : dateWithMonths; // Add days, hours, minutes and seconds
-
-  var minutesToAdd = minutes + hours * 60;
-  var secondsToAdd = seconds + minutesToAdd * 60;
-  var msToAdd = secondsToAdd * 1000;
-  var finalDate = new Date(dateWithDays.getTime() + msToAdd);
-  return finalDate;
 }
 
 module.exports = exports.default;
@@ -12281,6 +14114,58 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 1920:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = endOfISOWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(5218));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name endOfISOWeek
+ * @category ISO Week Helpers
+ * @summary Return the end of an ISO week for the given date.
+ *
+ * @description
+ * Return the end of an ISO week for the given date.
+ * The result will be in the local timezone.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the end of an ISO week
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The end of an ISO week for 2 September 2014 11:55:00:
+ * var result = endOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Sun Sep 07 2014 23:59:59.999
+ */
+function endOfISOWeek(dirtyDate) {
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(dirtyDate, {
+    weekStartsOn: 1
+  });
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 9731:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -12339,58 +14224,6 @@ function endOfISOWeekYear(dirtyDate) {
   var date = (0, _index2.default)(fourthOfJanuaryOfNextYear);
   date.setMilliseconds(date.getMilliseconds() - 1);
   return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 1920:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = endOfISOWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(5218));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name endOfISOWeek
- * @category ISO Week Helpers
- * @summary Return the end of an ISO week for the given date.
- *
- * @description
- * Return the end of an ISO week for the given date.
- * The result will be in the local timezone.
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the original date
- * @returns {Date} the end of an ISO week
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // The end of an ISO week for 2 September 2014 11:55:00:
- * var result = endOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
- * //=> Sun Sep 07 2014 23:59:59.999
- */
-function endOfISOWeek(dirtyDate) {
-  (0, _index2.default)(1, arguments);
-  return (0, _index.default)(dirtyDate, {
-    weekStartsOn: 1
-  });
 }
 
 module.exports = exports.default;
@@ -12872,1459 +14705,6 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 7128:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatDistanceStrict;
-
-var _index = _interopRequireDefault(__nccwpck_require__(7032));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(9818));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(7934));
-
-var _index5 = _interopRequireDefault(__nccwpck_require__(1773));
-
-var _index6 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var MILLISECONDS_IN_MINUTE = 1000 * 60;
-var MINUTES_IN_DAY = 60 * 24;
-var MINUTES_IN_MONTH = MINUTES_IN_DAY * 30;
-var MINUTES_IN_YEAR = MINUTES_IN_DAY * 365;
-/**
- * @name formatDistanceStrict
- * @category Common Helpers
- * @summary Return the distance between the given dates in words.
- *
- * @description
- * Return the distance between the given dates in words, using strict units.
- * This is like `formatDistance`, but does not use helpers like 'almost', 'over',
- * 'less than' and the like.
- *
- * | Distance between dates | Result              |
- * |------------------------|---------------------|
- * | 0 ... 59 secs          | [0..59] seconds     |
- * | 1 ... 59 mins          | [1..59] minutes     |
- * | 1 ... 23 hrs           | [1..23] hours       |
- * | 1 ... 29 days          | [1..29] days        |
- * | 1 ... 11 months        | [1..11] months      |
- * | 1 ... N years          | [1..N]  years       |
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * - The function was renamed from `distanceInWordsStrict` to `formatDistanceStrict`
- *   to make its name consistent with `format` and `formatRelative`.
- *
- * - The order of arguments is swapped to make the function
- *   consistent with `differenceIn...` functions.
- *
- *   ```javascript
- *   // Before v2.0.0
- *
- *   distanceInWordsStrict(
- *     new Date(2015, 0, 2),
- *     new Date(2014, 6, 2)
- *   ) //=> '6 months'
- *
- *   // v2.0.0 onward
- *
- *   formatDistanceStrict(
- *     new Date(2014, 6, 2),
- *     new Date(2015, 0, 2)
- *   ) //=> '6 months'
- *   ```
- *
- * - `partialMethod` option is renamed to `roundingMethod`.
- *
- *   ```javascript
- *   // Before v2.0.0
- *
- *   distanceInWordsStrict(
- *     new Date(1986, 3, 4, 10, 32, 0),
- *     new Date(1986, 3, 4, 10, 33, 1),
- *     { partialMethod: 'ceil' }
- *   ) //=> '2 minutes'
- *
- *   // v2.0.0 onward
- *
- *   formatDistanceStrict(
- *     new Date(1986, 3, 4, 10, 33, 1),
- *     new Date(1986, 3, 4, 10, 32, 0),
- *     { roundingMethod: 'ceil' }
- *   ) //=> '2 minutes'
- *   ```
- *
- * - If `roundingMethod` is not specified, it now defaults to `round` instead of `floor`.
- *
- * - `unit` option now accepts one of the strings:
- *   'second', 'minute', 'hour', 'day', 'month' or 'year' instead of 's', 'm', 'h', 'd', 'M' or 'Y'
- *
- *   ```javascript
- *   // Before v2.0.0
- *
- *   distanceInWordsStrict(
- *     new Date(1986, 3, 4, 10, 32, 0),
- *     new Date(1986, 3, 4, 10, 33, 1),
- *     { unit: 'm' }
- *   )
- *
- *   // v2.0.0 onward
- *
- *   formatDistanceStrict(
- *     new Date(1986, 3, 4, 10, 33, 1),
- *     new Date(1986, 3, 4, 10, 32, 0),
- *     { unit: 'minute' }
- *   )
- *   ```
- *
- * @param {Date|Number} date - the date
- * @param {Date|Number} baseDate - the date to compare with
- * @param {Object} [options] - an object with options.
- * @param {Boolean} [options.addSuffix=false] - result indicates if the second date is earlier or later than the first
- * @param {'second'|'minute'|'hour'|'day'|'month'|'year'} [options.unit] - if specified, will force a unit
- * @param {'floor'|'ceil'|'round'} [options.roundingMethod='round'] - which way to round partial units
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @returns {String} the distance in words
- * @throws {TypeError} 2 arguments required
- * @throws {RangeError} `date` must not be Invalid Date
- * @throws {RangeError} `baseDate` must not be Invalid Date
- * @throws {RangeError} `options.roundingMethod` must be 'floor', 'ceil' or 'round'
- * @throws {RangeError} `options.unit` must be 'second', 'minute', 'hour', 'day', 'month' or 'year'
- * @throws {RangeError} `options.locale` must contain `formatDistance` property
- *
- * @example
- * // What is the distance between 2 July 2014 and 1 January 2015?
- * const result = formatDistanceStrict(new Date(2014, 6, 2), new Date(2015, 0, 2))
- * //=> '6 months'
- *
- * @example
- * // What is the distance between 1 January 2015 00:00:15
- * // and 1 January 2015 00:00:00?
- * const result = formatDistanceStrict(
- *   new Date(2015, 0, 1, 0, 0, 15),
- *   new Date(2015, 0, 1, 0, 0, 0)
- * )
- * //=> '15 seconds'
- *
- * @example
- * // What is the distance from 1 January 2016
- * // to 1 January 2015, with a suffix?
- * const result = formatDistanceStrict(new Date(2015, 0, 1), new Date(2016, 0, 1), {
- *   addSuffix: true
- * })
- * //=> '1 year ago'
- *
- * @example
- * // What is the distance from 1 January 2016
- * // to 1 January 2015, in minutes?
- * const result = formatDistanceStrict(new Date(2016, 0, 1), new Date(2015, 0, 1), {
- *   unit: 'minute'
- * })
- * //=> '525600 minutes'
- *
- * @example
- * // What is the distance from 1 January 2015
- * // to 28 January 2015, in months, rounded up?
- * const result = formatDistanceStrict(new Date(2015, 0, 28), new Date(2015, 0, 1), {
- *   unit: 'month',
- *   roundingMethod: 'ceil'
- * })
- * //=> '1 month'
- *
- * @example
- * // What is the distance between 1 August 2016 and 1 January 2015 in Esperanto?
- * import { eoLocale } from 'date-fns/locale/eo'
- * const result = formatDistanceStrict(new Date(2016, 7, 1), new Date(2015, 0, 1), {
- *   locale: eoLocale
- * })
- * //=> '1 jaro'
- */
-
-function formatDistanceStrict(dirtyDate, dirtyBaseDate) {
-  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  (0, _index6.default)(2, arguments);
-  var locale = options.locale || _index5.default;
-
-  if (!locale.formatDistance) {
-    throw new RangeError('locale must contain localize.formatDistance property');
-  }
-
-  var comparison = (0, _index2.default)(dirtyDate, dirtyBaseDate);
-
-  if (isNaN(comparison)) {
-    throw new RangeError('Invalid time value');
-  }
-
-  var localizeOptions = (0, _index4.default)(options);
-  localizeOptions.addSuffix = Boolean(options.addSuffix);
-  localizeOptions.comparison = comparison;
-  var dateLeft;
-  var dateRight;
-
-  if (comparison > 0) {
-    dateLeft = (0, _index3.default)(dirtyBaseDate);
-    dateRight = (0, _index3.default)(dirtyDate);
-  } else {
-    dateLeft = (0, _index3.default)(dirtyDate);
-    dateRight = (0, _index3.default)(dirtyBaseDate);
-  }
-
-  var roundingMethod = options.roundingMethod == null ? 'round' : String(options.roundingMethod);
-  var roundingMethodFn;
-
-  if (roundingMethod === 'floor') {
-    roundingMethodFn = Math.floor;
-  } else if (roundingMethod === 'ceil') {
-    roundingMethodFn = Math.ceil;
-  } else if (roundingMethod === 'round') {
-    roundingMethodFn = Math.round;
-  } else {
-    throw new RangeError("roundingMethod must be 'floor', 'ceil' or 'round'");
-  }
-
-  var milliseconds = dateRight.getTime() - dateLeft.getTime();
-  var minutes = milliseconds / MILLISECONDS_IN_MINUTE;
-  var timezoneOffset = (0, _index.default)(dateRight) - (0, _index.default)(dateLeft); // Use DST-normalized difference in minutes for years, months and days;
-  // use regular difference in minutes for hours, minutes and seconds.
-
-  var dstNormalizedMinutes = (milliseconds - timezoneOffset) / MILLISECONDS_IN_MINUTE;
-  var unit;
-
-  if (options.unit == null) {
-    if (minutes < 1) {
-      unit = 'second';
-    } else if (minutes < 60) {
-      unit = 'minute';
-    } else if (minutes < MINUTES_IN_DAY) {
-      unit = 'hour';
-    } else if (dstNormalizedMinutes < MINUTES_IN_MONTH) {
-      unit = 'day';
-    } else if (dstNormalizedMinutes < MINUTES_IN_YEAR) {
-      unit = 'month';
-    } else {
-      unit = 'year';
-    }
-  } else {
-    unit = String(options.unit);
-  } // 0 up to 60 seconds
-
-
-  if (unit === 'second') {
-    var seconds = roundingMethodFn(milliseconds / 1000);
-    return locale.formatDistance('xSeconds', seconds, localizeOptions); // 1 up to 60 mins
-  } else if (unit === 'minute') {
-    var roundedMinutes = roundingMethodFn(minutes);
-    return locale.formatDistance('xMinutes', roundedMinutes, localizeOptions); // 1 up to 24 hours
-  } else if (unit === 'hour') {
-    var hours = roundingMethodFn(minutes / 60);
-    return locale.formatDistance('xHours', hours, localizeOptions); // 1 up to 30 days
-  } else if (unit === 'day') {
-    var days = roundingMethodFn(dstNormalizedMinutes / MINUTES_IN_DAY);
-    return locale.formatDistance('xDays', days, localizeOptions); // 1 up to 12 months
-  } else if (unit === 'month') {
-    var months = roundingMethodFn(dstNormalizedMinutes / MINUTES_IN_MONTH);
-    return months === 12 && options.unit !== 'month' ? locale.formatDistance('xYears', 1, localizeOptions) : locale.formatDistance('xMonths', months, localizeOptions); // 1 year up to max Date
-  } else if (unit === 'year') {
-    var years = roundingMethodFn(dstNormalizedMinutes / MINUTES_IN_YEAR);
-    return locale.formatDistance('xYears', years, localizeOptions);
-  }
-
-  throw new RangeError("unit must be 'second', 'minute', 'hour', 'day', 'month' or 'year'");
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 4741:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatDistanceToNowStrict;
-
-var _index = _interopRequireDefault(__nccwpck_require__(7128));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name formatDistanceToNowStrict
- * @category Common Helpers
- * @summary Return the distance between the given date and now in words.
- * @pure false
- *
- * @description
- * Return the distance between the given dates in words, using strict units.
- * This is like `formatDistance`, but does not use helpers like 'almost', 'over',
- * 'less than' and the like.
- *
- * | Distance between dates | Result              |
- * |------------------------|---------------------|
- * | 0 ... 59 secs          | [0..59] seconds     |
- * | 1 ... 59 mins          | [1..59] minutes     |
- * | 1 ... 23 hrs           | [1..23] hours       |
- * | 1 ... 29 days          | [1..29] days        |
- * | 1 ... 11 months        | [1..11] months      |
- * | 1 ... N years          | [1..N]  years       |
- *
- * @param {Date|Number} date - the given date
- * @param {Object} [options] - an object with options.
- * @param {Boolean} [options.addSuffix=false] - result indicates if the second date is earlier or later than the first
- * @param {'second'|'minute'|'hour'|'day'|'month'|'year'} [options.unit] - if specified, will force a unit
- * @param {'floor'|'ceil'|'round'} [options.roundingMethod='round'] - which way to round partial units
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @returns {String} the distance in words
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `date` must not be Invalid Date
- * @throws {RangeError} `options.locale` must contain `formatDistance` property
- *
- * @example
- * // If today is 1 January 2015, what is the distance to 2 July 2014?
- * var result = formatDistanceToNowStrict(
- *   new Date(2014, 6, 2)
- * )
- * //=> '6 months'
- *
- * @example
- * // If now is 1 January 2015 00:00:00,
- * // what is the distance to 1 January 2015 00:00:15, including seconds?
- * var result = formatDistanceToNowStrict(
- *   new Date(2015, 0, 1, 0, 0, 15)
- * )
- * //=> '20 seconds'
- *
- * @example
- * // If today is 1 January 2015,
- * // what is the distance to 1 January 2016, with a suffix?
- * var result = formatDistanceToNowStrict(
- *   new Date(2016, 0, 1),
- *   {addSuffix: true}
- * )
- * //=> 'in 1 year'
- *
- * @example
- * // If today is 28 January 2015,
- * // what is the distance to 1 January 2015, in months, rounded up??
- * var result = formatDistanceToNowStrict(new Date(2015, 0, 1), {
- *   unit: 'month',
- *   roundingMethod: 'ceil'
- * })
- * //=> '1 month'
- *
- * @example
- * // If today is 1 January 2015,
- * // what is the distance to 1 August 2016 in Esperanto?
- * var eoLocale = require('date-fns/locale/eo')
- * var result = formatDistanceToNowStrict(
- *   new Date(2016, 7, 1),
- *   {locale: eoLocale}
- * )
- * //=> '1 jaro'
- */
-function formatDistanceToNowStrict(dirtyDate, dirtyOptions) {
-  (0, _index2.default)(1, arguments);
-  return (0, _index.default)(dirtyDate, Date.now(), dirtyOptions);
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 1163:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatDistanceToNow;
-
-var _index = _interopRequireDefault(__nccwpck_require__(8149));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name formatDistanceToNow
- * @category Common Helpers
- * @summary Return the distance between the given date and now in words.
- * @pure false
- *
- * @description
- * Return the distance between the given date and now in words.
- *
- * | Distance to now                                                   | Result              |
- * |-------------------------------------------------------------------|---------------------|
- * | 0 ... 30 secs                                                     | less than a minute  |
- * | 30 secs ... 1 min 30 secs                                         | 1 minute            |
- * | 1 min 30 secs ... 44 mins 30 secs                                 | [2..44] minutes     |
- * | 44 mins ... 30 secs ... 89 mins 30 secs                           | about 1 hour        |
- * | 89 mins 30 secs ... 23 hrs 59 mins 30 secs                        | about [2..24] hours |
- * | 23 hrs 59 mins 30 secs ... 41 hrs 59 mins 30 secs                 | 1 day               |
- * | 41 hrs 59 mins 30 secs ... 29 days 23 hrs 59 mins 30 secs         | [2..30] days        |
- * | 29 days 23 hrs 59 mins 30 secs ... 44 days 23 hrs 59 mins 30 secs | about 1 month       |
- * | 44 days 23 hrs 59 mins 30 secs ... 59 days 23 hrs 59 mins 30 secs | about 2 months      |
- * | 59 days 23 hrs 59 mins 30 secs ... 1 yr                           | [2..12] months      |
- * | 1 yr ... 1 yr 3 months                                            | about 1 year        |
- * | 1 yr 3 months ... 1 yr 9 month s                                  | over 1 year         |
- * | 1 yr 9 months ... 2 yrs                                           | almost 2 years      |
- * | N yrs ... N yrs 3 months                                          | about N years       |
- * | N yrs 3 months ... N yrs 9 months                                 | over N years        |
- * | N yrs 9 months ... N+1 yrs                                        | almost N+1 years    |
- *
- * With `options.includeSeconds == true`:
- * | Distance to now     | Result               |
- * |---------------------|----------------------|
- * | 0 secs ... 5 secs   | less than 5 seconds  |
- * | 5 secs ... 10 secs  | less than 10 seconds |
- * | 10 secs ... 20 secs | less than 20 seconds |
- * | 20 secs ... 40 secs | half a minute        |
- * | 40 secs ... 60 secs | less than a minute   |
- * | 60 secs ... 90 secs | 1 minute             |
- *
- * > ⚠️ Please note that this function is not present in the FP submodule as
- * > it uses `Date.now()` internally hence impure and can't be safely curried.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * - The function was renamed from `distanceInWordsToNow ` to `formatDistanceToNow`
- *   to make its name consistent with `format` and `formatRelative`.
- *
- *   ```javascript
- *   // Before v2.0.0
- *
- *   distanceInWordsToNow(new Date(2014, 6, 2), { addSuffix: true })
- *   //=> 'in 6 months'
- *
- *   // v2.0.0 onward
- *
- *   formatDistanceToNow(new Date(2014, 6, 2), { addSuffix: true })
- *   //=> 'in 6 months'
- *   ```
- *
- * @param {Date|Number} date - the given date
- * @param {Object} [options] - the object with options
- * @param {Boolean} [options.includeSeconds=false] - distances less than a minute are more detailed
- * @param {Boolean} [options.addSuffix=false] - result specifies if now is earlier or later than the passed date
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @returns {String} the distance in words
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `date` must not be Invalid Date
- * @throws {RangeError} `options.locale` must contain `formatDistance` property
- *
- * @example
- * // If today is 1 January 2015, what is the distance to 2 July 2014?
- * var result = formatDistanceToNow(
- *   new Date(2014, 6, 2)
- * )
- * //=> '6 months'
- *
- * @example
- * // If now is 1 January 2015 00:00:00,
- * // what is the distance to 1 January 2015 00:00:15, including seconds?
- * var result = formatDistanceToNow(
- *   new Date(2015, 0, 1, 0, 0, 15),
- *   {includeSeconds: true}
- * )
- * //=> 'less than 20 seconds'
- *
- * @example
- * // If today is 1 January 2015,
- * // what is the distance to 1 January 2016, with a suffix?
- * var result = formatDistanceToNow(
- *   new Date(2016, 0, 1),
- *   {addSuffix: true}
- * )
- * //=> 'in about 1 year'
- *
- * @example
- * // If today is 1 January 2015,
- * // what is the distance to 1 August 2016 in Esperanto?
- * var eoLocale = require('date-fns/locale/eo')
- * var result = formatDistanceToNow(
- *   new Date(2016, 7, 1),
- *   {locale: eoLocale}
- * )
- * //=> 'pli ol 1 jaro'
- */
-function formatDistanceToNow(dirtyDate, dirtyOptions) {
-  (0, _index2.default)(1, arguments);
-  return (0, _index.default)(dirtyDate, Date.now(), dirtyOptions);
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 8149:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatDistance;
-
-var _index = _interopRequireDefault(__nccwpck_require__(9818));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2713));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(9448));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(1773));
-
-var _index5 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index6 = _interopRequireDefault(__nccwpck_require__(7934));
-
-var _index7 = _interopRequireDefault(__nccwpck_require__(7032));
-
-var _index8 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var MINUTES_IN_DAY = 1440;
-var MINUTES_IN_ALMOST_TWO_DAYS = 2520;
-var MINUTES_IN_MONTH = 43200;
-var MINUTES_IN_TWO_MONTHS = 86400;
-/**
- * @name formatDistance
- * @category Common Helpers
- * @summary Return the distance between the given dates in words.
- *
- * @description
- * Return the distance between the given dates in words.
- *
- * | Distance between dates                                            | Result              |
- * |-------------------------------------------------------------------|---------------------|
- * | 0 ... 30 secs                                                     | less than a minute  |
- * | 30 secs ... 1 min 30 secs                                         | 1 minute            |
- * | 1 min 30 secs ... 44 mins 30 secs                                 | [2..44] minutes     |
- * | 44 mins ... 30 secs ... 89 mins 30 secs                           | about 1 hour        |
- * | 89 mins 30 secs ... 23 hrs 59 mins 30 secs                        | about [2..24] hours |
- * | 23 hrs 59 mins 30 secs ... 41 hrs 59 mins 30 secs                 | 1 day               |
- * | 41 hrs 59 mins 30 secs ... 29 days 23 hrs 59 mins 30 secs         | [2..30] days        |
- * | 29 days 23 hrs 59 mins 30 secs ... 44 days 23 hrs 59 mins 30 secs | about 1 month       |
- * | 44 days 23 hrs 59 mins 30 secs ... 59 days 23 hrs 59 mins 30 secs | about 2 months      |
- * | 59 days 23 hrs 59 mins 30 secs ... 1 yr                           | [2..12] months      |
- * | 1 yr ... 1 yr 3 months                                            | about 1 year        |
- * | 1 yr 3 months ... 1 yr 9 month s                                  | over 1 year         |
- * | 1 yr 9 months ... 2 yrs                                           | almost 2 years      |
- * | N yrs ... N yrs 3 months                                          | about N years       |
- * | N yrs 3 months ... N yrs 9 months                                 | over N years        |
- * | N yrs 9 months ... N+1 yrs                                        | almost N+1 years    |
- *
- * With `options.includeSeconds == true`:
- * | Distance between dates | Result               |
- * |------------------------|----------------------|
- * | 0 secs ... 5 secs      | less than 5 seconds  |
- * | 5 secs ... 10 secs     | less than 10 seconds |
- * | 10 secs ... 20 secs    | less than 20 seconds |
- * | 20 secs ... 40 secs    | half a minute        |
- * | 40 secs ... 60 secs    | less than a minute   |
- * | 60 secs ... 90 secs    | 1 minute             |
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * - The function was renamed from `distanceInWords ` to `formatDistance`
- *   to make its name consistent with `format` and `formatRelative`.
- *
- * - The order of arguments is swapped to make the function
- *   consistent with `differenceIn...` functions.
- *
- *   ```javascript
- *   // Before v2.0.0
- *
- *   distanceInWords(
- *     new Date(1986, 3, 4, 10, 32, 0),
- *     new Date(1986, 3, 4, 11, 32, 0),
- *     { addSuffix: true }
- *   ) //=> 'in about 1 hour'
- *
- *   // v2.0.0 onward
- *
- *   formatDistance(
- *     new Date(1986, 3, 4, 11, 32, 0),
- *     new Date(1986, 3, 4, 10, 32, 0),
- *     { addSuffix: true }
- *   ) //=> 'in about 1 hour'
- *   ```
- *
- * @param {Date|Number} date - the date
- * @param {Date|Number} baseDate - the date to compare with
- * @param {Object} [options] - an object with options.
- * @param {Boolean} [options.includeSeconds=false] - distances less than a minute are more detailed
- * @param {Boolean} [options.addSuffix=false] - result indicates if the second date is earlier or later than the first
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @returns {String} the distance in words
- * @throws {TypeError} 2 arguments required
- * @throws {RangeError} `date` must not be Invalid Date
- * @throws {RangeError} `baseDate` must not be Invalid Date
- * @throws {RangeError} `options.locale` must contain `formatDistance` property
- *
- * @example
- * // What is the distance between 2 July 2014 and 1 January 2015?
- * const result = formatDistance(new Date(2014, 6, 2), new Date(2015, 0, 1))
- * //=> '6 months'
- *
- * @example
- * // What is the distance between 1 January 2015 00:00:15
- * // and 1 January 2015 00:00:00, including seconds?
- * const result = formatDistance(
- *   new Date(2015, 0, 1, 0, 0, 15),
- *   new Date(2015, 0, 1, 0, 0, 0),
- *   { includeSeconds: true }
- * )
- * //=> 'less than 20 seconds'
- *
- * @example
- * // What is the distance from 1 January 2016
- * // to 1 January 2015, with a suffix?
- * const result = formatDistance(new Date(2015, 0, 1), new Date(2016, 0, 1), {
- *   addSuffix: true
- * })
- * //=> 'about 1 year ago'
- *
- * @example
- * // What is the distance between 1 August 2016 and 1 January 2015 in Esperanto?
- * import { eoLocale } from 'date-fns/locale/eo'
- * const result = formatDistance(new Date(2016, 7, 1), new Date(2015, 0, 1), {
- *   locale: eoLocale
- * })
- * //=> 'pli ol 1 jaro'
- */
-
-function formatDistance(dirtyDate, dirtyBaseDate) {
-  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  (0, _index8.default)(2, arguments);
-  var locale = options.locale || _index4.default;
-
-  if (!locale.formatDistance) {
-    throw new RangeError('locale must contain formatDistance property');
-  }
-
-  var comparison = (0, _index.default)(dirtyDate, dirtyBaseDate);
-
-  if (isNaN(comparison)) {
-    throw new RangeError('Invalid time value');
-  }
-
-  var localizeOptions = (0, _index6.default)(options);
-  localizeOptions.addSuffix = Boolean(options.addSuffix);
-  localizeOptions.comparison = comparison;
-  var dateLeft;
-  var dateRight;
-
-  if (comparison > 0) {
-    dateLeft = (0, _index5.default)(dirtyBaseDate);
-    dateRight = (0, _index5.default)(dirtyDate);
-  } else {
-    dateLeft = (0, _index5.default)(dirtyDate);
-    dateRight = (0, _index5.default)(dirtyBaseDate);
-  }
-
-  var seconds = (0, _index3.default)(dateRight, dateLeft);
-  var offsetInSeconds = ((0, _index7.default)(dateRight) - (0, _index7.default)(dateLeft)) / 1000;
-  var minutes = Math.round((seconds - offsetInSeconds) / 60);
-  var months; // 0 up to 2 mins
-
-  if (minutes < 2) {
-    if (options.includeSeconds) {
-      if (seconds < 5) {
-        return locale.formatDistance('lessThanXSeconds', 5, localizeOptions);
-      } else if (seconds < 10) {
-        return locale.formatDistance('lessThanXSeconds', 10, localizeOptions);
-      } else if (seconds < 20) {
-        return locale.formatDistance('lessThanXSeconds', 20, localizeOptions);
-      } else if (seconds < 40) {
-        return locale.formatDistance('halfAMinute', null, localizeOptions);
-      } else if (seconds < 60) {
-        return locale.formatDistance('lessThanXMinutes', 1, localizeOptions);
-      } else {
-        return locale.formatDistance('xMinutes', 1, localizeOptions);
-      }
-    } else {
-      if (minutes === 0) {
-        return locale.formatDistance('lessThanXMinutes', 1, localizeOptions);
-      } else {
-        return locale.formatDistance('xMinutes', minutes, localizeOptions);
-      }
-    } // 2 mins up to 0.75 hrs
-
-  } else if (minutes < 45) {
-    return locale.formatDistance('xMinutes', minutes, localizeOptions); // 0.75 hrs up to 1.5 hrs
-  } else if (minutes < 90) {
-    return locale.formatDistance('aboutXHours', 1, localizeOptions); // 1.5 hrs up to 24 hrs
-  } else if (minutes < MINUTES_IN_DAY) {
-    var hours = Math.round(minutes / 60);
-    return locale.formatDistance('aboutXHours', hours, localizeOptions); // 1 day up to 1.75 days
-  } else if (minutes < MINUTES_IN_ALMOST_TWO_DAYS) {
-    return locale.formatDistance('xDays', 1, localizeOptions); // 1.75 days up to 30 days
-  } else if (minutes < MINUTES_IN_MONTH) {
-    var days = Math.round(minutes / MINUTES_IN_DAY);
-    return locale.formatDistance('xDays', days, localizeOptions); // 1 month up to 2 months
-  } else if (minutes < MINUTES_IN_TWO_MONTHS) {
-    months = Math.round(minutes / MINUTES_IN_MONTH);
-    return locale.formatDistance('aboutXMonths', months, localizeOptions);
-  }
-
-  months = (0, _index2.default)(dateRight, dateLeft); // 2 months up to 12 months
-
-  if (months < 12) {
-    var nearestMonth = Math.round(minutes / MINUTES_IN_MONTH);
-    return locale.formatDistance('xMonths', nearestMonth, localizeOptions); // 1 year up to max Date
-  } else {
-    var monthsSinceStartOfYear = months % 12;
-    var years = Math.floor(months / 12); // N years up to 1 years 3 months
-
-    if (monthsSinceStartOfYear < 3) {
-      return locale.formatDistance('aboutXYears', years, localizeOptions); // N years 3 months up to N years 9 months
-    } else if (monthsSinceStartOfYear < 9) {
-      return locale.formatDistance('overXYears', years, localizeOptions); // N years 9 months up to N year 12 months
-    } else {
-      return locale.formatDistance('almostXYears', years + 1, localizeOptions);
-    }
-  }
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 8917:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatDuration;
-
-var _index = _interopRequireDefault(__nccwpck_require__(1773));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var defaultFormat = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'];
-/**
- * @name formatDuration
- * @category Common Helpers
- * @summary Formats a duration in human-readable format
- *
- * @description
- * Return human-readable duration string i.e. "9 months 2 days"
- *
- * @param {Duration} duration - the duration to format
- * @param {Object} [options] - an object with options.
-
- * @param {string[]} [options.format=['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds']] - the array of units to format
- * @param {boolean} [options.zero=false] - should be zeros be included in the output?
- * @param {string} [options.delimiter=' '] - delimiter string
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @returns {string} the formatted date string
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // Format full duration
- * formatDuration({
- *   years: 2,
- *   months: 9,
- *   weeks: 1,
- *   days: 7,
- *   hours: 5,
- *   minutes: 9,
- *   seconds: 30
- * })
- * //=> '2 years 9 months 1 week 7 days 5 hours 9 minutes 30 seconds
- *
- * @example
- * // Format partial duration
- * formatDuration({ months: 9, days: 2 })
- * //=> '9 months 2 days'
- *
- * @example
- * // Customize the format
- * formatDuration(
- *   {
- *     years: 2,
- *     months: 9,
- *     weeks: 1,
- *     days: 7,
- *     hours: 5,
- *     minutes: 9,
- *     seconds: 30
- *   },
- *   { format: ['months', 'weeks'] }
- * ) === '9 months 1 week'
- *
- * @example
- * // Customize the zeros presence
- * formatDuration({ years: 0, months: 9 })
- * //=> '9 months'
- * formatDuration({ years: 0, months: 9 }, { zero: true })
- * //=> '0 years 9 months'
- *
- * @example
- * // Customize the delimiter
- * formatDuration({ years: 2, months: 9, weeks: 3 }, { delimiter: ', ' })
- * //=> '2 years, 9 months, 3 weeks'
- */
-
-function formatDuration(duration, options) {
-  if (arguments.length < 1) {
-    throw new TypeError("1 argument required, but only ".concat(arguments.length, " present"));
-  }
-
-  var format = (options === null || options === void 0 ? void 0 : options.format) || defaultFormat;
-  var locale = (options === null || options === void 0 ? void 0 : options.locale) || _index.default;
-  var zero = (options === null || options === void 0 ? void 0 : options.zero) || false;
-  var delimiter = (options === null || options === void 0 ? void 0 : options.delimiter) || ' ';
-  var result = format.reduce(function (acc, unit) {
-    var token = "x".concat(unit.replace(/(^.)/, function (m) {
-      return m.toUpperCase();
-    }));
-    var addChunk = typeof duration[unit] === 'number' && (zero || duration[unit]);
-    return addChunk ? acc.concat(locale.formatDistance(token, duration[unit])) : acc;
-  }, []).join(delimiter);
-  return result;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 5296:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatISO9075;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name formatISO9075
- * @category Common Helpers
- * @summary Format the date according to the ISO 9075 standard (https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_get-format).
- *
- * @description
- * Return the formatted date string in ISO 9075 format. Options may be passed to control the parts and notations of the date.
- *
- * @param {Date|Number} date - the original date
- * @param {Object} [options] - an object with options.
- * @param {'extended'|'basic'} [options.format='extended'] - if 'basic', hide delimiters between date and time values.
- * @param {'complete'|'date'|'time'} [options.representation='complete'] - format date, time, or both.
- * @returns {String} the formatted date string
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `date` must not be Invalid Date
- * @throws {RangeError} `options.format` must be 'extended' or 'basic'
- * @throws {RangeError} `options.represenation` must be 'date', 'time' or 'complete'
- *
- * @example
- * // Represent 18 September 2019 in ISO 9075 format:
- * const result = formatISO9075(new Date(2019, 8, 18, 19, 0, 52))
- * //=> '2019-09-18 19:00:52'
- *
- * @example
- * // Represent 18 September 2019 in ISO 9075, short format:
- * const result = formatISO9075(new Date(2019, 8, 18, 19, 0, 52), { format: 'basic' })
- * //=> '20190918 190052'
- *
- * @example
- * // Represent 18 September 2019 in ISO 9075 format, date only:
- * const result = formatISO9075(new Date(2019, 8, 18, 19, 0, 52), { representation: 'date' })
- * //=> '2019-09-18'
- *
- * @example
- * // Represent 18 September 2019 in ISO 9075 format, time only:
- * const result = formatISO9075(new Date(2019, 8, 18, 19, 0, 52), { representation: 'time' })
- * //=> '19:00:52'
- */
-function formatISO9075(dirtyDate, dirtyOptions) {
-  if (arguments.length < 1) {
-    throw new TypeError("1 argument required, but only ".concat(arguments.length, " present"));
-  }
-
-  var originalDate = (0, _index.default)(dirtyDate);
-
-  if (!(0, _index2.default)(originalDate)) {
-    throw new RangeError('Invalid time value');
-  }
-
-  var options = dirtyOptions || {};
-  var format = options.format == null ? 'extended' : String(options.format);
-  var representation = options.representation == null ? 'complete' : String(options.representation);
-
-  if (format !== 'extended' && format !== 'basic') {
-    throw new RangeError("format must be 'extended' or 'basic'");
-  }
-
-  if (representation !== 'date' && representation !== 'time' && representation !== 'complete') {
-    throw new RangeError("representation must be 'date', 'time', or 'complete'");
-  }
-
-  var result = '';
-  var dateDelimiter = format === 'extended' ? '-' : '';
-  var timeDelimiter = format === 'extended' ? ':' : ''; // Representation is either 'date' or 'complete'
-
-  if (representation !== 'time') {
-    var day = (0, _index3.default)(originalDate.getDate(), 2);
-    var month = (0, _index3.default)(originalDate.getMonth() + 1, 2);
-    var year = (0, _index3.default)(originalDate.getFullYear(), 4); // yyyyMMdd or yyyy-MM-dd.
-
-    result = "".concat(year).concat(dateDelimiter).concat(month).concat(dateDelimiter).concat(day);
-  } // Representation is either 'time' or 'complete'
-
-
-  if (representation !== 'date') {
-    var hour = (0, _index3.default)(originalDate.getHours(), 2);
-    var minute = (0, _index3.default)(originalDate.getMinutes(), 2);
-    var second = (0, _index3.default)(originalDate.getSeconds(), 2); // If there's also date, separate it with time with a space
-
-    var separator = result === '' ? '' : ' '; // HHmmss or HH:mm:ss.
-
-    result = "".concat(result).concat(separator).concat(hour).concat(timeDelimiter).concat(minute).concat(timeDelimiter).concat(second);
-  }
-
-  return result;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 2448:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatISODuration;
-
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name formatISODuration
- * @category Common Helpers
- * @summary Format a duration object according as ISO 8601 duration string
- *
- * @description
- * Format a duration object according to the ISO 8601 duration standard (https://www.digi.com/resources/documentation/digidocs/90001437-13/reference/r_iso_8601_duration_format.htm)
- *
- * @param {Duration} duration - the duration to format
- *
- * @returns {String} The ISO 8601 duration string
- * @throws {TypeError} Requires 1 argument
- * @throws {Error} Argument must be an object
- *
- * @example
- * // Format the given duration as ISO 8601 string
- * const result = formatISODuration({
- *   years: 39,
- *   months: 2,
- *   days: 20,
- *   hours: 7,
- *   minutes: 5,
- *   seconds: 0
- * })
- * //=> 'P39Y2M20DT0H0M0S'
- */
-function formatISODuration(duration) {
-  (0, _index.default)(1, arguments);
-  if (typeof duration !== 'object') throw new Error('Duration must be an object');
-  var _duration$years = duration.years,
-      years = _duration$years === void 0 ? 0 : _duration$years,
-      _duration$months = duration.months,
-      months = _duration$months === void 0 ? 0 : _duration$months,
-      _duration$days = duration.days,
-      days = _duration$days === void 0 ? 0 : _duration$days,
-      _duration$hours = duration.hours,
-      hours = _duration$hours === void 0 ? 0 : _duration$hours,
-      _duration$minutes = duration.minutes,
-      minutes = _duration$minutes === void 0 ? 0 : _duration$minutes,
-      _duration$seconds = duration.seconds,
-      seconds = _duration$seconds === void 0 ? 0 : _duration$seconds;
-  return "P".concat(years, "Y").concat(months, "M").concat(days, "DT").concat(hours, "H").concat(minutes, "M").concat(seconds, "S");
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 3385:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatISO;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name formatISO
- * @category Common Helpers
- * @summary Format the date according to the ISO 8601 standard (http://support.sas.com/documentation/cdl/en/lrdict/64316/HTML/default/viewer.htm#a003169814.htm).
- *
- * @description
- * Return the formatted date string in ISO 8601 format. Options may be passed to control the parts and notations of the date.
- *
- * @param {Date|Number} date - the original date
- * @param {Object} [options] - an object with options.
- * @param {'extended'|'basic'} [options.format='extended'] - if 'basic', hide delimiters between date and time values.
- * @param {'complete'|'date'|'time'} [options.representation='complete'] - format date, time with time zone, or both.
- * @returns {String} the formatted date string
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `date` must not be Invalid Date
- * @throws {RangeError} `options.format` must be 'extended' or 'basic'
- * @throws {RangeError} `options.represenation` must be 'date', 'time' or 'complete'
- *
- * @example
- * // Represent 18 September 2019 in ISO 8601 format (UTC):
- * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52))
- * //=> '2019-09-18T19:00:52Z'
- *
- * @example
- * // Represent 18 September 2019 in ISO 8601, short format (UTC):
- * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52), { format: 'basic' })
- * //=> '20190918T190052'
- *
- * @example
- * // Represent 18 September 2019 in ISO 8601 format, date only:
- * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52), { representation: 'date' })
- * //=> '2019-09-18'
- *
- * @example
- * // Represent 18 September 2019 in ISO 8601 format, time only (UTC):
- * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52), { representation: 'time' })
- * //=> '19:00:52Z'
- */
-function formatISO(dirtyDate, dirtyOptions) {
-  if (arguments.length < 1) {
-    throw new TypeError("1 argument required, but only ".concat(arguments.length, " present"));
-  }
-
-  var originalDate = (0, _index.default)(dirtyDate);
-
-  if (!(0, _index2.default)(originalDate)) {
-    throw new RangeError('Invalid time value');
-  }
-
-  var options = dirtyOptions || {};
-  var format = options.format == null ? 'extended' : String(options.format);
-  var representation = options.representation == null ? 'complete' : String(options.representation);
-
-  if (format !== 'extended' && format !== 'basic') {
-    throw new RangeError("format must be 'extended' or 'basic'");
-  }
-
-  if (representation !== 'date' && representation !== 'time' && representation !== 'complete') {
-    throw new RangeError("representation must be 'date', 'time', or 'complete'");
-  }
-
-  var result = '';
-  var tzOffset = '';
-  var dateDelimiter = format === 'extended' ? '-' : '';
-  var timeDelimiter = format === 'extended' ? ':' : ''; // Representation is either 'date' or 'complete'
-
-  if (representation !== 'time') {
-    var day = (0, _index3.default)(originalDate.getDate(), 2);
-    var month = (0, _index3.default)(originalDate.getMonth() + 1, 2);
-    var year = (0, _index3.default)(originalDate.getFullYear(), 4); // yyyyMMdd or yyyy-MM-dd.
-
-    result = "".concat(year).concat(dateDelimiter).concat(month).concat(dateDelimiter).concat(day);
-  } // Representation is either 'time' or 'complete'
-
-
-  if (representation !== 'date') {
-    // Add the timezone.
-    var offset = originalDate.getTimezoneOffset();
-
-    if (offset !== 0) {
-      var absoluteOffset = Math.abs(offset);
-      var hourOffset = (0, _index3.default)(Math.floor(absoluteOffset / 60), 2);
-      var minuteOffset = (0, _index3.default)(absoluteOffset % 60, 2); // If less than 0, the sign is +, because it is ahead of time.
-
-      var sign = offset < 0 ? '+' : '-';
-      tzOffset = "".concat(sign).concat(hourOffset, ":").concat(minuteOffset);
-    } else {
-      tzOffset = 'Z';
-    }
-
-    var hour = (0, _index3.default)(originalDate.getHours(), 2);
-    var minute = (0, _index3.default)(originalDate.getMinutes(), 2);
-    var second = (0, _index3.default)(originalDate.getSeconds(), 2); // If there's also date, separate it with time with 'T'
-
-    var separator = result === '' ? '' : 'T'; // Creates a time string consisting of hour, minute, and second, separated by delimiters, if defined.
-
-    var time = [hour, minute, second].join(timeDelimiter); // HHmmss or HH:mm:ss.
-
-    result = "".concat(result).concat(separator).concat(time).concat(tzOffset);
-  }
-
-  return result;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 4182:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatRFC3339;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(1985));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name formatRFC3339
- * @category Common Helpers
- * @summary Format the date according to the RFC 3339 standard (https://tools.ietf.org/html/rfc3339#section-5.6).
- *
- * @description
- * Return the formatted date string in RFC 3339 format. Options may be passed to control the parts and notations of the date.
- *
- * @param {Date|Number} date - the original date
- * @param {Object} [options] - an object with options.
- * @param {0|1|2|3} [options.fractionDigits=0] - number of digits after the decimal point after seconds
- * @returns {String} the formatted date string
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `date` must not be Invalid Date
- * @throws {RangeError} `options.fractionDigits` must be between 0 and 3
- *
- * @example
- * // Represent 18 September 2019 in RFC 3339 format:
- * const result = formatRFC3339(new Date(2019, 8, 18, 19, 0, 52))
- * //=> '2019-09-18T19:00:52Z'
- *
- * @example
- * // Represent 18 September 2019 in RFC 3339 format, 2 digits of second fraction:
- * const result = formatRFC3339(new Date(2019, 8, 18, 19, 0, 52, 234), { fractionDigits: 2 })
- * //=> '2019-09-18T19:00:52.23Z'
- *
- * @example
- * // Represent 18 September 2019 in RFC 3339 format, 3 digits of second fraction
- * const result = formatRFC3339(new Date(2019, 8, 18, 19, 0, 52, 234), { fractionDigits: 3 })
- * //=> '2019-09-18T19:00:52.234Z'
- */
-function formatRFC3339(dirtyDate, dirtyOptions) {
-  if (arguments.length < 1) {
-    throw new TypeError("1 arguments required, but only ".concat(arguments.length, " present"));
-  }
-
-  var originalDate = (0, _index.default)(dirtyDate);
-
-  if (!(0, _index2.default)(originalDate)) {
-    throw new RangeError('Invalid time value');
-  }
-
-  var _ref = dirtyOptions || {},
-      _ref$fractionDigits = _ref.fractionDigits,
-      fractionDigits = _ref$fractionDigits === void 0 ? 0 : _ref$fractionDigits; // Test if fractionDigits is between 0 and 3 _and_ is not NaN
-
-
-  if (!(fractionDigits >= 0 && fractionDigits <= 3)) {
-    throw new RangeError('fractionDigits must be between 0 and 3 inclusively');
-  }
-
-  var day = (0, _index3.default)(originalDate.getDate(), 2);
-  var month = (0, _index3.default)(originalDate.getMonth() + 1, 2);
-  var year = originalDate.getFullYear();
-  var hour = (0, _index3.default)(originalDate.getHours(), 2);
-  var minute = (0, _index3.default)(originalDate.getMinutes(), 2);
-  var second = (0, _index3.default)(originalDate.getSeconds(), 2);
-  var fractionalSecond = '';
-
-  if (fractionDigits > 0) {
-    var milliseconds = originalDate.getMilliseconds();
-    var fractionalSeconds = Math.floor(milliseconds * Math.pow(10, fractionDigits - 3));
-    fractionalSecond = '.' + (0, _index3.default)(fractionalSeconds, fractionDigits);
-  }
-
-  var offset = '';
-  var tzOffset = originalDate.getTimezoneOffset();
-
-  if (tzOffset !== 0) {
-    var absoluteOffset = Math.abs(tzOffset);
-    var hourOffset = (0, _index3.default)((0, _index4.default)(absoluteOffset / 60), 2);
-    var minuteOffset = (0, _index3.default)(absoluteOffset % 60, 2); // If less than 0, the sign is +, because it is ahead of time.
-
-    var sign = tzOffset < 0 ? '+' : '-';
-    offset = "".concat(sign).concat(hourOffset, ":").concat(minuteOffset);
-  } else {
-    offset = 'Z';
-  }
-
-  return "".concat(year, "-").concat(month, "-").concat(day, "T").concat(hour, ":").concat(minute, ":").concat(second).concat(fractionalSecond).concat(offset);
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 402:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatRFC7231;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-/**
- * @name formatRFC7231
- * @category Common Helpers
- * @summary Format the date according to the RFC 7231 standard (https://tools.ietf.org/html/rfc7231#section-7.1.1.1).
- *
- * @description
- * Return the formatted date string in RFC 7231 format.
- * The result will always be in UTC timezone.
- *
- * @param {Date|Number} date - the original date
- * @returns {String} the formatted date string
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `date` must not be Invalid Date
- *
- * @example
- * // Represent 18 September 2019 in RFC 7231 format:
- * const result = formatRFC7231(new Date(2019, 8, 18, 19, 0, 52))
- * //=> 'Wed, 18 Sep 2019 19:00:52 GMT'
- */
-
-function formatRFC7231(dirtyDate) {
-  if (arguments.length < 1) {
-    throw new TypeError("1 arguments required, but only ".concat(arguments.length, " present"));
-  }
-
-  var originalDate = (0, _index.default)(dirtyDate);
-
-  if (!(0, _index2.default)(originalDate)) {
-    throw new RangeError('Invalid time value');
-  }
-
-  var dayName = days[originalDate.getUTCDay()];
-  var dayOfMonth = (0, _index3.default)(originalDate.getUTCDate(), 2);
-  var monthName = months[originalDate.getUTCMonth()];
-  var year = originalDate.getUTCFullYear();
-  var hour = (0, _index3.default)(originalDate.getUTCHours(), 2);
-  var minute = (0, _index3.default)(originalDate.getUTCMinutes(), 2);
-  var second = (0, _index3.default)(originalDate.getUTCSeconds(), 2); // Result variables.
-
-  return "".concat(dayName, ", ").concat(dayOfMonth, " ").concat(monthName, " ").concat(year, " ").concat(hour, ":").concat(minute, ":").concat(second, " GMT");
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 675:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = formatRelative;
-
-var _index = _interopRequireDefault(__nccwpck_require__(3086));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2168));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(1773));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(7923));
-
-var _index5 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index6 = _interopRequireDefault(__nccwpck_require__(7032));
-
-var _index7 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name formatRelative
- * @category Common Helpers
- * @summary Represent the date in words relative to the given base date.
- *
- * @description
- * Represent the date in words relative to the given base date.
- *
- * | Distance to the base date | Result                    |
- * |---------------------------|---------------------------|
- * | Previous 6 days           | last Sunday at 04:30 AM   |
- * | Last day                  | yesterday at 04:30 AM     |
- * | Same day                  | today at 04:30 AM         |
- * | Next day                  | tomorrow at 04:30 AM      |
- * | Next 6 days               | Sunday at 04:30 AM        |
- * | Other                     | 12/31/2017                |
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the date to format
- * @param {Date|Number} baseDate - the date to compare with
- * @param {Object} [options] - an object with options.
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
- * @returns {String} the date in words
- * @throws {TypeError} 2 arguments required
- * @throws {RangeError} `date` must not be Invalid Date
- * @throws {RangeError} `baseDate` must not be Invalid Date
- * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
- * @throws {RangeError} `options.locale` must contain `localize` property
- * @throws {RangeError} `options.locale` must contain `formatLong` property
- * @throws {RangeError} `options.locale` must contain `formatRelative` property
- *
- * @example
- * // Represent the date of 6 days ago in words relative to the given base date. In this example, today is Wednesday
- * const result = formatRelative(addDays(new Date(), -6), new Date())
- * //=> "last Thursday at 12:45 AM"
- */
-function formatRelative(dirtyDate, dirtyBaseDate, dirtyOptions) {
-  (0, _index7.default)(2, arguments);
-  var date = (0, _index5.default)(dirtyDate);
-  var baseDate = (0, _index5.default)(dirtyBaseDate);
-
-  var _ref = dirtyOptions || {},
-      _ref$locale = _ref.locale,
-      locale = _ref$locale === void 0 ? _index3.default : _ref$locale,
-      _ref$weekStartsOn = _ref.weekStartsOn,
-      weekStartsOn = _ref$weekStartsOn === void 0 ? 0 : _ref$weekStartsOn;
-
-  if (!locale.localize) {
-    throw new RangeError('locale must contain localize property');
-  }
-
-  if (!locale.formatLong) {
-    throw new RangeError('locale must contain formatLong property');
-  }
-
-  if (!locale.formatRelative) {
-    throw new RangeError('locale must contain formatRelative property');
-  }
-
-  var diff = (0, _index.default)(date, baseDate);
-
-  if (isNaN(diff)) {
-    throw new RangeError('Invalid time value');
-  }
-
-  var token;
-
-  if (diff < -6) {
-    token = 'other';
-  } else if (diff < -1) {
-    token = 'lastWeek';
-  } else if (diff < 0) {
-    token = 'yesterday';
-  } else if (diff < 1) {
-    token = 'today';
-  } else if (diff < 2) {
-    token = 'tomorrow';
-  } else if (diff < 7) {
-    token = 'nextWeek';
-  } else {
-    token = 'other';
-  }
-
-  var utcDate = (0, _index4.default)(date, (0, _index6.default)(date));
-  var utcBaseDate = (0, _index4.default)(baseDate, (0, _index6.default)(baseDate));
-  var formatStr = locale.formatRelative(token, utcDate, utcBaseDate, {
-    locale: locale,
-    weekStartsOn: weekStartsOn
-  });
-  return (0, _index2.default)(date, formatStr, {
-    locale: locale,
-    weekStartsOn: weekStartsOn
-  });
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
 /***/ 2168:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -14786,6 +15166,1459 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 8149:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatDistance;
+
+var _index = _interopRequireDefault(__nccwpck_require__(9818));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2713));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(9448));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(1773));
+
+var _index5 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index6 = _interopRequireDefault(__nccwpck_require__(7934));
+
+var _index7 = _interopRequireDefault(__nccwpck_require__(7032));
+
+var _index8 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var MINUTES_IN_DAY = 1440;
+var MINUTES_IN_ALMOST_TWO_DAYS = 2520;
+var MINUTES_IN_MONTH = 43200;
+var MINUTES_IN_TWO_MONTHS = 86400;
+/**
+ * @name formatDistance
+ * @category Common Helpers
+ * @summary Return the distance between the given dates in words.
+ *
+ * @description
+ * Return the distance between the given dates in words.
+ *
+ * | Distance between dates                                            | Result              |
+ * |-------------------------------------------------------------------|---------------------|
+ * | 0 ... 30 secs                                                     | less than a minute  |
+ * | 30 secs ... 1 min 30 secs                                         | 1 minute            |
+ * | 1 min 30 secs ... 44 mins 30 secs                                 | [2..44] minutes     |
+ * | 44 mins ... 30 secs ... 89 mins 30 secs                           | about 1 hour        |
+ * | 89 mins 30 secs ... 23 hrs 59 mins 30 secs                        | about [2..24] hours |
+ * | 23 hrs 59 mins 30 secs ... 41 hrs 59 mins 30 secs                 | 1 day               |
+ * | 41 hrs 59 mins 30 secs ... 29 days 23 hrs 59 mins 30 secs         | [2..30] days        |
+ * | 29 days 23 hrs 59 mins 30 secs ... 44 days 23 hrs 59 mins 30 secs | about 1 month       |
+ * | 44 days 23 hrs 59 mins 30 secs ... 59 days 23 hrs 59 mins 30 secs | about 2 months      |
+ * | 59 days 23 hrs 59 mins 30 secs ... 1 yr                           | [2..12] months      |
+ * | 1 yr ... 1 yr 3 months                                            | about 1 year        |
+ * | 1 yr 3 months ... 1 yr 9 month s                                  | over 1 year         |
+ * | 1 yr 9 months ... 2 yrs                                           | almost 2 years      |
+ * | N yrs ... N yrs 3 months                                          | about N years       |
+ * | N yrs 3 months ... N yrs 9 months                                 | over N years        |
+ * | N yrs 9 months ... N+1 yrs                                        | almost N+1 years    |
+ *
+ * With `options.includeSeconds == true`:
+ * | Distance between dates | Result               |
+ * |------------------------|----------------------|
+ * | 0 secs ... 5 secs      | less than 5 seconds  |
+ * | 5 secs ... 10 secs     | less than 10 seconds |
+ * | 10 secs ... 20 secs    | less than 20 seconds |
+ * | 20 secs ... 40 secs    | half a minute        |
+ * | 40 secs ... 60 secs    | less than a minute   |
+ * | 60 secs ... 90 secs    | 1 minute             |
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * - The function was renamed from `distanceInWords ` to `formatDistance`
+ *   to make its name consistent with `format` and `formatRelative`.
+ *
+ * - The order of arguments is swapped to make the function
+ *   consistent with `differenceIn...` functions.
+ *
+ *   ```javascript
+ *   // Before v2.0.0
+ *
+ *   distanceInWords(
+ *     new Date(1986, 3, 4, 10, 32, 0),
+ *     new Date(1986, 3, 4, 11, 32, 0),
+ *     { addSuffix: true }
+ *   ) //=> 'in about 1 hour'
+ *
+ *   // v2.0.0 onward
+ *
+ *   formatDistance(
+ *     new Date(1986, 3, 4, 11, 32, 0),
+ *     new Date(1986, 3, 4, 10, 32, 0),
+ *     { addSuffix: true }
+ *   ) //=> 'in about 1 hour'
+ *   ```
+ *
+ * @param {Date|Number} date - the date
+ * @param {Date|Number} baseDate - the date to compare with
+ * @param {Object} [options] - an object with options.
+ * @param {Boolean} [options.includeSeconds=false] - distances less than a minute are more detailed
+ * @param {Boolean} [options.addSuffix=false] - result indicates if the second date is earlier or later than the first
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @returns {String} the distance in words
+ * @throws {TypeError} 2 arguments required
+ * @throws {RangeError} `date` must not be Invalid Date
+ * @throws {RangeError} `baseDate` must not be Invalid Date
+ * @throws {RangeError} `options.locale` must contain `formatDistance` property
+ *
+ * @example
+ * // What is the distance between 2 July 2014 and 1 January 2015?
+ * const result = formatDistance(new Date(2014, 6, 2), new Date(2015, 0, 1))
+ * //=> '6 months'
+ *
+ * @example
+ * // What is the distance between 1 January 2015 00:00:15
+ * // and 1 January 2015 00:00:00, including seconds?
+ * const result = formatDistance(
+ *   new Date(2015, 0, 1, 0, 0, 15),
+ *   new Date(2015, 0, 1, 0, 0, 0),
+ *   { includeSeconds: true }
+ * )
+ * //=> 'less than 20 seconds'
+ *
+ * @example
+ * // What is the distance from 1 January 2016
+ * // to 1 January 2015, with a suffix?
+ * const result = formatDistance(new Date(2015, 0, 1), new Date(2016, 0, 1), {
+ *   addSuffix: true
+ * })
+ * //=> 'about 1 year ago'
+ *
+ * @example
+ * // What is the distance between 1 August 2016 and 1 January 2015 in Esperanto?
+ * import { eoLocale } from 'date-fns/locale/eo'
+ * const result = formatDistance(new Date(2016, 7, 1), new Date(2015, 0, 1), {
+ *   locale: eoLocale
+ * })
+ * //=> 'pli ol 1 jaro'
+ */
+
+function formatDistance(dirtyDate, dirtyBaseDate) {
+  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  (0, _index8.default)(2, arguments);
+  var locale = options.locale || _index4.default;
+
+  if (!locale.formatDistance) {
+    throw new RangeError('locale must contain formatDistance property');
+  }
+
+  var comparison = (0, _index.default)(dirtyDate, dirtyBaseDate);
+
+  if (isNaN(comparison)) {
+    throw new RangeError('Invalid time value');
+  }
+
+  var localizeOptions = (0, _index6.default)(options);
+  localizeOptions.addSuffix = Boolean(options.addSuffix);
+  localizeOptions.comparison = comparison;
+  var dateLeft;
+  var dateRight;
+
+  if (comparison > 0) {
+    dateLeft = (0, _index5.default)(dirtyBaseDate);
+    dateRight = (0, _index5.default)(dirtyDate);
+  } else {
+    dateLeft = (0, _index5.default)(dirtyDate);
+    dateRight = (0, _index5.default)(dirtyBaseDate);
+  }
+
+  var seconds = (0, _index3.default)(dateRight, dateLeft);
+  var offsetInSeconds = ((0, _index7.default)(dateRight) - (0, _index7.default)(dateLeft)) / 1000;
+  var minutes = Math.round((seconds - offsetInSeconds) / 60);
+  var months; // 0 up to 2 mins
+
+  if (minutes < 2) {
+    if (options.includeSeconds) {
+      if (seconds < 5) {
+        return locale.formatDistance('lessThanXSeconds', 5, localizeOptions);
+      } else if (seconds < 10) {
+        return locale.formatDistance('lessThanXSeconds', 10, localizeOptions);
+      } else if (seconds < 20) {
+        return locale.formatDistance('lessThanXSeconds', 20, localizeOptions);
+      } else if (seconds < 40) {
+        return locale.formatDistance('halfAMinute', null, localizeOptions);
+      } else if (seconds < 60) {
+        return locale.formatDistance('lessThanXMinutes', 1, localizeOptions);
+      } else {
+        return locale.formatDistance('xMinutes', 1, localizeOptions);
+      }
+    } else {
+      if (minutes === 0) {
+        return locale.formatDistance('lessThanXMinutes', 1, localizeOptions);
+      } else {
+        return locale.formatDistance('xMinutes', minutes, localizeOptions);
+      }
+    } // 2 mins up to 0.75 hrs
+
+  } else if (minutes < 45) {
+    return locale.formatDistance('xMinutes', minutes, localizeOptions); // 0.75 hrs up to 1.5 hrs
+  } else if (minutes < 90) {
+    return locale.formatDistance('aboutXHours', 1, localizeOptions); // 1.5 hrs up to 24 hrs
+  } else if (minutes < MINUTES_IN_DAY) {
+    var hours = Math.round(minutes / 60);
+    return locale.formatDistance('aboutXHours', hours, localizeOptions); // 1 day up to 1.75 days
+  } else if (minutes < MINUTES_IN_ALMOST_TWO_DAYS) {
+    return locale.formatDistance('xDays', 1, localizeOptions); // 1.75 days up to 30 days
+  } else if (minutes < MINUTES_IN_MONTH) {
+    var days = Math.round(minutes / MINUTES_IN_DAY);
+    return locale.formatDistance('xDays', days, localizeOptions); // 1 month up to 2 months
+  } else if (minutes < MINUTES_IN_TWO_MONTHS) {
+    months = Math.round(minutes / MINUTES_IN_MONTH);
+    return locale.formatDistance('aboutXMonths', months, localizeOptions);
+  }
+
+  months = (0, _index2.default)(dateRight, dateLeft); // 2 months up to 12 months
+
+  if (months < 12) {
+    var nearestMonth = Math.round(minutes / MINUTES_IN_MONTH);
+    return locale.formatDistance('xMonths', nearestMonth, localizeOptions); // 1 year up to max Date
+  } else {
+    var monthsSinceStartOfYear = months % 12;
+    var years = Math.floor(months / 12); // N years up to 1 years 3 months
+
+    if (monthsSinceStartOfYear < 3) {
+      return locale.formatDistance('aboutXYears', years, localizeOptions); // N years 3 months up to N years 9 months
+    } else if (monthsSinceStartOfYear < 9) {
+      return locale.formatDistance('overXYears', years, localizeOptions); // N years 9 months up to N year 12 months
+    } else {
+      return locale.formatDistance('almostXYears', years + 1, localizeOptions);
+    }
+  }
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 7128:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatDistanceStrict;
+
+var _index = _interopRequireDefault(__nccwpck_require__(7032));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(9818));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(7934));
+
+var _index5 = _interopRequireDefault(__nccwpck_require__(1773));
+
+var _index6 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var MILLISECONDS_IN_MINUTE = 1000 * 60;
+var MINUTES_IN_DAY = 60 * 24;
+var MINUTES_IN_MONTH = MINUTES_IN_DAY * 30;
+var MINUTES_IN_YEAR = MINUTES_IN_DAY * 365;
+/**
+ * @name formatDistanceStrict
+ * @category Common Helpers
+ * @summary Return the distance between the given dates in words.
+ *
+ * @description
+ * Return the distance between the given dates in words, using strict units.
+ * This is like `formatDistance`, but does not use helpers like 'almost', 'over',
+ * 'less than' and the like.
+ *
+ * | Distance between dates | Result              |
+ * |------------------------|---------------------|
+ * | 0 ... 59 secs          | [0..59] seconds     |
+ * | 1 ... 59 mins          | [1..59] minutes     |
+ * | 1 ... 23 hrs           | [1..23] hours       |
+ * | 1 ... 29 days          | [1..29] days        |
+ * | 1 ... 11 months        | [1..11] months      |
+ * | 1 ... N years          | [1..N]  years       |
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * - The function was renamed from `distanceInWordsStrict` to `formatDistanceStrict`
+ *   to make its name consistent with `format` and `formatRelative`.
+ *
+ * - The order of arguments is swapped to make the function
+ *   consistent with `differenceIn...` functions.
+ *
+ *   ```javascript
+ *   // Before v2.0.0
+ *
+ *   distanceInWordsStrict(
+ *     new Date(2015, 0, 2),
+ *     new Date(2014, 6, 2)
+ *   ) //=> '6 months'
+ *
+ *   // v2.0.0 onward
+ *
+ *   formatDistanceStrict(
+ *     new Date(2014, 6, 2),
+ *     new Date(2015, 0, 2)
+ *   ) //=> '6 months'
+ *   ```
+ *
+ * - `partialMethod` option is renamed to `roundingMethod`.
+ *
+ *   ```javascript
+ *   // Before v2.0.0
+ *
+ *   distanceInWordsStrict(
+ *     new Date(1986, 3, 4, 10, 32, 0),
+ *     new Date(1986, 3, 4, 10, 33, 1),
+ *     { partialMethod: 'ceil' }
+ *   ) //=> '2 minutes'
+ *
+ *   // v2.0.0 onward
+ *
+ *   formatDistanceStrict(
+ *     new Date(1986, 3, 4, 10, 33, 1),
+ *     new Date(1986, 3, 4, 10, 32, 0),
+ *     { roundingMethod: 'ceil' }
+ *   ) //=> '2 minutes'
+ *   ```
+ *
+ * - If `roundingMethod` is not specified, it now defaults to `round` instead of `floor`.
+ *
+ * - `unit` option now accepts one of the strings:
+ *   'second', 'minute', 'hour', 'day', 'month' or 'year' instead of 's', 'm', 'h', 'd', 'M' or 'Y'
+ *
+ *   ```javascript
+ *   // Before v2.0.0
+ *
+ *   distanceInWordsStrict(
+ *     new Date(1986, 3, 4, 10, 32, 0),
+ *     new Date(1986, 3, 4, 10, 33, 1),
+ *     { unit: 'm' }
+ *   )
+ *
+ *   // v2.0.0 onward
+ *
+ *   formatDistanceStrict(
+ *     new Date(1986, 3, 4, 10, 33, 1),
+ *     new Date(1986, 3, 4, 10, 32, 0),
+ *     { unit: 'minute' }
+ *   )
+ *   ```
+ *
+ * @param {Date|Number} date - the date
+ * @param {Date|Number} baseDate - the date to compare with
+ * @param {Object} [options] - an object with options.
+ * @param {Boolean} [options.addSuffix=false] - result indicates if the second date is earlier or later than the first
+ * @param {'second'|'minute'|'hour'|'day'|'month'|'year'} [options.unit] - if specified, will force a unit
+ * @param {'floor'|'ceil'|'round'} [options.roundingMethod='round'] - which way to round partial units
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @returns {String} the distance in words
+ * @throws {TypeError} 2 arguments required
+ * @throws {RangeError} `date` must not be Invalid Date
+ * @throws {RangeError} `baseDate` must not be Invalid Date
+ * @throws {RangeError} `options.roundingMethod` must be 'floor', 'ceil' or 'round'
+ * @throws {RangeError} `options.unit` must be 'second', 'minute', 'hour', 'day', 'month' or 'year'
+ * @throws {RangeError} `options.locale` must contain `formatDistance` property
+ *
+ * @example
+ * // What is the distance between 2 July 2014 and 1 January 2015?
+ * const result = formatDistanceStrict(new Date(2014, 6, 2), new Date(2015, 0, 2))
+ * //=> '6 months'
+ *
+ * @example
+ * // What is the distance between 1 January 2015 00:00:15
+ * // and 1 January 2015 00:00:00?
+ * const result = formatDistanceStrict(
+ *   new Date(2015, 0, 1, 0, 0, 15),
+ *   new Date(2015, 0, 1, 0, 0, 0)
+ * )
+ * //=> '15 seconds'
+ *
+ * @example
+ * // What is the distance from 1 January 2016
+ * // to 1 January 2015, with a suffix?
+ * const result = formatDistanceStrict(new Date(2015, 0, 1), new Date(2016, 0, 1), {
+ *   addSuffix: true
+ * })
+ * //=> '1 year ago'
+ *
+ * @example
+ * // What is the distance from 1 January 2016
+ * // to 1 January 2015, in minutes?
+ * const result = formatDistanceStrict(new Date(2016, 0, 1), new Date(2015, 0, 1), {
+ *   unit: 'minute'
+ * })
+ * //=> '525600 minutes'
+ *
+ * @example
+ * // What is the distance from 1 January 2015
+ * // to 28 January 2015, in months, rounded up?
+ * const result = formatDistanceStrict(new Date(2015, 0, 28), new Date(2015, 0, 1), {
+ *   unit: 'month',
+ *   roundingMethod: 'ceil'
+ * })
+ * //=> '1 month'
+ *
+ * @example
+ * // What is the distance between 1 August 2016 and 1 January 2015 in Esperanto?
+ * import { eoLocale } from 'date-fns/locale/eo'
+ * const result = formatDistanceStrict(new Date(2016, 7, 1), new Date(2015, 0, 1), {
+ *   locale: eoLocale
+ * })
+ * //=> '1 jaro'
+ */
+
+function formatDistanceStrict(dirtyDate, dirtyBaseDate) {
+  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  (0, _index6.default)(2, arguments);
+  var locale = options.locale || _index5.default;
+
+  if (!locale.formatDistance) {
+    throw new RangeError('locale must contain localize.formatDistance property');
+  }
+
+  var comparison = (0, _index2.default)(dirtyDate, dirtyBaseDate);
+
+  if (isNaN(comparison)) {
+    throw new RangeError('Invalid time value');
+  }
+
+  var localizeOptions = (0, _index4.default)(options);
+  localizeOptions.addSuffix = Boolean(options.addSuffix);
+  localizeOptions.comparison = comparison;
+  var dateLeft;
+  var dateRight;
+
+  if (comparison > 0) {
+    dateLeft = (0, _index3.default)(dirtyBaseDate);
+    dateRight = (0, _index3.default)(dirtyDate);
+  } else {
+    dateLeft = (0, _index3.default)(dirtyDate);
+    dateRight = (0, _index3.default)(dirtyBaseDate);
+  }
+
+  var roundingMethod = options.roundingMethod == null ? 'round' : String(options.roundingMethod);
+  var roundingMethodFn;
+
+  if (roundingMethod === 'floor') {
+    roundingMethodFn = Math.floor;
+  } else if (roundingMethod === 'ceil') {
+    roundingMethodFn = Math.ceil;
+  } else if (roundingMethod === 'round') {
+    roundingMethodFn = Math.round;
+  } else {
+    throw new RangeError("roundingMethod must be 'floor', 'ceil' or 'round'");
+  }
+
+  var milliseconds = dateRight.getTime() - dateLeft.getTime();
+  var minutes = milliseconds / MILLISECONDS_IN_MINUTE;
+  var timezoneOffset = (0, _index.default)(dateRight) - (0, _index.default)(dateLeft); // Use DST-normalized difference in minutes for years, months and days;
+  // use regular difference in minutes for hours, minutes and seconds.
+
+  var dstNormalizedMinutes = (milliseconds - timezoneOffset) / MILLISECONDS_IN_MINUTE;
+  var unit;
+
+  if (options.unit == null) {
+    if (minutes < 1) {
+      unit = 'second';
+    } else if (minutes < 60) {
+      unit = 'minute';
+    } else if (minutes < MINUTES_IN_DAY) {
+      unit = 'hour';
+    } else if (dstNormalizedMinutes < MINUTES_IN_MONTH) {
+      unit = 'day';
+    } else if (dstNormalizedMinutes < MINUTES_IN_YEAR) {
+      unit = 'month';
+    } else {
+      unit = 'year';
+    }
+  } else {
+    unit = String(options.unit);
+  } // 0 up to 60 seconds
+
+
+  if (unit === 'second') {
+    var seconds = roundingMethodFn(milliseconds / 1000);
+    return locale.formatDistance('xSeconds', seconds, localizeOptions); // 1 up to 60 mins
+  } else if (unit === 'minute') {
+    var roundedMinutes = roundingMethodFn(minutes);
+    return locale.formatDistance('xMinutes', roundedMinutes, localizeOptions); // 1 up to 24 hours
+  } else if (unit === 'hour') {
+    var hours = roundingMethodFn(minutes / 60);
+    return locale.formatDistance('xHours', hours, localizeOptions); // 1 up to 30 days
+  } else if (unit === 'day') {
+    var days = roundingMethodFn(dstNormalizedMinutes / MINUTES_IN_DAY);
+    return locale.formatDistance('xDays', days, localizeOptions); // 1 up to 12 months
+  } else if (unit === 'month') {
+    var months = roundingMethodFn(dstNormalizedMinutes / MINUTES_IN_MONTH);
+    return months === 12 && options.unit !== 'month' ? locale.formatDistance('xYears', 1, localizeOptions) : locale.formatDistance('xMonths', months, localizeOptions); // 1 year up to max Date
+  } else if (unit === 'year') {
+    var years = roundingMethodFn(dstNormalizedMinutes / MINUTES_IN_YEAR);
+    return locale.formatDistance('xYears', years, localizeOptions);
+  }
+
+  throw new RangeError("unit must be 'second', 'minute', 'hour', 'day', 'month' or 'year'");
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 1163:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatDistanceToNow;
+
+var _index = _interopRequireDefault(__nccwpck_require__(8149));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name formatDistanceToNow
+ * @category Common Helpers
+ * @summary Return the distance between the given date and now in words.
+ * @pure false
+ *
+ * @description
+ * Return the distance between the given date and now in words.
+ *
+ * | Distance to now                                                   | Result              |
+ * |-------------------------------------------------------------------|---------------------|
+ * | 0 ... 30 secs                                                     | less than a minute  |
+ * | 30 secs ... 1 min 30 secs                                         | 1 minute            |
+ * | 1 min 30 secs ... 44 mins 30 secs                                 | [2..44] minutes     |
+ * | 44 mins ... 30 secs ... 89 mins 30 secs                           | about 1 hour        |
+ * | 89 mins 30 secs ... 23 hrs 59 mins 30 secs                        | about [2..24] hours |
+ * | 23 hrs 59 mins 30 secs ... 41 hrs 59 mins 30 secs                 | 1 day               |
+ * | 41 hrs 59 mins 30 secs ... 29 days 23 hrs 59 mins 30 secs         | [2..30] days        |
+ * | 29 days 23 hrs 59 mins 30 secs ... 44 days 23 hrs 59 mins 30 secs | about 1 month       |
+ * | 44 days 23 hrs 59 mins 30 secs ... 59 days 23 hrs 59 mins 30 secs | about 2 months      |
+ * | 59 days 23 hrs 59 mins 30 secs ... 1 yr                           | [2..12] months      |
+ * | 1 yr ... 1 yr 3 months                                            | about 1 year        |
+ * | 1 yr 3 months ... 1 yr 9 month s                                  | over 1 year         |
+ * | 1 yr 9 months ... 2 yrs                                           | almost 2 years      |
+ * | N yrs ... N yrs 3 months                                          | about N years       |
+ * | N yrs 3 months ... N yrs 9 months                                 | over N years        |
+ * | N yrs 9 months ... N+1 yrs                                        | almost N+1 years    |
+ *
+ * With `options.includeSeconds == true`:
+ * | Distance to now     | Result               |
+ * |---------------------|----------------------|
+ * | 0 secs ... 5 secs   | less than 5 seconds  |
+ * | 5 secs ... 10 secs  | less than 10 seconds |
+ * | 10 secs ... 20 secs | less than 20 seconds |
+ * | 20 secs ... 40 secs | half a minute        |
+ * | 40 secs ... 60 secs | less than a minute   |
+ * | 60 secs ... 90 secs | 1 minute             |
+ *
+ * > ⚠️ Please note that this function is not present in the FP submodule as
+ * > it uses `Date.now()` internally hence impure and can't be safely curried.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * - The function was renamed from `distanceInWordsToNow ` to `formatDistanceToNow`
+ *   to make its name consistent with `format` and `formatRelative`.
+ *
+ *   ```javascript
+ *   // Before v2.0.0
+ *
+ *   distanceInWordsToNow(new Date(2014, 6, 2), { addSuffix: true })
+ *   //=> 'in 6 months'
+ *
+ *   // v2.0.0 onward
+ *
+ *   formatDistanceToNow(new Date(2014, 6, 2), { addSuffix: true })
+ *   //=> 'in 6 months'
+ *   ```
+ *
+ * @param {Date|Number} date - the given date
+ * @param {Object} [options] - the object with options
+ * @param {Boolean} [options.includeSeconds=false] - distances less than a minute are more detailed
+ * @param {Boolean} [options.addSuffix=false] - result specifies if now is earlier or later than the passed date
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @returns {String} the distance in words
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `date` must not be Invalid Date
+ * @throws {RangeError} `options.locale` must contain `formatDistance` property
+ *
+ * @example
+ * // If today is 1 January 2015, what is the distance to 2 July 2014?
+ * var result = formatDistanceToNow(
+ *   new Date(2014, 6, 2)
+ * )
+ * //=> '6 months'
+ *
+ * @example
+ * // If now is 1 January 2015 00:00:00,
+ * // what is the distance to 1 January 2015 00:00:15, including seconds?
+ * var result = formatDistanceToNow(
+ *   new Date(2015, 0, 1, 0, 0, 15),
+ *   {includeSeconds: true}
+ * )
+ * //=> 'less than 20 seconds'
+ *
+ * @example
+ * // If today is 1 January 2015,
+ * // what is the distance to 1 January 2016, with a suffix?
+ * var result = formatDistanceToNow(
+ *   new Date(2016, 0, 1),
+ *   {addSuffix: true}
+ * )
+ * //=> 'in about 1 year'
+ *
+ * @example
+ * // If today is 1 January 2015,
+ * // what is the distance to 1 August 2016 in Esperanto?
+ * var eoLocale = require('date-fns/locale/eo')
+ * var result = formatDistanceToNow(
+ *   new Date(2016, 7, 1),
+ *   {locale: eoLocale}
+ * )
+ * //=> 'pli ol 1 jaro'
+ */
+function formatDistanceToNow(dirtyDate, dirtyOptions) {
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(dirtyDate, Date.now(), dirtyOptions);
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 4741:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatDistanceToNowStrict;
+
+var _index = _interopRequireDefault(__nccwpck_require__(7128));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name formatDistanceToNowStrict
+ * @category Common Helpers
+ * @summary Return the distance between the given date and now in words.
+ * @pure false
+ *
+ * @description
+ * Return the distance between the given dates in words, using strict units.
+ * This is like `formatDistance`, but does not use helpers like 'almost', 'over',
+ * 'less than' and the like.
+ *
+ * | Distance between dates | Result              |
+ * |------------------------|---------------------|
+ * | 0 ... 59 secs          | [0..59] seconds     |
+ * | 1 ... 59 mins          | [1..59] minutes     |
+ * | 1 ... 23 hrs           | [1..23] hours       |
+ * | 1 ... 29 days          | [1..29] days        |
+ * | 1 ... 11 months        | [1..11] months      |
+ * | 1 ... N years          | [1..N]  years       |
+ *
+ * @param {Date|Number} date - the given date
+ * @param {Object} [options] - an object with options.
+ * @param {Boolean} [options.addSuffix=false] - result indicates if the second date is earlier or later than the first
+ * @param {'second'|'minute'|'hour'|'day'|'month'|'year'} [options.unit] - if specified, will force a unit
+ * @param {'floor'|'ceil'|'round'} [options.roundingMethod='round'] - which way to round partial units
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @returns {String} the distance in words
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `date` must not be Invalid Date
+ * @throws {RangeError} `options.locale` must contain `formatDistance` property
+ *
+ * @example
+ * // If today is 1 January 2015, what is the distance to 2 July 2014?
+ * var result = formatDistanceToNowStrict(
+ *   new Date(2014, 6, 2)
+ * )
+ * //=> '6 months'
+ *
+ * @example
+ * // If now is 1 January 2015 00:00:00,
+ * // what is the distance to 1 January 2015 00:00:15, including seconds?
+ * var result = formatDistanceToNowStrict(
+ *   new Date(2015, 0, 1, 0, 0, 15)
+ * )
+ * //=> '20 seconds'
+ *
+ * @example
+ * // If today is 1 January 2015,
+ * // what is the distance to 1 January 2016, with a suffix?
+ * var result = formatDistanceToNowStrict(
+ *   new Date(2016, 0, 1),
+ *   {addSuffix: true}
+ * )
+ * //=> 'in 1 year'
+ *
+ * @example
+ * // If today is 28 January 2015,
+ * // what is the distance to 1 January 2015, in months, rounded up??
+ * var result = formatDistanceToNowStrict(new Date(2015, 0, 1), {
+ *   unit: 'month',
+ *   roundingMethod: 'ceil'
+ * })
+ * //=> '1 month'
+ *
+ * @example
+ * // If today is 1 January 2015,
+ * // what is the distance to 1 August 2016 in Esperanto?
+ * var eoLocale = require('date-fns/locale/eo')
+ * var result = formatDistanceToNowStrict(
+ *   new Date(2016, 7, 1),
+ *   {locale: eoLocale}
+ * )
+ * //=> '1 jaro'
+ */
+function formatDistanceToNowStrict(dirtyDate, dirtyOptions) {
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(dirtyDate, Date.now(), dirtyOptions);
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 8917:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatDuration;
+
+var _index = _interopRequireDefault(__nccwpck_require__(1773));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var defaultFormat = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'];
+/**
+ * @name formatDuration
+ * @category Common Helpers
+ * @summary Formats a duration in human-readable format
+ *
+ * @description
+ * Return human-readable duration string i.e. "9 months 2 days"
+ *
+ * @param {Duration} duration - the duration to format
+ * @param {Object} [options] - an object with options.
+
+ * @param {string[]} [options.format=['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds']] - the array of units to format
+ * @param {boolean} [options.zero=false] - should be zeros be included in the output?
+ * @param {string} [options.delimiter=' '] - delimiter string
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @returns {string} the formatted date string
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // Format full duration
+ * formatDuration({
+ *   years: 2,
+ *   months: 9,
+ *   weeks: 1,
+ *   days: 7,
+ *   hours: 5,
+ *   minutes: 9,
+ *   seconds: 30
+ * })
+ * //=> '2 years 9 months 1 week 7 days 5 hours 9 minutes 30 seconds
+ *
+ * @example
+ * // Format partial duration
+ * formatDuration({ months: 9, days: 2 })
+ * //=> '9 months 2 days'
+ *
+ * @example
+ * // Customize the format
+ * formatDuration(
+ *   {
+ *     years: 2,
+ *     months: 9,
+ *     weeks: 1,
+ *     days: 7,
+ *     hours: 5,
+ *     minutes: 9,
+ *     seconds: 30
+ *   },
+ *   { format: ['months', 'weeks'] }
+ * ) === '9 months 1 week'
+ *
+ * @example
+ * // Customize the zeros presence
+ * formatDuration({ years: 0, months: 9 })
+ * //=> '9 months'
+ * formatDuration({ years: 0, months: 9 }, { zero: true })
+ * //=> '0 years 9 months'
+ *
+ * @example
+ * // Customize the delimiter
+ * formatDuration({ years: 2, months: 9, weeks: 3 }, { delimiter: ', ' })
+ * //=> '2 years, 9 months, 3 weeks'
+ */
+
+function formatDuration(duration, options) {
+  if (arguments.length < 1) {
+    throw new TypeError("1 argument required, but only ".concat(arguments.length, " present"));
+  }
+
+  var format = (options === null || options === void 0 ? void 0 : options.format) || defaultFormat;
+  var locale = (options === null || options === void 0 ? void 0 : options.locale) || _index.default;
+  var zero = (options === null || options === void 0 ? void 0 : options.zero) || false;
+  var delimiter = (options === null || options === void 0 ? void 0 : options.delimiter) || ' ';
+  var result = format.reduce(function (acc, unit) {
+    var token = "x".concat(unit.replace(/(^.)/, function (m) {
+      return m.toUpperCase();
+    }));
+    var addChunk = typeof duration[unit] === 'number' && (zero || duration[unit]);
+    return addChunk ? acc.concat(locale.formatDistance(token, duration[unit])) : acc;
+  }, []).join(delimiter);
+  return result;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 3385:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatISO;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name formatISO
+ * @category Common Helpers
+ * @summary Format the date according to the ISO 8601 standard (http://support.sas.com/documentation/cdl/en/lrdict/64316/HTML/default/viewer.htm#a003169814.htm).
+ *
+ * @description
+ * Return the formatted date string in ISO 8601 format. Options may be passed to control the parts and notations of the date.
+ *
+ * @param {Date|Number} date - the original date
+ * @param {Object} [options] - an object with options.
+ * @param {'extended'|'basic'} [options.format='extended'] - if 'basic', hide delimiters between date and time values.
+ * @param {'complete'|'date'|'time'} [options.representation='complete'] - format date, time with time zone, or both.
+ * @returns {String} the formatted date string
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `date` must not be Invalid Date
+ * @throws {RangeError} `options.format` must be 'extended' or 'basic'
+ * @throws {RangeError} `options.represenation` must be 'date', 'time' or 'complete'
+ *
+ * @example
+ * // Represent 18 September 2019 in ISO 8601 format (UTC):
+ * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52))
+ * //=> '2019-09-18T19:00:52Z'
+ *
+ * @example
+ * // Represent 18 September 2019 in ISO 8601, short format (UTC):
+ * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52), { format: 'basic' })
+ * //=> '20190918T190052'
+ *
+ * @example
+ * // Represent 18 September 2019 in ISO 8601 format, date only:
+ * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52), { representation: 'date' })
+ * //=> '2019-09-18'
+ *
+ * @example
+ * // Represent 18 September 2019 in ISO 8601 format, time only (UTC):
+ * const result = formatISO(new Date(2019, 8, 18, 19, 0, 52), { representation: 'time' })
+ * //=> '19:00:52Z'
+ */
+function formatISO(dirtyDate, dirtyOptions) {
+  if (arguments.length < 1) {
+    throw new TypeError("1 argument required, but only ".concat(arguments.length, " present"));
+  }
+
+  var originalDate = (0, _index.default)(dirtyDate);
+
+  if (!(0, _index2.default)(originalDate)) {
+    throw new RangeError('Invalid time value');
+  }
+
+  var options = dirtyOptions || {};
+  var format = options.format == null ? 'extended' : String(options.format);
+  var representation = options.representation == null ? 'complete' : String(options.representation);
+
+  if (format !== 'extended' && format !== 'basic') {
+    throw new RangeError("format must be 'extended' or 'basic'");
+  }
+
+  if (representation !== 'date' && representation !== 'time' && representation !== 'complete') {
+    throw new RangeError("representation must be 'date', 'time', or 'complete'");
+  }
+
+  var result = '';
+  var tzOffset = '';
+  var dateDelimiter = format === 'extended' ? '-' : '';
+  var timeDelimiter = format === 'extended' ? ':' : ''; // Representation is either 'date' or 'complete'
+
+  if (representation !== 'time') {
+    var day = (0, _index3.default)(originalDate.getDate(), 2);
+    var month = (0, _index3.default)(originalDate.getMonth() + 1, 2);
+    var year = (0, _index3.default)(originalDate.getFullYear(), 4); // yyyyMMdd or yyyy-MM-dd.
+
+    result = "".concat(year).concat(dateDelimiter).concat(month).concat(dateDelimiter).concat(day);
+  } // Representation is either 'time' or 'complete'
+
+
+  if (representation !== 'date') {
+    // Add the timezone.
+    var offset = originalDate.getTimezoneOffset();
+
+    if (offset !== 0) {
+      var absoluteOffset = Math.abs(offset);
+      var hourOffset = (0, _index3.default)(Math.floor(absoluteOffset / 60), 2);
+      var minuteOffset = (0, _index3.default)(absoluteOffset % 60, 2); // If less than 0, the sign is +, because it is ahead of time.
+
+      var sign = offset < 0 ? '+' : '-';
+      tzOffset = "".concat(sign).concat(hourOffset, ":").concat(minuteOffset);
+    } else {
+      tzOffset = 'Z';
+    }
+
+    var hour = (0, _index3.default)(originalDate.getHours(), 2);
+    var minute = (0, _index3.default)(originalDate.getMinutes(), 2);
+    var second = (0, _index3.default)(originalDate.getSeconds(), 2); // If there's also date, separate it with time with 'T'
+
+    var separator = result === '' ? '' : 'T'; // Creates a time string consisting of hour, minute, and second, separated by delimiters, if defined.
+
+    var time = [hour, minute, second].join(timeDelimiter); // HHmmss or HH:mm:ss.
+
+    result = "".concat(result).concat(separator).concat(time).concat(tzOffset);
+  }
+
+  return result;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 5296:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatISO9075;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name formatISO9075
+ * @category Common Helpers
+ * @summary Format the date according to the ISO 9075 standard (https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_get-format).
+ *
+ * @description
+ * Return the formatted date string in ISO 9075 format. Options may be passed to control the parts and notations of the date.
+ *
+ * @param {Date|Number} date - the original date
+ * @param {Object} [options] - an object with options.
+ * @param {'extended'|'basic'} [options.format='extended'] - if 'basic', hide delimiters between date and time values.
+ * @param {'complete'|'date'|'time'} [options.representation='complete'] - format date, time, or both.
+ * @returns {String} the formatted date string
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `date` must not be Invalid Date
+ * @throws {RangeError} `options.format` must be 'extended' or 'basic'
+ * @throws {RangeError} `options.represenation` must be 'date', 'time' or 'complete'
+ *
+ * @example
+ * // Represent 18 September 2019 in ISO 9075 format:
+ * const result = formatISO9075(new Date(2019, 8, 18, 19, 0, 52))
+ * //=> '2019-09-18 19:00:52'
+ *
+ * @example
+ * // Represent 18 September 2019 in ISO 9075, short format:
+ * const result = formatISO9075(new Date(2019, 8, 18, 19, 0, 52), { format: 'basic' })
+ * //=> '20190918 190052'
+ *
+ * @example
+ * // Represent 18 September 2019 in ISO 9075 format, date only:
+ * const result = formatISO9075(new Date(2019, 8, 18, 19, 0, 52), { representation: 'date' })
+ * //=> '2019-09-18'
+ *
+ * @example
+ * // Represent 18 September 2019 in ISO 9075 format, time only:
+ * const result = formatISO9075(new Date(2019, 8, 18, 19, 0, 52), { representation: 'time' })
+ * //=> '19:00:52'
+ */
+function formatISO9075(dirtyDate, dirtyOptions) {
+  if (arguments.length < 1) {
+    throw new TypeError("1 argument required, but only ".concat(arguments.length, " present"));
+  }
+
+  var originalDate = (0, _index.default)(dirtyDate);
+
+  if (!(0, _index2.default)(originalDate)) {
+    throw new RangeError('Invalid time value');
+  }
+
+  var options = dirtyOptions || {};
+  var format = options.format == null ? 'extended' : String(options.format);
+  var representation = options.representation == null ? 'complete' : String(options.representation);
+
+  if (format !== 'extended' && format !== 'basic') {
+    throw new RangeError("format must be 'extended' or 'basic'");
+  }
+
+  if (representation !== 'date' && representation !== 'time' && representation !== 'complete') {
+    throw new RangeError("representation must be 'date', 'time', or 'complete'");
+  }
+
+  var result = '';
+  var dateDelimiter = format === 'extended' ? '-' : '';
+  var timeDelimiter = format === 'extended' ? ':' : ''; // Representation is either 'date' or 'complete'
+
+  if (representation !== 'time') {
+    var day = (0, _index3.default)(originalDate.getDate(), 2);
+    var month = (0, _index3.default)(originalDate.getMonth() + 1, 2);
+    var year = (0, _index3.default)(originalDate.getFullYear(), 4); // yyyyMMdd or yyyy-MM-dd.
+
+    result = "".concat(year).concat(dateDelimiter).concat(month).concat(dateDelimiter).concat(day);
+  } // Representation is either 'time' or 'complete'
+
+
+  if (representation !== 'date') {
+    var hour = (0, _index3.default)(originalDate.getHours(), 2);
+    var minute = (0, _index3.default)(originalDate.getMinutes(), 2);
+    var second = (0, _index3.default)(originalDate.getSeconds(), 2); // If there's also date, separate it with time with a space
+
+    var separator = result === '' ? '' : ' '; // HHmmss or HH:mm:ss.
+
+    result = "".concat(result).concat(separator).concat(hour).concat(timeDelimiter).concat(minute).concat(timeDelimiter).concat(second);
+  }
+
+  return result;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 2448:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatISODuration;
+
+var _index = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name formatISODuration
+ * @category Common Helpers
+ * @summary Format a duration object according as ISO 8601 duration string
+ *
+ * @description
+ * Format a duration object according to the ISO 8601 duration standard (https://www.digi.com/resources/documentation/digidocs/90001437-13/reference/r_iso_8601_duration_format.htm)
+ *
+ * @param {Duration} duration - the duration to format
+ *
+ * @returns {String} The ISO 8601 duration string
+ * @throws {TypeError} Requires 1 argument
+ * @throws {Error} Argument must be an object
+ *
+ * @example
+ * // Format the given duration as ISO 8601 string
+ * const result = formatISODuration({
+ *   years: 39,
+ *   months: 2,
+ *   days: 20,
+ *   hours: 7,
+ *   minutes: 5,
+ *   seconds: 0
+ * })
+ * //=> 'P39Y2M20DT0H0M0S'
+ */
+function formatISODuration(duration) {
+  (0, _index.default)(1, arguments);
+  if (typeof duration !== 'object') throw new Error('Duration must be an object');
+  var _duration$years = duration.years,
+      years = _duration$years === void 0 ? 0 : _duration$years,
+      _duration$months = duration.months,
+      months = _duration$months === void 0 ? 0 : _duration$months,
+      _duration$days = duration.days,
+      days = _duration$days === void 0 ? 0 : _duration$days,
+      _duration$hours = duration.hours,
+      hours = _duration$hours === void 0 ? 0 : _duration$hours,
+      _duration$minutes = duration.minutes,
+      minutes = _duration$minutes === void 0 ? 0 : _duration$minutes,
+      _duration$seconds = duration.seconds,
+      seconds = _duration$seconds === void 0 ? 0 : _duration$seconds;
+  return "P".concat(years, "Y").concat(months, "M").concat(days, "DT").concat(hours, "H").concat(minutes, "M").concat(seconds, "S");
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 4182:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatRFC3339;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(1985));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name formatRFC3339
+ * @category Common Helpers
+ * @summary Format the date according to the RFC 3339 standard (https://tools.ietf.org/html/rfc3339#section-5.6).
+ *
+ * @description
+ * Return the formatted date string in RFC 3339 format. Options may be passed to control the parts and notations of the date.
+ *
+ * @param {Date|Number} date - the original date
+ * @param {Object} [options] - an object with options.
+ * @param {0|1|2|3} [options.fractionDigits=0] - number of digits after the decimal point after seconds
+ * @returns {String} the formatted date string
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `date` must not be Invalid Date
+ * @throws {RangeError} `options.fractionDigits` must be between 0 and 3
+ *
+ * @example
+ * // Represent 18 September 2019 in RFC 3339 format:
+ * const result = formatRFC3339(new Date(2019, 8, 18, 19, 0, 52))
+ * //=> '2019-09-18T19:00:52Z'
+ *
+ * @example
+ * // Represent 18 September 2019 in RFC 3339 format, 2 digits of second fraction:
+ * const result = formatRFC3339(new Date(2019, 8, 18, 19, 0, 52, 234), { fractionDigits: 2 })
+ * //=> '2019-09-18T19:00:52.23Z'
+ *
+ * @example
+ * // Represent 18 September 2019 in RFC 3339 format, 3 digits of second fraction
+ * const result = formatRFC3339(new Date(2019, 8, 18, 19, 0, 52, 234), { fractionDigits: 3 })
+ * //=> '2019-09-18T19:00:52.234Z'
+ */
+function formatRFC3339(dirtyDate, dirtyOptions) {
+  if (arguments.length < 1) {
+    throw new TypeError("1 arguments required, but only ".concat(arguments.length, " present"));
+  }
+
+  var originalDate = (0, _index.default)(dirtyDate);
+
+  if (!(0, _index2.default)(originalDate)) {
+    throw new RangeError('Invalid time value');
+  }
+
+  var _ref = dirtyOptions || {},
+      _ref$fractionDigits = _ref.fractionDigits,
+      fractionDigits = _ref$fractionDigits === void 0 ? 0 : _ref$fractionDigits; // Test if fractionDigits is between 0 and 3 _and_ is not NaN
+
+
+  if (!(fractionDigits >= 0 && fractionDigits <= 3)) {
+    throw new RangeError('fractionDigits must be between 0 and 3 inclusively');
+  }
+
+  var day = (0, _index3.default)(originalDate.getDate(), 2);
+  var month = (0, _index3.default)(originalDate.getMonth() + 1, 2);
+  var year = originalDate.getFullYear();
+  var hour = (0, _index3.default)(originalDate.getHours(), 2);
+  var minute = (0, _index3.default)(originalDate.getMinutes(), 2);
+  var second = (0, _index3.default)(originalDate.getSeconds(), 2);
+  var fractionalSecond = '';
+
+  if (fractionDigits > 0) {
+    var milliseconds = originalDate.getMilliseconds();
+    var fractionalSeconds = Math.floor(milliseconds * Math.pow(10, fractionDigits - 3));
+    fractionalSecond = '.' + (0, _index3.default)(fractionalSeconds, fractionDigits);
+  }
+
+  var offset = '';
+  var tzOffset = originalDate.getTimezoneOffset();
+
+  if (tzOffset !== 0) {
+    var absoluteOffset = Math.abs(tzOffset);
+    var hourOffset = (0, _index3.default)((0, _index4.default)(absoluteOffset / 60), 2);
+    var minuteOffset = (0, _index3.default)(absoluteOffset % 60, 2); // If less than 0, the sign is +, because it is ahead of time.
+
+    var sign = tzOffset < 0 ? '+' : '-';
+    offset = "".concat(sign).concat(hourOffset, ":").concat(minuteOffset);
+  } else {
+    offset = 'Z';
+  }
+
+  return "".concat(year, "-").concat(month, "-").concat(day, "T").concat(hour, ":").concat(minute, ":").concat(second).concat(fractionalSecond).concat(offset);
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 402:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatRFC7231;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(9920));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(8794));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/**
+ * @name formatRFC7231
+ * @category Common Helpers
+ * @summary Format the date according to the RFC 7231 standard (https://tools.ietf.org/html/rfc7231#section-7.1.1.1).
+ *
+ * @description
+ * Return the formatted date string in RFC 7231 format.
+ * The result will always be in UTC timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {String} the formatted date string
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `date` must not be Invalid Date
+ *
+ * @example
+ * // Represent 18 September 2019 in RFC 7231 format:
+ * const result = formatRFC7231(new Date(2019, 8, 18, 19, 0, 52))
+ * //=> 'Wed, 18 Sep 2019 19:00:52 GMT'
+ */
+
+function formatRFC7231(dirtyDate) {
+  if (arguments.length < 1) {
+    throw new TypeError("1 arguments required, but only ".concat(arguments.length, " present"));
+  }
+
+  var originalDate = (0, _index.default)(dirtyDate);
+
+  if (!(0, _index2.default)(originalDate)) {
+    throw new RangeError('Invalid time value');
+  }
+
+  var dayName = days[originalDate.getUTCDay()];
+  var dayOfMonth = (0, _index3.default)(originalDate.getUTCDate(), 2);
+  var monthName = months[originalDate.getUTCMonth()];
+  var year = originalDate.getUTCFullYear();
+  var hour = (0, _index3.default)(originalDate.getUTCHours(), 2);
+  var minute = (0, _index3.default)(originalDate.getUTCMinutes(), 2);
+  var second = (0, _index3.default)(originalDate.getUTCSeconds(), 2); // Result variables.
+
+  return "".concat(dayName, ", ").concat(dayOfMonth, " ").concat(monthName, " ").concat(year, " ").concat(hour, ":").concat(minute, ":").concat(second, " GMT");
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 675:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = formatRelative;
+
+var _index = _interopRequireDefault(__nccwpck_require__(3086));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2168));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(1773));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(7923));
+
+var _index5 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index6 = _interopRequireDefault(__nccwpck_require__(7032));
+
+var _index7 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name formatRelative
+ * @category Common Helpers
+ * @summary Represent the date in words relative to the given base date.
+ *
+ * @description
+ * Represent the date in words relative to the given base date.
+ *
+ * | Distance to the base date | Result                    |
+ * |---------------------------|---------------------------|
+ * | Previous 6 days           | last Sunday at 04:30 AM   |
+ * | Last day                  | yesterday at 04:30 AM     |
+ * | Same day                  | today at 04:30 AM         |
+ * | Next day                  | tomorrow at 04:30 AM      |
+ * | Next 6 days               | Sunday at 04:30 AM        |
+ * | Other                     | 12/31/2017                |
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the date to format
+ * @param {Date|Number} baseDate - the date to compare with
+ * @param {Object} [options] - an object with options.
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
+ * @returns {String} the date in words
+ * @throws {TypeError} 2 arguments required
+ * @throws {RangeError} `date` must not be Invalid Date
+ * @throws {RangeError} `baseDate` must not be Invalid Date
+ * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
+ * @throws {RangeError} `options.locale` must contain `localize` property
+ * @throws {RangeError} `options.locale` must contain `formatLong` property
+ * @throws {RangeError} `options.locale` must contain `formatRelative` property
+ *
+ * @example
+ * // Represent the date of 6 days ago in words relative to the given base date. In this example, today is Wednesday
+ * const result = formatRelative(addDays(new Date(), -6), new Date())
+ * //=> "last Thursday at 12:45 AM"
+ */
+function formatRelative(dirtyDate, dirtyBaseDate, dirtyOptions) {
+  (0, _index7.default)(2, arguments);
+  var date = (0, _index5.default)(dirtyDate);
+  var baseDate = (0, _index5.default)(dirtyBaseDate);
+
+  var _ref = dirtyOptions || {},
+      _ref$locale = _ref.locale,
+      locale = _ref$locale === void 0 ? _index3.default : _ref$locale,
+      _ref$weekStartsOn = _ref.weekStartsOn,
+      weekStartsOn = _ref$weekStartsOn === void 0 ? 0 : _ref$weekStartsOn;
+
+  if (!locale.localize) {
+    throw new RangeError('locale must contain localize property');
+  }
+
+  if (!locale.formatLong) {
+    throw new RangeError('locale must contain formatLong property');
+  }
+
+  if (!locale.formatRelative) {
+    throw new RangeError('locale must contain formatRelative property');
+  }
+
+  var diff = (0, _index.default)(date, baseDate);
+
+  if (isNaN(diff)) {
+    throw new RangeError('Invalid time value');
+  }
+
+  var token;
+
+  if (diff < -6) {
+    token = 'other';
+  } else if (diff < -1) {
+    token = 'lastWeek';
+  } else if (diff < 0) {
+    token = 'yesterday';
+  } else if (diff < 1) {
+    token = 'today';
+  } else if (diff < 2) {
+    token = 'tomorrow';
+  } else if (diff < 7) {
+    token = 'nextWeek';
+  } else {
+    token = 'other';
+  }
+
+  var utcDate = (0, _index4.default)(date, (0, _index6.default)(date));
+  var utcBaseDate = (0, _index4.default)(baseDate, (0, _index6.default)(baseDate));
+  var formatStr = locale.formatRelative(token, utcDate, utcBaseDate, {
+    locale: locale,
+    weekStartsOn: weekStartsOn
+  });
+  return (0, _index2.default)(date, formatStr, {
+    locale: locale,
+    weekStartsOn: weekStartsOn
+  });
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 4897:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -14885,6 +16718,55 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 9361:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = getDay;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name getDay
+ * @category Weekday Helpers
+ * @summary Get the day of the week of the given date.
+ *
+ * @description
+ * Get the day of the week of the given date.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the given date
+ * @returns {0|1|2|3|4|5|6} the day of week, 0 represents Sunday
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // Which day of the week is 29 February 2012?
+ * const result = getDay(new Date(2012, 1, 29))
+ * //=> 3
+ */
+function getDay(dirtyDate) {
+  (0, _index2.default)(1, arguments);
+  var date = (0, _index.default)(dirtyDate);
+  var day = date.getDay();
+  return day;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 7468:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -14933,55 +16815,6 @@ function getDayOfYear(dirtyDate) {
   var diff = (0, _index3.default)(date, (0, _index2.default)(date));
   var dayOfYear = diff + 1;
   return dayOfYear;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 9361:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = getDay;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name getDay
- * @category Weekday Helpers
- * @summary Get the day of the week of the given date.
- *
- * @description
- * Get the day of the week of the given date.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the given date
- * @returns {0|1|2|3|4|5|6} the day of week, 0 represents Sunday
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // Which day of the week is 29 February 2012?
- * const result = getDay(new Date(2012, 1, 29))
- * //=> 3
- */
-function getDay(dirtyDate) {
-  (0, _index2.default)(1, arguments);
-  var date = (0, _index.default)(dirtyDate);
-  var day = date.getDay();
-  return day;
 }
 
 module.exports = exports.default;
@@ -15252,6 +17085,66 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 9894:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = getISOWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(6307));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(776));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var MILLISECONDS_IN_WEEK = 604800000;
+/**
+ * @name getISOWeek
+ * @category ISO Week Helpers
+ * @summary Get the ISO week of the given date.
+ *
+ * @description
+ * Get the ISO week of the given date.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the given date
+ * @returns {Number} the ISO week
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // Which week of the ISO-week numbering year is 2 January 2005?
+ * const result = getISOWeek(new Date(2005, 0, 2))
+ * //=> 53
+ */
+
+function getISOWeek(dirtyDate) {
+  (0, _index4.default)(1, arguments);
+  var date = (0, _index.default)(dirtyDate);
+  var diff = (0, _index2.default)(date).getTime() - (0, _index3.default)(date).getTime(); // Round the number of days to the nearest integer
+  // because the number of milliseconds in a week is not constant
+  // (e.g. it's different in the week of the daylight saving time clock shift)
+
+  return Math.round(diff / MILLISECONDS_IN_WEEK) + 1;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 6991:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -15320,66 +17213,6 @@ function getISOWeekYear(dirtyDate) {
   } else {
     return year - 1;
   }
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 9894:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = getISOWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(6307));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(776));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var MILLISECONDS_IN_WEEK = 604800000;
-/**
- * @name getISOWeek
- * @category ISO Week Helpers
- * @summary Get the ISO week of the given date.
- *
- * @description
- * Get the ISO week of the given date.
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the given date
- * @returns {Number} the ISO week
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // Which week of the ISO-week numbering year is 2 January 2005?
- * const result = getISOWeek(new Date(2005, 0, 2))
- * //=> 53
- */
-
-function getISOWeek(dirtyDate) {
-  (0, _index4.default)(1, arguments);
-  var date = (0, _index.default)(dirtyDate);
-  var diff = (0, _index2.default)(date).getTime() - (0, _index3.default)(date).getTime(); // Round the number of days to the nearest integer
-  // because the number of milliseconds in a week is not constant
-  // (e.g. it's different in the week of the daylight saving time clock shift)
-
-  return Math.round(diff / MILLISECONDS_IN_WEEK) + 1;
 }
 
 module.exports = exports.default;
@@ -15899,6 +17732,85 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 81:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = getWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(9813));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(8014));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var MILLISECONDS_IN_WEEK = 604800000;
+/**
+ * @name getWeek
+ * @category Week Helpers
+ * @summary Get the local week index of the given date.
+ *
+ * @description
+ * Get the local week index of the given date.
+ * The exact calculation depends on the values of
+ * `options.weekStartsOn` (which is the index of the first day of the week)
+ * and `options.firstWeekContainsDate` (which is the day of January, which is always in
+ * the first week of the week-numbering year)
+ *
+ * Week numbering: https://en.wikipedia.org/wiki/Week#Week_numbering
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the given date
+ * @param {Object} [options] - an object with options.
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
+ * @param {1|2|3|4|5|6|7} [options.firstWeekContainsDate=1] - the day of January, which is always in the first week of the year
+ * @returns {Number} the week
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
+ * @throws {RangeError} `options.firstWeekContainsDate` must be between 1 and 7
+ *
+ * @example
+ * // Which week of the local week numbering year is 2 January 2005 with default options?
+ * const result = getISOWeek(new Date(2005, 0, 2))
+ * //=> 2
+ *
+ * // Which week of the local week numbering year is 2 January 2005,
+ * // if Monday is the first day of the week,
+ * // and the first week of the year always contains 4 January?
+ * const result = getISOWeek(new Date(2005, 0, 2), {
+ *   weekStartsOn: 1,
+ *   firstWeekContainsDate: 4
+ * })
+ * //=> 53
+ */
+
+function getWeek(dirtyDate, options) {
+  (0, _index4.default)(1, arguments);
+  var date = (0, _index3.default)(dirtyDate);
+  var diff = (0, _index.default)(date, options).getTime() - (0, _index2.default)(date, options).getTime(); // Round the number of days to the nearest integer
+  // because the number of milliseconds in a week is not constant
+  // (e.g. it's different in the week of the daylight saving time clock shift)
+
+  return Math.round(diff / MILLISECONDS_IN_WEEK) + 1;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 9229:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -16082,85 +17994,6 @@ function getWeekYear(dirtyDate, options) {
   } else {
     return year - 1;
   }
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 81:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = getWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(9813));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(8014));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var MILLISECONDS_IN_WEEK = 604800000;
-/**
- * @name getWeek
- * @category Week Helpers
- * @summary Get the local week index of the given date.
- *
- * @description
- * Get the local week index of the given date.
- * The exact calculation depends on the values of
- * `options.weekStartsOn` (which is the index of the first day of the week)
- * and `options.firstWeekContainsDate` (which is the day of January, which is always in
- * the first week of the week-numbering year)
- *
- * Week numbering: https://en.wikipedia.org/wiki/Week#Week_numbering
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the given date
- * @param {Object} [options] - an object with options.
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
- * @param {1|2|3|4|5|6|7} [options.firstWeekContainsDate=1] - the day of January, which is always in the first week of the year
- * @returns {Number} the week
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
- * @throws {RangeError} `options.firstWeekContainsDate` must be between 1 and 7
- *
- * @example
- * // Which week of the local week numbering year is 2 January 2005 with default options?
- * const result = getISOWeek(new Date(2005, 0, 2))
- * //=> 2
- *
- * // Which week of the local week numbering year is 2 January 2005,
- * // if Monday is the first day of the week,
- * // and the first week of the year always contains 4 January?
- * const result = getISOWeek(new Date(2005, 0, 2), {
- *   weekStartsOn: 1,
- *   firstWeekContainsDate: 4
- * })
- * //=> 53
- */
-
-function getWeek(dirtyDate, options) {
-  (0, _index4.default)(1, arguments);
-  var date = (0, _index3.default)(dirtyDate);
-  var diff = (0, _index.default)(date, options).getTime() - (0, _index2.default)(date, options).getTime(); // Round the number of days to the nearest integer
-  // because the number of milliseconds in a week is not constant
-  // (e.g. it's different in the week of the daylight saving time clock shift)
-
-  return Math.round(diff / MILLISECONDS_IN_WEEK) + 1;
 }
 
 module.exports = exports.default;
@@ -19805,6 +21638,58 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 9852:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = isSameISOWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(4679));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name isSameISOWeek
+ * @category ISO Week Helpers
+ * @summary Are the given dates in the same ISO week?
+ *
+ * @description
+ * Are the given dates in the same ISO week?
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} dateLeft - the first date to check
+ * @param {Date|Number} dateRight - the second date to check
+ * @returns {Boolean} the dates are in the same ISO week
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Are 1 September 2014 and 7 September 2014 in the same ISO week?
+ * var result = isSameISOWeek(new Date(2014, 8, 1), new Date(2014, 8, 7))
+ * //=> true
+ */
+function isSameISOWeek(dirtyDateLeft, dirtyDateRight) {
+  (0, _index2.default)(2, arguments);
+  return (0, _index.default)(dirtyDateLeft, dirtyDateRight, {
+    weekStartsOn: 1
+  });
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 3944:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -19856,58 +21741,6 @@ function isSameISOWeekYear(dirtyDateLeft, dirtyDateRight) {
   var dateLeftStartOfYear = (0, _index.default)(dirtyDateLeft);
   var dateRightStartOfYear = (0, _index.default)(dirtyDateRight);
   return dateLeftStartOfYear.getTime() === dateRightStartOfYear.getTime();
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 9852:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = isSameISOWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(4679));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name isSameISOWeek
- * @category ISO Week Helpers
- * @summary Are the given dates in the same ISO week?
- *
- * @description
- * Are the given dates in the same ISO week?
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} dateLeft - the first date to check
- * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same ISO week
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Are 1 September 2014 and 7 September 2014 in the same ISO week?
- * var result = isSameISOWeek(new Date(2014, 8, 1), new Date(2014, 8, 7))
- * //=> true
- */
-function isSameISOWeek(dirtyDateLeft, dirtyDateRight) {
-  (0, _index2.default)(2, arguments);
-  return (0, _index.default)(dirtyDateLeft, dirtyDateRight, {
-    weekStartsOn: 1
-  });
 }
 
 module.exports = exports.default;
@@ -21348,6 +23181,58 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 7692:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = lastDayOfISOWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(666));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name lastDayOfISOWeek
+ * @category ISO Week Helpers
+ * @summary Return the last day of an ISO week for the given date.
+ *
+ * @description
+ * Return the last day of an ISO week for the given date.
+ * The result will be in the local timezone.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the last day of an ISO week
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The last day of an ISO week for 2 September 2014 11:55:00:
+ * var result = lastDayOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Sun Sep 07 2014 00:00:00
+ */
+function lastDayOfISOWeek(dirtyDate) {
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(dirtyDate, {
+    weekStartsOn: 1
+  });
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 217:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -21406,58 +23291,6 @@ function lastDayOfISOWeekYear(dirtyDate) {
   var date = (0, _index2.default)(fourthOfJanuary);
   date.setDate(date.getDate() - 1);
   return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 7692:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = lastDayOfISOWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(666));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name lastDayOfISOWeek
- * @category ISO Week Helpers
- * @summary Return the last day of an ISO week for the given date.
- *
- * @description
- * Return the last day of an ISO week for the given date.
- * The result will be in the local timezone.
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the original date
- * @returns {Date} the last day of an ISO week
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // The last day of an ISO week for 2 September 2014 11:55:00:
- * var result = lastDayOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
- * //=> Sun Sep 07 2014 00:00:00
- */
-function lastDayOfISOWeek(dirtyDate) {
-  (0, _index2.default)(1, arguments);
-  return (0, _index.default)(dirtyDate, {
-    weekStartsOn: 1
-  });
 }
 
 module.exports = exports.default;
@@ -22614,6 +24447,79 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 6133:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = milliseconds;
+
+var _index = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Leap year occures every 4 years, except for years that are divisable by 100 and not divisable by 400.
+// 1 mean year = (365+1/4-1/100+1/400) days = 365.2425 days
+var daysInYear = 365.2425;
+/**
+ * @name milliseconds
+ * @category Millisecond Helpers
+ * @summary
+ * Returns the number of milliseconds in the specified, years, months, weeks, days, hours, minutes and seconds.
+ *
+ * @description
+ * Returns the number of milliseconds in the specified, years, months, weeks, days, hours, minutes and seconds.
+ *
+ * One years equals 365.2425 days according to the formula:
+ *
+ * > Leap year occures every 4 years, except for years that are divisable by 100 and not divisable by 400.
+ * > 1 mean year = (365+1/4-1/100+1/400) days = 365.2425 days
+ *
+ * One month is a year divided by 12.
+ *
+ * @param {Duration} duration - the object with years, months, weeks, days, hours, minutes and seconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {number} the milliseconds
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // 1 year in milliseconds
+ * milliseconds({ years: 1 })
+ * //=> 31556952000
+ *
+ * // 3 months in milliseconds
+ * milliseconds({ months: 3 })
+ * //=> 7889238000
+ */
+
+function milliseconds(_ref) {
+  var years = _ref.years,
+      months = _ref.months,
+      weeks = _ref.weeks,
+      days = _ref.days,
+      hours = _ref.hours,
+      minutes = _ref.minutes,
+      seconds = _ref.seconds;
+  (0, _index.default)(1, arguments);
+  var totalDays = 0;
+  if (years) totalDays += years * daysInYear;
+  if (months) totalDays += months * (daysInYear / 12);
+  if (weeks) totalDays += weeks * 7;
+  if (days) totalDays += days;
+  var totalSeconds = totalDays * 24 * 60 * 60;
+  if (hours) totalSeconds += hours * 60 * 60;
+  if (minutes) totalSeconds += minutes * 60;
+  if (seconds) totalSeconds += seconds;
+  return Math.round(totalSeconds * 1000);
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 9571:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -22758,79 +24664,6 @@ function millisecondsToSeconds(milliseconds) {
   (0, _index.default)(1, arguments);
   var seconds = milliseconds / _index2.millisecondsInSecond;
   return Math.floor(seconds);
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 6133:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = milliseconds;
-
-var _index = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// Leap year occures every 4 years, except for years that are divisable by 100 and not divisable by 400.
-// 1 mean year = (365+1/4-1/100+1/400) days = 365.2425 days
-var daysInYear = 365.2425;
-/**
- * @name milliseconds
- * @category Millisecond Helpers
- * @summary
- * Returns the number of milliseconds in the specified, years, months, weeks, days, hours, minutes and seconds.
- *
- * @description
- * Returns the number of milliseconds in the specified, years, months, weeks, days, hours, minutes and seconds.
- *
- * One years equals 365.2425 days according to the formula:
- *
- * > Leap year occures every 4 years, except for years that are divisable by 100 and not divisable by 400.
- * > 1 mean year = (365+1/4-1/100+1/400) days = 365.2425 days
- *
- * One month is a year divided by 12.
- *
- * @param {Duration} duration - the object with years, months, weeks, days, hours, minutes and seconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
- * @returns {number} the milliseconds
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // 1 year in milliseconds
- * milliseconds({ years: 1 })
- * //=> 31556952000
- *
- * // 3 months in milliseconds
- * milliseconds({ months: 3 })
- * //=> 7889238000
- */
-
-function milliseconds(_ref) {
-  var years = _ref.years,
-      months = _ref.months,
-      weeks = _ref.weeks,
-      days = _ref.days,
-      hours = _ref.hours,
-      minutes = _ref.minutes,
-      seconds = _ref.seconds;
-  (0, _index.default)(1, arguments);
-  var totalDays = 0;
-  if (years) totalDays += years * daysInYear;
-  if (months) totalDays += months * (daysInYear / 12);
-  if (weeks) totalDays += weeks * 7;
-  if (days) totalDays += days;
-  var totalSeconds = totalDays * 24 * 60 * 60;
-  if (hours) totalSeconds += hours * 60 * 60;
-  if (minutes) totalSeconds += minutes * 60;
-  if (seconds) totalSeconds += seconds;
-  return Math.round(totalSeconds * 1000);
 }
 
 module.exports = exports.default;
@@ -23520,389 +25353,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function nextWednesday(date) {
   (0, _index.default)(1, arguments);
   return (0, _index2.default)((0, _index3.default)(date), 3);
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 3390:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = parseISO;
-
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var MILLISECONDS_IN_HOUR = 3600000;
-var MILLISECONDS_IN_MINUTE = 60000;
-var DEFAULT_ADDITIONAL_DIGITS = 2;
-var patterns = {
-  dateTimeDelimiter: /[T ]/,
-  timeZoneDelimiter: /[Z ]/i,
-  timezone: /([Z+-].*)$/
-};
-var dateRegex = /^-?(?:(\d{3})|(\d{2})(?:-?(\d{2}))?|W(\d{2})(?:-?(\d{1}))?|)$/;
-var timeRegex = /^(\d{2}(?:[.,]\d*)?)(?::?(\d{2}(?:[.,]\d*)?))?(?::?(\d{2}(?:[.,]\d*)?))?$/;
-var timezoneRegex = /^([+-])(\d{2})(?::?(\d{2}))?$/;
-/**
- * @name parseISO
- * @category Common Helpers
- * @summary Parse ISO string
- *
- * @description
- * Parse the given string in ISO 8601 format and return an instance of Date.
- *
- * Function accepts complete ISO 8601 formats as well as partial implementations.
- * ISO 8601: http://en.wikipedia.org/wiki/ISO_8601
- *
- * If the argument isn't a string, the function cannot parse the string or
- * the values are invalid, it returns Invalid Date.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * - The previous `parse` implementation was renamed to `parseISO`.
- *
- *   ```javascript
- *   // Before v2.0.0
- *   parse('2016-01-01')
- *
- *   // v2.0.0 onward
- *   parseISO('2016-01-01')
- *   ```
- *
- * - `parseISO` now validates separate date and time values in ISO-8601 strings
- *   and returns `Invalid Date` if the date is invalid.
- *
- *   ```javascript
- *   parseISO('2018-13-32')
- *   //=> Invalid Date
- *   ```
- *
- * - `parseISO` now doesn't fall back to `new Date` constructor
- *   if it fails to parse a string argument. Instead, it returns `Invalid Date`.
- *
- * @param {String} argument - the value to convert
- * @param {Object} [options] - an object with options.
- * @param {0|1|2} [options.additionalDigits=2] - the additional number of digits in the extended year format
- * @returns {Date} the parsed date in the local time zone
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `options.additionalDigits` must be 0, 1 or 2
- *
- * @example
- * // Convert string '2014-02-11T11:30:30' to date:
- * var result = parseISO('2014-02-11T11:30:30')
- * //=> Tue Feb 11 2014 11:30:30
- *
- * @example
- * // Convert string '+02014101' to date,
- * // if the additional number of digits in the extended year format is 1:
- * var result = parseISO('+02014101', { additionalDigits: 1 })
- * //=> Fri Apr 11 2014 00:00:00
- */
-
-function parseISO(argument, dirtyOptions) {
-  (0, _index2.default)(1, arguments);
-  var options = dirtyOptions || {};
-  var additionalDigits = options.additionalDigits == null ? DEFAULT_ADDITIONAL_DIGITS : (0, _index.default)(options.additionalDigits);
-
-  if (additionalDigits !== 2 && additionalDigits !== 1 && additionalDigits !== 0) {
-    throw new RangeError('additionalDigits must be 0, 1 or 2');
-  }
-
-  if (!(typeof argument === 'string' || Object.prototype.toString.call(argument) === '[object String]')) {
-    return new Date(NaN);
-  }
-
-  var dateStrings = splitDateString(argument);
-  var date;
-
-  if (dateStrings.date) {
-    var parseYearResult = parseYear(dateStrings.date, additionalDigits);
-    date = parseDate(parseYearResult.restDateString, parseYearResult.year);
-  }
-
-  if (isNaN(date) || !date) {
-    return new Date(NaN);
-  }
-
-  var timestamp = date.getTime();
-  var time = 0;
-  var offset;
-
-  if (dateStrings.time) {
-    time = parseTime(dateStrings.time);
-
-    if (isNaN(time) || time === null) {
-      return new Date(NaN);
-    }
-  }
-
-  if (dateStrings.timezone) {
-    offset = parseTimezone(dateStrings.timezone);
-
-    if (isNaN(offset)) {
-      return new Date(NaN);
-    }
-  } else {
-    var dirtyDate = new Date(timestamp + time); // js parsed string assuming it's in UTC timezone
-    // but we need it to be parsed in our timezone
-    // so we use utc values to build date in our timezone.
-    // Year values from 0 to 99 map to the years 1900 to 1999
-    // so set year explicitly with setFullYear.
-
-    var result = new Date(0);
-    result.setFullYear(dirtyDate.getUTCFullYear(), dirtyDate.getUTCMonth(), dirtyDate.getUTCDate());
-    result.setHours(dirtyDate.getUTCHours(), dirtyDate.getUTCMinutes(), dirtyDate.getUTCSeconds(), dirtyDate.getUTCMilliseconds());
-    return result;
-  }
-
-  return new Date(timestamp + time + offset);
-}
-
-function splitDateString(dateString) {
-  var dateStrings = {};
-  var array = dateString.split(patterns.dateTimeDelimiter);
-  var timeString; // The regex match should only return at maximum two array elements.
-  // [date], [time], or [date, time].
-
-  if (array.length > 2) {
-    return dateStrings;
-  }
-
-  if (/:/.test(array[0])) {
-    dateStrings.date = null;
-    timeString = array[0];
-  } else {
-    dateStrings.date = array[0];
-    timeString = array[1];
-
-    if (patterns.timeZoneDelimiter.test(dateStrings.date)) {
-      dateStrings.date = dateString.split(patterns.timeZoneDelimiter)[0];
-      timeString = dateString.substr(dateStrings.date.length, dateString.length);
-    }
-  }
-
-  if (timeString) {
-    var token = patterns.timezone.exec(timeString);
-
-    if (token) {
-      dateStrings.time = timeString.replace(token[1], '');
-      dateStrings.timezone = token[1];
-    } else {
-      dateStrings.time = timeString;
-    }
-  }
-
-  return dateStrings;
-}
-
-function parseYear(dateString, additionalDigits) {
-  var regex = new RegExp('^(?:(\\d{4}|[+-]\\d{' + (4 + additionalDigits) + '})|(\\d{2}|[+-]\\d{' + (2 + additionalDigits) + '})$)');
-  var captures = dateString.match(regex); // Invalid ISO-formatted year
-
-  if (!captures) return {
-    year: null
-  };
-  var year = captures[1] && parseInt(captures[1]);
-  var century = captures[2] && parseInt(captures[2]);
-  return {
-    year: century == null ? year : century * 100,
-    restDateString: dateString.slice((captures[1] || captures[2]).length)
-  };
-}
-
-function parseDate(dateString, year) {
-  // Invalid ISO-formatted year
-  if (year === null) return null;
-  var captures = dateString.match(dateRegex); // Invalid ISO-formatted string
-
-  if (!captures) return null;
-  var isWeekDate = !!captures[4];
-  var dayOfYear = parseDateUnit(captures[1]);
-  var month = parseDateUnit(captures[2]) - 1;
-  var day = parseDateUnit(captures[3]);
-  var week = parseDateUnit(captures[4]);
-  var dayOfWeek = parseDateUnit(captures[5]) - 1;
-
-  if (isWeekDate) {
-    if (!validateWeekDate(year, week, dayOfWeek)) {
-      return new Date(NaN);
-    }
-
-    return dayOfISOWeekYear(year, week, dayOfWeek);
-  } else {
-    var date = new Date(0);
-
-    if (!validateDate(year, month, day) || !validateDayOfYearDate(year, dayOfYear)) {
-      return new Date(NaN);
-    }
-
-    date.setUTCFullYear(year, month, Math.max(dayOfYear, day));
-    return date;
-  }
-}
-
-function parseDateUnit(value) {
-  return value ? parseInt(value) : 1;
-}
-
-function parseTime(timeString) {
-  var captures = timeString.match(timeRegex);
-  if (!captures) return null; // Invalid ISO-formatted time
-
-  var hours = parseTimeUnit(captures[1]);
-  var minutes = parseTimeUnit(captures[2]);
-  var seconds = parseTimeUnit(captures[3]);
-
-  if (!validateTime(hours, minutes, seconds)) {
-    return NaN;
-  }
-
-  return hours * MILLISECONDS_IN_HOUR + minutes * MILLISECONDS_IN_MINUTE + seconds * 1000;
-}
-
-function parseTimeUnit(value) {
-  return value && parseFloat(value.replace(',', '.')) || 0;
-}
-
-function parseTimezone(timezoneString) {
-  if (timezoneString === 'Z') return 0;
-  var captures = timezoneString.match(timezoneRegex);
-  if (!captures) return 0;
-  var sign = captures[1] === '+' ? -1 : 1;
-  var hours = parseInt(captures[2]);
-  var minutes = captures[3] && parseInt(captures[3]) || 0;
-
-  if (!validateTimezone(hours, minutes)) {
-    return NaN;
-  }
-
-  return sign * (hours * MILLISECONDS_IN_HOUR + minutes * MILLISECONDS_IN_MINUTE);
-}
-
-function dayOfISOWeekYear(isoWeekYear, week, day) {
-  var date = new Date(0);
-  date.setUTCFullYear(isoWeekYear, 0, 4);
-  var fourthOfJanuaryDay = date.getUTCDay() || 7;
-  var diff = (week - 1) * 7 + day + 1 - fourthOfJanuaryDay;
-  date.setUTCDate(date.getUTCDate() + diff);
-  return date;
-} // Validation functions
-// February is null to handle the leap year (using ||)
-
-
-var daysInMonths = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-function isLeapYearIndex(year) {
-  return year % 400 === 0 || year % 4 === 0 && year % 100;
-}
-
-function validateDate(year, month, date) {
-  return month >= 0 && month <= 11 && date >= 1 && date <= (daysInMonths[month] || (isLeapYearIndex(year) ? 29 : 28));
-}
-
-function validateDayOfYearDate(year, dayOfYear) {
-  return dayOfYear >= 1 && dayOfYear <= (isLeapYearIndex(year) ? 366 : 365);
-}
-
-function validateWeekDate(_year, week, day) {
-  return week >= 1 && week <= 53 && day >= 0 && day <= 6;
-}
-
-function validateTime(hours, minutes, seconds) {
-  if (hours === 24) {
-    return minutes === 0 && seconds === 0;
-  }
-
-  return seconds >= 0 && seconds < 60 && minutes >= 0 && minutes < 60 && hours >= 0 && hours < 25;
-}
-
-function validateTimezone(_hours, minutes) {
-  return minutes >= 0 && minutes <= 59;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 8159:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = parseJSON;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name parseJSON
- * @category Common Helpers
- * @summary Parse a JSON date string
- *
- * @description
- * Converts a complete ISO date string in UTC time, the typical format for transmitting
- * a date in JSON, to a JavaScript `Date` instance.
- *
- * This is a minimal implementation for converting dates retrieved from a JSON API to
- * a `Date` instance which can be used with other functions in the `date-fns` library.
- * The following formats are supported:
- *
- * - `2000-03-15T05:20:10.123Z`: The output of `.toISOString()` and `JSON.stringify(new Date())`
- * - `2000-03-15T05:20:10Z`: Without milliseconds
- * - `2000-03-15T05:20:10+00:00`: With a zero offset, the default JSON encoded format in some other languages
- * - `2000-03-15T05:20:10+05:45`: With a positive or negative offset, the default JSON encoded format in some other languages
- * - `2000-03-15T05:20:10+0000`: With a zero offset without a colon
- * - `2000-03-15T05:20:10`: Without a trailing 'Z' symbol
- * - `2000-03-15T05:20:10.1234567`: Up to 7 digits in milliseconds field. Only first 3 are taken into account since JS does not allow fractional milliseconds
- * - `2000-03-15 05:20:10`: With a space instead of a 'T' separator for APIs returning a SQL date without reformatting
- *
- * For convenience and ease of use these other input types are also supported
- * via [toDate]{@link https://date-fns.org/docs/toDate}:
- *
- * - A `Date` instance will be cloned
- * - A `number` will be treated as a timestamp
- *
- * Any other input type or invalid date strings will return an `Invalid Date`.
- *
- * @param {String|Number|Date} argument A fully formed ISO8601 date string to convert
- * @returns {Date} the parsed date in the local time zone
- * @throws {TypeError} 1 argument required
- */
-function parseJSON(argument) {
-  (0, _index2.default)(1, arguments);
-
-  if (typeof argument === 'string') {
-    var parts = argument.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.(\d{0,7}))?(?:Z|(.)(\d{2}):?(\d{2})?)?/);
-
-    if (parts) {
-      // Group 8 matches the sign
-      return new Date(Date.UTC(+parts[1], +parts[2] - 1, +parts[3], +parts[4] - (+parts[9] || 0) * (parts[8] == '-' ? -1 : 1), +parts[5] - (+parts[10] || 0) * (parts[8] == '-' ? -1 : 1), +parts[6], +((parts[7] || '0') + '00').substring(0, 3)));
-    }
-
-    return new Date(NaN);
-  }
-
-  return (0, _index.default)(argument);
 }
 
 module.exports = exports.default;
@@ -26016,6 +27466,389 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 3390:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = parseISO;
+
+var _index = _interopRequireDefault(__nccwpck_require__(1985));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var MILLISECONDS_IN_HOUR = 3600000;
+var MILLISECONDS_IN_MINUTE = 60000;
+var DEFAULT_ADDITIONAL_DIGITS = 2;
+var patterns = {
+  dateTimeDelimiter: /[T ]/,
+  timeZoneDelimiter: /[Z ]/i,
+  timezone: /([Z+-].*)$/
+};
+var dateRegex = /^-?(?:(\d{3})|(\d{2})(?:-?(\d{2}))?|W(\d{2})(?:-?(\d{1}))?|)$/;
+var timeRegex = /^(\d{2}(?:[.,]\d*)?)(?::?(\d{2}(?:[.,]\d*)?))?(?::?(\d{2}(?:[.,]\d*)?))?$/;
+var timezoneRegex = /^([+-])(\d{2})(?::?(\d{2}))?$/;
+/**
+ * @name parseISO
+ * @category Common Helpers
+ * @summary Parse ISO string
+ *
+ * @description
+ * Parse the given string in ISO 8601 format and return an instance of Date.
+ *
+ * Function accepts complete ISO 8601 formats as well as partial implementations.
+ * ISO 8601: http://en.wikipedia.org/wiki/ISO_8601
+ *
+ * If the argument isn't a string, the function cannot parse the string or
+ * the values are invalid, it returns Invalid Date.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * - The previous `parse` implementation was renamed to `parseISO`.
+ *
+ *   ```javascript
+ *   // Before v2.0.0
+ *   parse('2016-01-01')
+ *
+ *   // v2.0.0 onward
+ *   parseISO('2016-01-01')
+ *   ```
+ *
+ * - `parseISO` now validates separate date and time values in ISO-8601 strings
+ *   and returns `Invalid Date` if the date is invalid.
+ *
+ *   ```javascript
+ *   parseISO('2018-13-32')
+ *   //=> Invalid Date
+ *   ```
+ *
+ * - `parseISO` now doesn't fall back to `new Date` constructor
+ *   if it fails to parse a string argument. Instead, it returns `Invalid Date`.
+ *
+ * @param {String} argument - the value to convert
+ * @param {Object} [options] - an object with options.
+ * @param {0|1|2} [options.additionalDigits=2] - the additional number of digits in the extended year format
+ * @returns {Date} the parsed date in the local time zone
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `options.additionalDigits` must be 0, 1 or 2
+ *
+ * @example
+ * // Convert string '2014-02-11T11:30:30' to date:
+ * var result = parseISO('2014-02-11T11:30:30')
+ * //=> Tue Feb 11 2014 11:30:30
+ *
+ * @example
+ * // Convert string '+02014101' to date,
+ * // if the additional number of digits in the extended year format is 1:
+ * var result = parseISO('+02014101', { additionalDigits: 1 })
+ * //=> Fri Apr 11 2014 00:00:00
+ */
+
+function parseISO(argument, dirtyOptions) {
+  (0, _index2.default)(1, arguments);
+  var options = dirtyOptions || {};
+  var additionalDigits = options.additionalDigits == null ? DEFAULT_ADDITIONAL_DIGITS : (0, _index.default)(options.additionalDigits);
+
+  if (additionalDigits !== 2 && additionalDigits !== 1 && additionalDigits !== 0) {
+    throw new RangeError('additionalDigits must be 0, 1 or 2');
+  }
+
+  if (!(typeof argument === 'string' || Object.prototype.toString.call(argument) === '[object String]')) {
+    return new Date(NaN);
+  }
+
+  var dateStrings = splitDateString(argument);
+  var date;
+
+  if (dateStrings.date) {
+    var parseYearResult = parseYear(dateStrings.date, additionalDigits);
+    date = parseDate(parseYearResult.restDateString, parseYearResult.year);
+  }
+
+  if (isNaN(date) || !date) {
+    return new Date(NaN);
+  }
+
+  var timestamp = date.getTime();
+  var time = 0;
+  var offset;
+
+  if (dateStrings.time) {
+    time = parseTime(dateStrings.time);
+
+    if (isNaN(time) || time === null) {
+      return new Date(NaN);
+    }
+  }
+
+  if (dateStrings.timezone) {
+    offset = parseTimezone(dateStrings.timezone);
+
+    if (isNaN(offset)) {
+      return new Date(NaN);
+    }
+  } else {
+    var dirtyDate = new Date(timestamp + time); // js parsed string assuming it's in UTC timezone
+    // but we need it to be parsed in our timezone
+    // so we use utc values to build date in our timezone.
+    // Year values from 0 to 99 map to the years 1900 to 1999
+    // so set year explicitly with setFullYear.
+
+    var result = new Date(0);
+    result.setFullYear(dirtyDate.getUTCFullYear(), dirtyDate.getUTCMonth(), dirtyDate.getUTCDate());
+    result.setHours(dirtyDate.getUTCHours(), dirtyDate.getUTCMinutes(), dirtyDate.getUTCSeconds(), dirtyDate.getUTCMilliseconds());
+    return result;
+  }
+
+  return new Date(timestamp + time + offset);
+}
+
+function splitDateString(dateString) {
+  var dateStrings = {};
+  var array = dateString.split(patterns.dateTimeDelimiter);
+  var timeString; // The regex match should only return at maximum two array elements.
+  // [date], [time], or [date, time].
+
+  if (array.length > 2) {
+    return dateStrings;
+  }
+
+  if (/:/.test(array[0])) {
+    dateStrings.date = null;
+    timeString = array[0];
+  } else {
+    dateStrings.date = array[0];
+    timeString = array[1];
+
+    if (patterns.timeZoneDelimiter.test(dateStrings.date)) {
+      dateStrings.date = dateString.split(patterns.timeZoneDelimiter)[0];
+      timeString = dateString.substr(dateStrings.date.length, dateString.length);
+    }
+  }
+
+  if (timeString) {
+    var token = patterns.timezone.exec(timeString);
+
+    if (token) {
+      dateStrings.time = timeString.replace(token[1], '');
+      dateStrings.timezone = token[1];
+    } else {
+      dateStrings.time = timeString;
+    }
+  }
+
+  return dateStrings;
+}
+
+function parseYear(dateString, additionalDigits) {
+  var regex = new RegExp('^(?:(\\d{4}|[+-]\\d{' + (4 + additionalDigits) + '})|(\\d{2}|[+-]\\d{' + (2 + additionalDigits) + '})$)');
+  var captures = dateString.match(regex); // Invalid ISO-formatted year
+
+  if (!captures) return {
+    year: null
+  };
+  var year = captures[1] && parseInt(captures[1]);
+  var century = captures[2] && parseInt(captures[2]);
+  return {
+    year: century == null ? year : century * 100,
+    restDateString: dateString.slice((captures[1] || captures[2]).length)
+  };
+}
+
+function parseDate(dateString, year) {
+  // Invalid ISO-formatted year
+  if (year === null) return null;
+  var captures = dateString.match(dateRegex); // Invalid ISO-formatted string
+
+  if (!captures) return null;
+  var isWeekDate = !!captures[4];
+  var dayOfYear = parseDateUnit(captures[1]);
+  var month = parseDateUnit(captures[2]) - 1;
+  var day = parseDateUnit(captures[3]);
+  var week = parseDateUnit(captures[4]);
+  var dayOfWeek = parseDateUnit(captures[5]) - 1;
+
+  if (isWeekDate) {
+    if (!validateWeekDate(year, week, dayOfWeek)) {
+      return new Date(NaN);
+    }
+
+    return dayOfISOWeekYear(year, week, dayOfWeek);
+  } else {
+    var date = new Date(0);
+
+    if (!validateDate(year, month, day) || !validateDayOfYearDate(year, dayOfYear)) {
+      return new Date(NaN);
+    }
+
+    date.setUTCFullYear(year, month, Math.max(dayOfYear, day));
+    return date;
+  }
+}
+
+function parseDateUnit(value) {
+  return value ? parseInt(value) : 1;
+}
+
+function parseTime(timeString) {
+  var captures = timeString.match(timeRegex);
+  if (!captures) return null; // Invalid ISO-formatted time
+
+  var hours = parseTimeUnit(captures[1]);
+  var minutes = parseTimeUnit(captures[2]);
+  var seconds = parseTimeUnit(captures[3]);
+
+  if (!validateTime(hours, minutes, seconds)) {
+    return NaN;
+  }
+
+  return hours * MILLISECONDS_IN_HOUR + minutes * MILLISECONDS_IN_MINUTE + seconds * 1000;
+}
+
+function parseTimeUnit(value) {
+  return value && parseFloat(value.replace(',', '.')) || 0;
+}
+
+function parseTimezone(timezoneString) {
+  if (timezoneString === 'Z') return 0;
+  var captures = timezoneString.match(timezoneRegex);
+  if (!captures) return 0;
+  var sign = captures[1] === '+' ? -1 : 1;
+  var hours = parseInt(captures[2]);
+  var minutes = captures[3] && parseInt(captures[3]) || 0;
+
+  if (!validateTimezone(hours, minutes)) {
+    return NaN;
+  }
+
+  return sign * (hours * MILLISECONDS_IN_HOUR + minutes * MILLISECONDS_IN_MINUTE);
+}
+
+function dayOfISOWeekYear(isoWeekYear, week, day) {
+  var date = new Date(0);
+  date.setUTCFullYear(isoWeekYear, 0, 4);
+  var fourthOfJanuaryDay = date.getUTCDay() || 7;
+  var diff = (week - 1) * 7 + day + 1 - fourthOfJanuaryDay;
+  date.setUTCDate(date.getUTCDate() + diff);
+  return date;
+} // Validation functions
+// February is null to handle the leap year (using ||)
+
+
+var daysInMonths = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function isLeapYearIndex(year) {
+  return year % 400 === 0 || year % 4 === 0 && year % 100;
+}
+
+function validateDate(year, month, date) {
+  return month >= 0 && month <= 11 && date >= 1 && date <= (daysInMonths[month] || (isLeapYearIndex(year) ? 29 : 28));
+}
+
+function validateDayOfYearDate(year, dayOfYear) {
+  return dayOfYear >= 1 && dayOfYear <= (isLeapYearIndex(year) ? 366 : 365);
+}
+
+function validateWeekDate(_year, week, day) {
+  return week >= 1 && week <= 53 && day >= 0 && day <= 6;
+}
+
+function validateTime(hours, minutes, seconds) {
+  if (hours === 24) {
+    return minutes === 0 && seconds === 0;
+  }
+
+  return seconds >= 0 && seconds < 60 && minutes >= 0 && minutes < 60 && hours >= 0 && hours < 25;
+}
+
+function validateTimezone(_hours, minutes) {
+  return minutes >= 0 && minutes <= 59;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 8159:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = parseJSON;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name parseJSON
+ * @category Common Helpers
+ * @summary Parse a JSON date string
+ *
+ * @description
+ * Converts a complete ISO date string in UTC time, the typical format for transmitting
+ * a date in JSON, to a JavaScript `Date` instance.
+ *
+ * This is a minimal implementation for converting dates retrieved from a JSON API to
+ * a `Date` instance which can be used with other functions in the `date-fns` library.
+ * The following formats are supported:
+ *
+ * - `2000-03-15T05:20:10.123Z`: The output of `.toISOString()` and `JSON.stringify(new Date())`
+ * - `2000-03-15T05:20:10Z`: Without milliseconds
+ * - `2000-03-15T05:20:10+00:00`: With a zero offset, the default JSON encoded format in some other languages
+ * - `2000-03-15T05:20:10+05:45`: With a positive or negative offset, the default JSON encoded format in some other languages
+ * - `2000-03-15T05:20:10+0000`: With a zero offset without a colon
+ * - `2000-03-15T05:20:10`: Without a trailing 'Z' symbol
+ * - `2000-03-15T05:20:10.1234567`: Up to 7 digits in milliseconds field. Only first 3 are taken into account since JS does not allow fractional milliseconds
+ * - `2000-03-15 05:20:10`: With a space instead of a 'T' separator for APIs returning a SQL date without reformatting
+ *
+ * For convenience and ease of use these other input types are also supported
+ * via [toDate]{@link https://date-fns.org/docs/toDate}:
+ *
+ * - A `Date` instance will be cloned
+ * - A `number` will be treated as a timestamp
+ *
+ * Any other input type or invalid date strings will return an `Invalid Date`.
+ *
+ * @param {String|Number|Date} argument A fully formed ISO8601 date string to convert
+ * @returns {Date} the parsed date in the local time zone
+ * @throws {TypeError} 1 argument required
+ */
+function parseJSON(argument) {
+  (0, _index2.default)(1, arguments);
+
+  if (typeof argument === 'string') {
+    var parts = argument.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.(\d{0,7}))?(?:Z|(.)(\d{2}):?(\d{2})?)?/);
+
+    if (parts) {
+      // Group 8 matches the sign
+      return new Date(Date.UTC(+parts[1], +parts[2] - 1, +parts[3], +parts[4] - (+parts[9] || 0) * (parts[8] == '-' ? -1 : 1), +parts[5] - (+parts[10] || 0) * (parts[8] == '-' ? -1 : 1), +parts[6], +((parts[7] || '0') + '00').substring(0, 3)));
+    }
+
+    return new Date(NaN);
+  }
+
+  return (0, _index.default)(argument);
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 8756:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -26681,6 +28514,113 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 2031:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = set;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(847));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name set
+ * @category Common Helpers
+ * @summary Set date values to a given date.
+ *
+ * @description
+ * Set date values to a given date.
+ *
+ * Sets time values to date from object `values`.
+ * A value is not set if it is undefined or null or doesn't exist in `values`.
+ *
+ * Note about bundle size: `set` does not internally use `setX` functions from date-fns but instead opts
+ * to use native `Date#setX` methods. If you use this function, you may not want to include the
+ * other `setX` functions that date-fns provides if you are concerned about the bundle size.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Object} values - an object with options
+ * @param {Number} [values.year] - the number of years to be set
+ * @param {Number} [values.month] - the number of months to be set
+ * @param {Number} [values.date] - the number of days to be set
+ * @param {Number} [values.hours] - the number of hours to be set
+ * @param {Number} [values.minutes] - the number of minutes to be set
+ * @param {Number} [values.seconds] - the number of seconds to be set
+ * @param {Number} [values.milliseconds] - the number of milliseconds to be set
+ * @returns {Date} the new date with options set
+ * @throws {TypeError} 2 arguments required
+ * @throws {RangeError} `values` must be an object
+ *
+ * @example
+ * // Transform 1 September 2014 into 20 October 2015 in a single line:
+ * var result = set(new Date(2014, 8, 20), { year: 2015, month: 9, date: 20 })
+ * //=> Tue Oct 20 2015 00:00:00
+ *
+ * @example
+ * // Set 12 PM to 1 September 2014 01:23:45 to 1 September 2014 12:00:00:
+ * var result = set(new Date(2014, 8, 1, 1, 23, 45), { hours: 12 })
+ * //=> Mon Sep 01 2014 12:23:45
+ */
+function set(dirtyDate, values) {
+  (0, _index4.default)(2, arguments);
+
+  if (typeof values !== 'object' || values === null) {
+    throw new RangeError('values parameter must be an object');
+  }
+
+  var date = (0, _index.default)(dirtyDate); // Check if date is Invalid Date because Date.prototype.setFullYear ignores the value of Invalid Date
+
+  if (isNaN(date.getTime())) {
+    return new Date(NaN);
+  }
+
+  if (values.year != null) {
+    date.setFullYear(values.year);
+  }
+
+  if (values.month != null) {
+    date = (0, _index2.default)(date, values.month);
+  }
+
+  if (values.date != null) {
+    date.setDate((0, _index3.default)(values.date));
+  }
+
+  if (values.hours != null) {
+    date.setHours((0, _index3.default)(values.hours));
+  }
+
+  if (values.minutes != null) {
+    date.setMinutes((0, _index3.default)(values.minutes));
+  }
+
+  if (values.seconds != null) {
+    date.setSeconds((0, _index3.default)(values.seconds));
+  }
+
+  if (values.milliseconds != null) {
+    date.setMilliseconds((0, _index3.default)(values.milliseconds));
+  }
+
+  return date;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 8760:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -26727,60 +28667,6 @@ function setDate(dirtyDate, dirtyDayOfMonth) {
   var date = (0, _index2.default)(dirtyDate);
   var dayOfMonth = (0, _index.default)(dirtyDayOfMonth);
   date.setDate(dayOfMonth);
-  return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 4002:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = setDayOfYear;
-
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name setDayOfYear
- * @category Day Helpers
- * @summary Set the day of the year to the given date.
- *
- * @description
- * Set the day of the year to the given date.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Number} dayOfYear - the day of the year of the new date
- * @returns {Date} the new date with the day of the year set
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Set the 2nd day of the year to 2 July 2014:
- * var result = setDayOfYear(new Date(2014, 6, 2), 2)
- * //=> Thu Jan 02 2014 00:00:00
- */
-function setDayOfYear(dirtyDate, dirtyDayOfYear) {
-  (0, _index3.default)(2, arguments);
-  var date = (0, _index2.default)(dirtyDate);
-  var dayOfYear = (0, _index.default)(dirtyDayOfYear);
-  date.setMonth(0);
-  date.setDate(dayOfYear);
   return date;
 }
 
@@ -26860,6 +28746,60 @@ function setDay(dirtyDate, dirtyDay, dirtyOptions) {
   var delta = 7 - weekStartsOn;
   var diff = day < 0 || day > 6 ? day - (currentDay + delta) % 7 : (dayIndex + delta) % 7 - (currentDay + delta) % 7;
   return (0, _index.default)(date, diff);
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 4002:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = setDayOfYear;
+
+var _index = _interopRequireDefault(__nccwpck_require__(1985));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name setDayOfYear
+ * @category Day Helpers
+ * @summary Set the day of the year to the given date.
+ *
+ * @description
+ * Set the day of the year to the given date.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} dayOfYear - the day of the year of the new date
+ * @returns {Date} the new date with the day of the year set
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Set the 2nd day of the year to 2 July 2014:
+ * var result = setDayOfYear(new Date(2014, 6, 2), 2)
+ * //=> Thu Jan 02 2014 00:00:00
+ */
+function setDayOfYear(dirtyDate, dirtyDayOfYear) {
+  (0, _index3.default)(2, arguments);
+  var date = (0, _index2.default)(dirtyDate);
+  var dayOfYear = (0, _index.default)(dirtyDayOfYear);
+  date.setMonth(0);
+  date.setDate(dayOfYear);
+  return date;
 }
 
 module.exports = exports.default;
@@ -26979,6 +28919,64 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 3035:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = setISOWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(1985));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(9894));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name setISOWeek
+ * @category ISO Week Helpers
+ * @summary Set the ISO week to the given date.
+ *
+ * @description
+ * Set the ISO week to the given date, saving the weekday number.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} isoWeek - the ISO week of the new date
+ * @returns {Date} the new date with the ISO week set
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Set the 53rd ISO week to 7 August 2004:
+ * const result = setISOWeek(new Date(2004, 7, 7), 53)
+ * //=> Sat Jan 01 2005 00:00:00
+ */
+function setISOWeek(dirtyDate, dirtyISOWeek) {
+  (0, _index4.default)(2, arguments);
+  var date = (0, _index2.default)(dirtyDate);
+  var isoWeek = (0, _index.default)(dirtyISOWeek);
+  var diff = (0, _index3.default)(date) - isoWeek;
+  date.setDate(date.getDate() - diff * 7);
+  return date;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 822:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -27042,64 +29040,6 @@ function setISOWeekYear(dirtyDate, dirtyISOWeekYear) {
   fourthOfJanuary.setHours(0, 0, 0, 0);
   date = (0, _index3.default)(fourthOfJanuary);
   date.setDate(date.getDate() + diff);
-  return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 3035:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = setISOWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(1985));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(9894));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name setISOWeek
- * @category ISO Week Helpers
- * @summary Set the ISO week to the given date.
- *
- * @description
- * Set the ISO week to the given date, saving the weekday number.
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Number} isoWeek - the ISO week of the new date
- * @returns {Date} the new date with the ISO week set
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Set the 53rd ISO week to 7 August 2004:
- * const result = setISOWeek(new Date(2004, 7, 7), 53)
- * //=> Sat Jan 01 2005 00:00:00
- */
-function setISOWeek(dirtyDate, dirtyISOWeek) {
-  (0, _index4.default)(2, arguments);
-  var date = (0, _index2.default)(dirtyDate);
-  var isoWeek = (0, _index.default)(dirtyISOWeek);
-  var diff = (0, _index3.default)(date) - isoWeek;
-  date.setDate(date.getDate() - diff * 7);
   return date;
 }
 
@@ -27385,6 +29325,84 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 2664:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = setWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(81));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name setWeek
+ * @category Week Helpers
+ * @summary Set the local week to the given date.
+ *
+ * @description
+ * Set the local week to the given date, saving the weekday number.
+ * The exact calculation depends on the values of
+ * `options.weekStartsOn` (which is the index of the first day of the week)
+ * and `options.firstWeekContainsDate` (which is the day of January, which is always in
+ * the first week of the week-numbering year)
+ *
+ * Week numbering: https://en.wikipedia.org/wiki/Week#Week_numbering
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} week - the week of the new date
+ * @param {Object} [options] - an object with options.
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
+ * @param {1|2|3|4|5|6|7} [options.firstWeekContainsDate=1] - the day of January, which is always in the first week of the year
+ * @returns {Date} the new date with the local week set
+ * @throws {TypeError} 2 arguments required
+ * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
+ * @throws {RangeError} `options.firstWeekContainsDate` must be between 1 and 7
+ *
+ * @example
+ * // Set the 1st week to 2 January 2005 with default options:
+ * var result = setWeek(new Date(2005, 0, 2), 1)
+ * //=> Sun Dec 26 2004 00:00:00
+ *
+ * @example
+ * // Set the 1st week to 2 January 2005,
+ * // if Monday is the first day of the week,
+ * // and the first week of the year always contains 4 January:
+ * var result = setWeek(new Date(2005, 0, 2), 1, {
+ *   weekStartsOn: 1,
+ *   firstWeekContainsDate: 4
+ * })
+ * //=> Sun Jan 4 2004 00:00:00
+ */
+function setWeek(dirtyDate, dirtyWeek, options) {
+  (0, _index4.default)(2, arguments);
+  var date = (0, _index2.default)(dirtyDate);
+  var week = (0, _index3.default)(dirtyWeek);
+  var diff = (0, _index.default)(date, options) - week;
+  date.setDate(date.getDate() - diff * 7);
+  return date;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 3438:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -27475,84 +29493,6 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 2664:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = setWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(81));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name setWeek
- * @category Week Helpers
- * @summary Set the local week to the given date.
- *
- * @description
- * Set the local week to the given date, saving the weekday number.
- * The exact calculation depends on the values of
- * `options.weekStartsOn` (which is the index of the first day of the week)
- * and `options.firstWeekContainsDate` (which is the day of January, which is always in
- * the first week of the week-numbering year)
- *
- * Week numbering: https://en.wikipedia.org/wiki/Week#Week_numbering
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Number} week - the week of the new date
- * @param {Object} [options] - an object with options.
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
- * @param {1|2|3|4|5|6|7} [options.firstWeekContainsDate=1] - the day of January, which is always in the first week of the year
- * @returns {Date} the new date with the local week set
- * @throws {TypeError} 2 arguments required
- * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
- * @throws {RangeError} `options.firstWeekContainsDate` must be between 1 and 7
- *
- * @example
- * // Set the 1st week to 2 January 2005 with default options:
- * var result = setWeek(new Date(2005, 0, 2), 1)
- * //=> Sun Dec 26 2004 00:00:00
- *
- * @example
- * // Set the 1st week to 2 January 2005,
- * // if Monday is the first day of the week,
- * // and the first week of the year always contains 4 January:
- * var result = setWeek(new Date(2005, 0, 2), 1, {
- *   weekStartsOn: 1,
- *   firstWeekContainsDate: 4
- * })
- * //=> Sun Jan 4 2004 00:00:00
- */
-function setWeek(dirtyDate, dirtyWeek, options) {
-  (0, _index4.default)(2, arguments);
-  var date = (0, _index2.default)(dirtyDate);
-  var week = (0, _index3.default)(dirtyWeek);
-  var diff = (0, _index.default)(date, options) - week;
-  date.setDate(date.getDate() - diff * 7);
-  return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
 /***/ 6212:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -27604,113 +29544,6 @@ function setYear(dirtyDate, dirtyYear) {
   }
 
   date.setFullYear(year);
-  return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 2031:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = set;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(847));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(1985));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name set
- * @category Common Helpers
- * @summary Set date values to a given date.
- *
- * @description
- * Set date values to a given date.
- *
- * Sets time values to date from object `values`.
- * A value is not set if it is undefined or null or doesn't exist in `values`.
- *
- * Note about bundle size: `set` does not internally use `setX` functions from date-fns but instead opts
- * to use native `Date#setX` methods. If you use this function, you may not want to include the
- * other `setX` functions that date-fns provides if you are concerned about the bundle size.
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Object} values - an object with options
- * @param {Number} [values.year] - the number of years to be set
- * @param {Number} [values.month] - the number of months to be set
- * @param {Number} [values.date] - the number of days to be set
- * @param {Number} [values.hours] - the number of hours to be set
- * @param {Number} [values.minutes] - the number of minutes to be set
- * @param {Number} [values.seconds] - the number of seconds to be set
- * @param {Number} [values.milliseconds] - the number of milliseconds to be set
- * @returns {Date} the new date with options set
- * @throws {TypeError} 2 arguments required
- * @throws {RangeError} `values` must be an object
- *
- * @example
- * // Transform 1 September 2014 into 20 October 2015 in a single line:
- * var result = set(new Date(2014, 8, 20), { year: 2015, month: 9, date: 20 })
- * //=> Tue Oct 20 2015 00:00:00
- *
- * @example
- * // Set 12 PM to 1 September 2014 01:23:45 to 1 September 2014 12:00:00:
- * var result = set(new Date(2014, 8, 1, 1, 23, 45), { hours: 12 })
- * //=> Mon Sep 01 2014 12:23:45
- */
-function set(dirtyDate, values) {
-  (0, _index4.default)(2, arguments);
-
-  if (typeof values !== 'object' || values === null) {
-    throw new RangeError('values parameter must be an object');
-  }
-
-  var date = (0, _index.default)(dirtyDate); // Check if date is Invalid Date because Date.prototype.setFullYear ignores the value of Invalid Date
-
-  if (isNaN(date.getTime())) {
-    return new Date(NaN);
-  }
-
-  if (values.year != null) {
-    date.setFullYear(values.year);
-  }
-
-  if (values.month != null) {
-    date = (0, _index2.default)(date, values.month);
-  }
-
-  if (values.date != null) {
-    date.setDate((0, _index3.default)(values.date));
-  }
-
-  if (values.hours != null) {
-    date.setHours((0, _index3.default)(values.hours));
-  }
-
-  if (values.minutes != null) {
-    date.setMinutes((0, _index3.default)(values.minutes));
-  }
-
-  if (values.seconds != null) {
-    date.setSeconds((0, _index3.default)(values.seconds));
-  }
-
-  if (values.milliseconds != null) {
-    date.setMilliseconds((0, _index3.default)(values.milliseconds));
-  }
-
   return date;
 }
 
@@ -27870,6 +29703,58 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 6307:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = startOfISOWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(9813));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name startOfISOWeek
+ * @category ISO Week Helpers
+ * @summary Return the start of an ISO week for the given date.
+ *
+ * @description
+ * Return the start of an ISO week for the given date.
+ * The result will be in the local timezone.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the start of an ISO week
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The start of an ISO week for 2 September 2014 11:55:00:
+ * var result = startOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+function startOfISOWeek(dirtyDate) {
+  (0, _index2.default)(1, arguments);
+  return (0, _index.default)(dirtyDate, {
+    weekStartsOn: 1
+  });
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 776:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -27922,58 +29807,6 @@ function startOfISOWeekYear(dirtyDate) {
   fourthOfJanuary.setHours(0, 0, 0, 0);
   var date = (0, _index2.default)(fourthOfJanuary);
   return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 6307:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = startOfISOWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(9813));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name startOfISOWeek
- * @category ISO Week Helpers
- * @summary Return the start of an ISO week for the given date.
- *
- * @description
- * Return the start of an ISO week for the given date.
- * The result will be in the local timezone.
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the original date
- * @returns {Date} the start of an ISO week
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // The start of an ISO week for 2 September 2014 11:55:00:
- * var result = startOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
- * //=> Mon Sep 01 2014 00:00:00
- */
-function startOfISOWeek(dirtyDate) {
-  (0, _index2.default)(1, arguments);
-  return (0, _index.default)(dirtyDate, {
-    weekStartsOn: 1
-  });
 }
 
 module.exports = exports.default;
@@ -28279,6 +30112,80 @@ module.exports = exports.default;
 
 /***/ }),
 
+/***/ 9813:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = startOfWeek;
+
+var _index = _interopRequireDefault(__nccwpck_require__(6477));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(1985));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name startOfWeek
+ * @category Week Helpers
+ * @summary Return the start of a week for the given date.
+ *
+ * @description
+ * Return the start of a week for the given date.
+ * The result will be in the local timezone.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the original date
+ * @param {Object} [options] - an object with options.
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
+ * @returns {Date} the start of a week
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
+ *
+ * @example
+ * // The start of a week for 2 September 2014 11:55:00:
+ * const result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Sun Aug 31 2014 00:00:00
+ *
+ * @example
+ * // If the week starts on Monday, the start of the week for 2 September 2014 11:55:00:
+ * const result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0), { weekStartsOn: 1 })
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+function startOfWeek(dirtyDate, dirtyOptions) {
+  (0, _index3.default)(1, arguments);
+  var options = dirtyOptions || {};
+  var locale = options.locale;
+  var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
+  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index2.default)(localeWeekStartsOn);
+  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index2.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+
+  if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
+    throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
+  }
+
+  var date = (0, _index.default)(dirtyDate);
+  var day = date.getDay();
+  var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
+  date.setDate(date.getDate() - diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
 /***/ 8014:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -28355,80 +30262,6 @@ function startOfWeekYear(dirtyDate, dirtyOptions) {
   firstWeek.setFullYear(year, 0, firstWeekContainsDate);
   firstWeek.setHours(0, 0, 0, 0);
   var date = (0, _index2.default)(firstWeek, dirtyOptions);
-  return date;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
-/***/ 9813:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = startOfWeek;
-
-var _index = _interopRequireDefault(__nccwpck_require__(6477));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(1985));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name startOfWeek
- * @category Week Helpers
- * @summary Return the start of a week for the given date.
- *
- * @description
- * Return the start of a week for the given date.
- * The result will be in the local timezone.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the original date
- * @param {Object} [options] - an object with options.
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
- * @returns {Date} the start of a week
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
- *
- * @example
- * // The start of a week for 2 September 2014 11:55:00:
- * const result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0))
- * //=> Sun Aug 31 2014 00:00:00
- *
- * @example
- * // If the week starts on Monday, the start of the week for 2 September 2014 11:55:00:
- * const result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0), { weekStartsOn: 1 })
- * //=> Mon Sep 01 2014 00:00:00
- */
-function startOfWeek(dirtyDate, dirtyOptions) {
-  (0, _index3.default)(1, arguments);
-  var options = dirtyOptions || {};
-  var locale = options.locale;
-  var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : (0, _index2.default)(localeWeekStartsOn);
-  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : (0, _index2.default)(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
-
-  if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
-    throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
-  }
-
-  var date = (0, _index.default)(dirtyDate);
-  var day = date.getDay();
-  var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
-  date.setDate(date.getDate() - diff);
-  date.setHours(0, 0, 0, 0);
   return date;
 }
 
@@ -28531,6 +30364,92 @@ function startOfYesterday() {
   date.setFullYear(year, month, day - 1);
   date.setHours(0, 0, 0, 0);
   return date;
+}
+
+module.exports = exports.default;
+
+/***/ }),
+
+/***/ 3875:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.default = sub;
+
+var _index = _interopRequireDefault(__nccwpck_require__(970));
+
+var _index2 = _interopRequireDefault(__nccwpck_require__(6752));
+
+var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
+
+var _index4 = _interopRequireDefault(__nccwpck_require__(1985));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @name sub
+ * @category Common Helpers
+ * @summary Subtract the specified years, months, weeks, days, hours, minutes and seconds from the given date.
+ *
+ * @description
+ * Subtract the specified years, months, weeks, days, hours, minutes and seconds from the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Duration} duration - the object with years, months, weeks, days, hours, minutes and seconds to be subtracted
+ *
+ * | Key     | Description                        |
+ * |---------|------------------------------------|
+ * | years   | Amount of years to be subtracted   |
+ * | months  | Amount of months to be subtracted  |
+ * | weeks   | Amount of weeks to be subtracted   |
+ * | days    | Amount of days to be subtracted    |
+ * | hours   | Amount of hours to be subtracted   |
+ * | minutes | Amount of minutes to be subtracted |
+ * | seconds | Amount of seconds to be subtracted |
+ *
+ * All values default to 0
+ *
+ * @returns {Date} the new date with the seconds subtracted
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Subtract the following duration from 15 June 2017 15:29:20
+ * const result = sub(new Date(2017, 5, 15, 15, 29, 20), {
+ *   years: 2,
+ *   months: 9,
+ *   weeks: 1,
+ *   days: 7,
+ *   hours: 5,
+ *   minutes: 9,
+ *   seconds: 30
+ * })
+ * //=> Mon Sep 1 2014 10:19:50
+ */
+function sub(date, duration) {
+  (0, _index3.default)(2, arguments);
+  if (!duration || typeof duration !== 'object') return new Date(NaN);
+  var years = duration.years ? (0, _index4.default)(duration.years) : 0;
+  var months = duration.months ? (0, _index4.default)(duration.months) : 0;
+  var weeks = duration.weeks ? (0, _index4.default)(duration.weeks) : 0;
+  var days = duration.days ? (0, _index4.default)(duration.days) : 0;
+  var hours = duration.hours ? (0, _index4.default)(duration.hours) : 0;
+  var minutes = duration.minutes ? (0, _index4.default)(duration.minutes) : 0;
+  var seconds = duration.seconds ? (0, _index4.default)(duration.seconds) : 0; // Subtract years and months
+
+  var dateWithoutMonths = (0, _index2.default)(date, months + years * 12); // Subtract weeks and days
+
+  var dateWithoutDays = (0, _index.default)(dateWithoutMonths, days + weeks * 7); // Subtract hours, minutes and seconds
+
+  var minutestoSub = minutes + hours * 60;
+  var secondstoSub = seconds + minutestoSub * 60;
+  var mstoSub = secondstoSub * 1000;
+  var finalDate = new Date(dateWithoutDays.getTime() - mstoSub);
+  return finalDate;
 }
 
 module.exports = exports.default;
@@ -29101,92 +31020,6 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 3875:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = sub;
-
-var _index = _interopRequireDefault(__nccwpck_require__(970));
-
-var _index2 = _interopRequireDefault(__nccwpck_require__(6752));
-
-var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
-
-var _index4 = _interopRequireDefault(__nccwpck_require__(1985));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @name sub
- * @category Common Helpers
- * @summary Subtract the specified years, months, weeks, days, hours, minutes and seconds from the given date.
- *
- * @description
- * Subtract the specified years, months, weeks, days, hours, minutes and seconds from the given date.
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Duration} duration - the object with years, months, weeks, days, hours, minutes and seconds to be subtracted
- *
- * | Key     | Description                        |
- * |---------|------------------------------------|
- * | years   | Amount of years to be subtracted   |
- * | months  | Amount of months to be subtracted  |
- * | weeks   | Amount of weeks to be subtracted   |
- * | days    | Amount of days to be subtracted    |
- * | hours   | Amount of hours to be subtracted   |
- * | minutes | Amount of minutes to be subtracted |
- * | seconds | Amount of seconds to be subtracted |
- *
- * All values default to 0
- *
- * @returns {Date} the new date with the seconds subtracted
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Subtract the following duration from 15 June 2017 15:29:20
- * const result = sub(new Date(2017, 5, 15, 15, 29, 20), {
- *   years: 2,
- *   months: 9,
- *   weeks: 1,
- *   days: 7,
- *   hours: 5,
- *   minutes: 9,
- *   seconds: 30
- * })
- * //=> Mon Sep 1 2014 10:19:50
- */
-function sub(date, duration) {
-  (0, _index3.default)(2, arguments);
-  if (!duration || typeof duration !== 'object') return new Date(NaN);
-  var years = duration.years ? (0, _index4.default)(duration.years) : 0;
-  var months = duration.months ? (0, _index4.default)(duration.months) : 0;
-  var weeks = duration.weeks ? (0, _index4.default)(duration.weeks) : 0;
-  var days = duration.days ? (0, _index4.default)(duration.days) : 0;
-  var hours = duration.hours ? (0, _index4.default)(duration.hours) : 0;
-  var minutes = duration.minutes ? (0, _index4.default)(duration.minutes) : 0;
-  var seconds = duration.seconds ? (0, _index4.default)(duration.seconds) : 0; // Subtract years and months
-
-  var dateWithoutMonths = (0, _index2.default)(date, months + years * 12); // Subtract weeks and days
-
-  var dateWithoutDays = (0, _index.default)(dateWithoutMonths, days + weeks * 7); // Subtract hours, minutes and seconds
-
-  var minutestoSub = minutes + hours * 60;
-  var secondstoSub = seconds + minutestoSub * 60;
-  var mstoSub = secondstoSub * 1000;
-  var finalDate = new Date(dateWithoutDays.getTime() - mstoSub);
-  return finalDate;
-}
-
-module.exports = exports.default;
-
-/***/ }),
-
 /***/ 6477:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -29504,6 +31337,22 @@ function checkEncoding(name) {
         .replace(/^us[\-_]?ascii$/i, 'ASCII')
         .toUpperCase();
 }
+
+
+/***/ }),
+
+/***/ 1621:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = (flag, argv = process.argv) => {
+	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
+	const position = argv.indexOf(prefix + flag);
+	const terminatorPosition = argv.indexOf('--');
+	return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
+};
 
 
 /***/ }),
@@ -34887,6 +36736,149 @@ module.exports = safer
 
 /***/ }),
 
+/***/ 9318:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const os = __nccwpck_require__(2087);
+const tty = __nccwpck_require__(3867);
+const hasFlag = __nccwpck_require__(1621);
+
+const {env} = process;
+
+let forceColor;
+if (hasFlag('no-color') ||
+	hasFlag('no-colors') ||
+	hasFlag('color=false') ||
+	hasFlag('color=never')) {
+	forceColor = 0;
+} else if (hasFlag('color') ||
+	hasFlag('colors') ||
+	hasFlag('color=true') ||
+	hasFlag('color=always')) {
+	forceColor = 1;
+}
+
+if ('FORCE_COLOR' in env) {
+	if (env.FORCE_COLOR === 'true') {
+		forceColor = 1;
+	} else if (env.FORCE_COLOR === 'false') {
+		forceColor = 0;
+	} else {
+		forceColor = env.FORCE_COLOR.length === 0 ? 1 : Math.min(parseInt(env.FORCE_COLOR, 10), 3);
+	}
+}
+
+function translateLevel(level) {
+	if (level === 0) {
+		return false;
+	}
+
+	return {
+		level,
+		hasBasic: true,
+		has256: level >= 2,
+		has16m: level >= 3
+	};
+}
+
+function supportsColor(haveStream, streamIsTTY) {
+	if (forceColor === 0) {
+		return 0;
+	}
+
+	if (hasFlag('color=16m') ||
+		hasFlag('color=full') ||
+		hasFlag('color=truecolor')) {
+		return 3;
+	}
+
+	if (hasFlag('color=256')) {
+		return 2;
+	}
+
+	if (haveStream && !streamIsTTY && forceColor === undefined) {
+		return 0;
+	}
+
+	const min = forceColor || 0;
+
+	if (env.TERM === 'dumb') {
+		return min;
+	}
+
+	if (process.platform === 'win32') {
+		// Windows 10 build 10586 is the first Windows release that supports 256 colors.
+		// Windows 10 build 14931 is the first release that supports 16m/TrueColor.
+		const osRelease = os.release().split('.');
+		if (
+			Number(osRelease[0]) >= 10 &&
+			Number(osRelease[2]) >= 10586
+		) {
+			return Number(osRelease[2]) >= 14931 ? 3 : 2;
+		}
+
+		return 1;
+	}
+
+	if ('CI' in env) {
+		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI', 'GITHUB_ACTIONS', 'BUILDKITE'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
+			return 1;
+		}
+
+		return min;
+	}
+
+	if ('TEAMCITY_VERSION' in env) {
+		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
+	}
+
+	if (env.COLORTERM === 'truecolor') {
+		return 3;
+	}
+
+	if ('TERM_PROGRAM' in env) {
+		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
+
+		switch (env.TERM_PROGRAM) {
+			case 'iTerm.app':
+				return version >= 3 ? 3 : 2;
+			case 'Apple_Terminal':
+				return 2;
+			// No default
+		}
+	}
+
+	if (/-256(color)?$/i.test(env.TERM)) {
+		return 2;
+	}
+
+	if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
+		return 1;
+	}
+
+	if ('COLORTERM' in env) {
+		return 1;
+	}
+
+	return min;
+}
+
+function getSupportLevel(stream) {
+	const level = supportsColor(stream, stream && stream.isTTY);
+	return translateLevel(level);
+}
+
+module.exports = {
+	supportsColor: getSupportLevel,
+	stdout: translateLevel(supportsColor(true, tty.isatty(1))),
+	stderr: translateLevel(supportsColor(true, tty.isatty(2)))
+};
+
+
+/***/ }),
+
 /***/ 4256:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -37587,6 +39579,14 @@ module.exports = require("tls");
 
 /***/ }),
 
+/***/ 3867:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("tty");
+
+/***/ }),
+
 /***/ 8835:
 /***/ ((module) => {
 
@@ -37625,8 +39625,8 @@ module.exports = require("zlib");
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
+/******/ 			id: moduleId,
+/******/ 			loaded: false,
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -37639,11 +39639,23 @@ module.exports = require("zlib");
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
 /******/ 	
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/node module decorator */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.nmd = (module) => {
+/******/ 			module.paths = [];
+/******/ 			if (!module.children) module.children = [];
+/******/ 			return module;
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";

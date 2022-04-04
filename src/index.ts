@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 import deployToStag from './deploy-pr-staging'
 import deployToProd from './deploy-main'
 import cleanDeployments from './pr-close-cleanup'
@@ -18,11 +19,12 @@ const currentBranch = splitRef[splitRef.length - 1]
 
 const isPR = context.eventName === 'pull_request'
 const prNumber = payload.pull_request?.number ?? 0
+chalk.level = 1
 
 const run = async () => {
 	const startTime = new Date()
+	console.log(`${chalk.bold.blue('Info')}: Installing azure CLI...`)
 
-	console.log('Installing azure CLI...')
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 
 	// Use the below version in case specific version has to be installed
@@ -41,20 +43,24 @@ const run = async () => {
 	// 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
 
 	// `)
+	console.log('\n')
 
 	await azLogin()
+	console.log('\n')
+
 	await createServices()
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
-		console.log('Deploying to staging...')
+		console.log(`${chalk.bold.blue('Info')}: Deploying to staging...`)
 		await deployToStag(prNumber)
 	}
 
 	// Deploy to prod
 	const preventProdDeploy = core.getInput('preventProdDeploy')
 	if (preventProdDeploy && currentBranch === defaultBranch) {
-		const errorMsg =
-			'Production deployment skipped! Code quality checks have failed'
+		const errorMsg = `${chalk.bold.yellow(
+			'Info',
+		)}: Production deployment skipped! Code quality checks have failed`
 		console.error(errorMsg)
 		core.setFailed(errorMsg)
 	}
@@ -64,14 +70,20 @@ const run = async () => {
 		currentBranch === defaultBranch &&
 		!preventProdDeploy
 	) {
-		console.log('Deploying to production...')
+		console.log(`${chalk.bold.blue('Info')}: Deploying to production...`)
 		await deployToProd()
 	}
 
 	if (isPR && payload.pull_request?.state === 'closed') {
-		console.log('PR closed. Cleaning up deployments...')
+		console.log(
+			`${chalk.bold.blue('Info')}: PR closed. Cleaning up deployments...`,
+		)
 		await cleanDeployments(prNumber)
 	}
+
+	console.log(
+		`${chalk.bold.green('Success')}: You are lucky, the action finished!`,
+	)
 
 	if (isPR) await postComment(startTime)
 }

@@ -18,11 +18,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(require("@actions/core"));
 const child_process_promise_1 = require("child-process-promise");
+const chalk_1 = __importDefault(require("chalk"));
+chalk_1.default.level = 1;
 exports.default = async () => {
-    console.log('Logging into Azure CLI...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });

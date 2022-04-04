@@ -2,25 +2,33 @@ import { exec } from 'child-process-promise'
 import * as github from '@actions/github'
 import path from 'path'
 import fs from 'fs'
+import chalk from 'chalk'
 import { Package } from '../types'
 
 const msgFile = path.join('github_message.txt')
 
 const commitSha = github.context.sha.substr(0, 7)
-
+chalk.level = 1
 export default async (pkg: Package, pullNumber: number): Promise<void> => {
 	try {
-		if (!pullNumber) throw Error('PR number is undefined')
+		if (!pullNumber)
+			throw Error(`${chalk.bold.red('Error')}: PR number is undefined`)
 		const slotName = pullNumber
 		const stagName = `${pkg.id}stag`
 
-		console.log(`Building webapp: ${pkg.name}`)
+		console.log(
+			`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(pkg.name)}`,
+		)
 		const { stdout, stderr } = await exec(
 			`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 		)
 		if (stderr) console.log(stderr, stdout)
 
-		console.log(`Build finished, uploading webapp: ${pkg.name}`)
+		console.log(
+			`${chalk.bold.blue(
+				'Info',
+			)}: Build finished, uploading webapp: ${chalk.bold(pkg.name)}`,
+		)
 
 		await exec('az extension add --name storage-preview').catch()
 

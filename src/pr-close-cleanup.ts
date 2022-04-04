@@ -1,8 +1,10 @@
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 import { Package } from './types'
 import packages from './functions/get-packages'
 import groupBySubscription from './functions/group-by-subscription'
 
+chalk.level = 1
 const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 	try {
 		if (!pullNumber) throw Error('No PR number')
@@ -13,7 +15,11 @@ const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 		await exec(
 			`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`,
 		)
-		console.log(`Deleted web app: ${stagName}-${slotName}`)
+		console.log(
+			`${chalk.bold.green('Success')}: Deleted web app: ${chalk.bold(
+				`${stagName}-${slotName}`,
+			)}`,
+		)
 	} catch (err) {
 		throw Error(err)
 	}
@@ -24,14 +30,18 @@ const removeFuncAppStagingDeployment = async (
 	pullNumber: number,
 ) => {
 	try {
-		if (!pullNumber) throw Error('No PR number')
+		if (!pullNumber) throw Error(`${chalk.bold.red('Error')}: No PR number`)
 		const slotName = `stag-${pullNumber}`
 
 		const { stdout: deleteOut, stderr: deleteErr } = await exec(
 			`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`,
 		)
 		if (deleteErr) console.log(deleteOut, deleteErr)
-		console.log(`Deleted function app: ${pkg.id}-${slotName}`)
+		console.log(
+			`${chalk.bold.green('Success')}: Deleted function app: ${chalk.bold(
+				`${pkg.id}-${slotName}`,
+			)}`,
+		)
 	} catch (err) {
 		throw Error(err)
 	}
@@ -42,9 +52,16 @@ const removeResources = async (
 	subsId: string,
 	prNumber: number,
 ) => {
-	console.log('\nSetting the subscription for creating services...')
+	console.log('\n')
+	console.log(
+		`${chalk.bold.blue(
+			'Info',
+		)}: Setting the subscription for creating services...`,
+	)
 	await exec(`az account set --subscription ${subsId}`)
-	console.log(`subscription set to ${subsId}`)
+	console.log(
+		`${chalk.bold.green('Success')}: Subscription set to ${chalk.bold(subsId)}`,
+	)
 
 	const webPackages = localConfig.filter((pkg) => pkg.type === 'app')
 	const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api')

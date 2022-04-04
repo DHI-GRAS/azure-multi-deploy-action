@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const chalk_1 = __importDefault(require("chalk"));
+chalk_1.default.level = 1;
 const msgFile = path_1.default.join('github_message.txt');
 exports.default = async (pkg, pullNumber) => {
     try {
@@ -14,7 +16,7 @@ exports.default = async (pkg, pullNumber) => {
             throw Error(listErr);
         const slots = JSON.parse(listOut);
         if (!pullNumber)
-            throw Error('The environment variable GITHUB_PR_NUMBER must be defined');
+            throw Error(`${chalk_1.default.bold.red('Error')}: The environment variable GITHUB_PR_NUMBER must be defined`);
         const slotName = `stag-${pullNumber}`;
         const slotNames = slots.map((slot) => slot.name);
         const slotExists = slotNames.includes(slotName);
@@ -37,8 +39,8 @@ exports.default = async (pkg, pullNumber) => {
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
-        console.log(`Deployed functionapp ${pkg.id}-${slotName}`);
-        // Don't think the deployment url gets returned from upload - hopefully this stays static?
+        console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp ${chalk_1.default.bold(`${pkg.id}-${slotName}`)}`);
+        // I don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`;
         console.log(deployMsg);
         fs_1.default.appendFileSync(msgFile, deployMsg);

@@ -1,9 +1,11 @@
 import fs from 'fs'
 import path from 'path'
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 import { Packages, Package, PackageJSON } from '../types'
 import packages from './get-packages'
 
+chalk.level = 1
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
 export default async (): Promise<Packages> => {
 	try {
@@ -21,13 +23,13 @@ export default async (): Promise<Packages> => {
 
 		const checkChanged = async (pkg: Package) => {
 			const { stdout: diffOut, stdout: diffErr } = await exec(
-				`git diff --quiet origin/main HEAD -- ${path.join(
-					pkg.path,
-				)} || echo changed`,
+				`git diff --quiet origin/main HEAD -- ${path.join(pkg.path)} || echo ${
+					pkg.id
+				} changed`,
 			)
 			if (diffErr) console.log(diffErr)
 
-			return diffOut.includes('changed') ? pkg : null
+			return diffOut.includes(`${pkg.id} changed`) ? pkg : null
 		}
 
 		const changedPromises = packages.map(checkChanged)
@@ -63,7 +65,11 @@ export default async (): Promise<Packages> => {
 		const changedPackageIdString = changedPackages
 			.map((pkg) => pkg.id)
 			.join(', ')
-		console.log(`Changed packages: ${changedPackageIdString}`)
+		console.log(
+			`${chalk.bold.blue('Info')}: Changed packages: ${chalk.bold(
+				changedPackageIdString,
+			)}`,
+		)
 
 		return changedPackages
 	} catch (err) {

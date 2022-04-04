@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const chalk_1 = __importDefault(require("chalk"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const packageTypes = ['apps', 'func-apis', 'libs'];
@@ -14,6 +15,7 @@ const pkgTypeRequiredFieldMap = {
     'func-apis': apiRequiredFields,
     libs: [],
 };
+chalk_1.default.level = 1;
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
     const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '.' : pkgType, pkgDir));
@@ -24,7 +26,7 @@ const getPackageObject = (pkgDir, pkgType) => {
         var _a;
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
-            throw Error(`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
+            throw Error(`${chalk_1.default.bold.red('Error')}: "${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
     const notReqPropertiesFromPckJson = appNotRequiredFields.reduce((fieldAcc, field) => {
@@ -43,7 +45,7 @@ const getPackageObject = (pkgDir, pkgType) => {
     if (pkgType === 'apps' &&
         ((_a = lowercaseRe.exec(pkgObj.azureDeployConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !==
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
-        throw Error(`"id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
+        throw Error(`${chalk_1.default.bold.red('Error')}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
     return {
         ...propertiesFromPckJson,
         type: pkgType.substring(0, pkgType.length - 1),
@@ -63,7 +65,7 @@ const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
 const isMonorepo = packageTypes
     .map((pkg) => fs_1.default.existsSync(path_1.default.join(pkg)))
     .includes(true);
-console.log(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app');
+console.log(`${chalk_1.default.bold.blue('Info')}: ${chalk_1.default.bold(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app')}`);
 const packages = isMonorepo
     ? getMonorepoPackages()
     : [getPackageObject('.', 'apps')];

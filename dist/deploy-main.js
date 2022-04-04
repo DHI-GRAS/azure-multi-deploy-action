@@ -24,20 +24,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
 const github = __importStar(require("@actions/github"));
+const chalk_1 = __importDefault(require("chalk"));
 const get_changed_packages_1 = __importDefault(require("./functions/get-changed-packages"));
 const group_by_subscription_1 = __importDefault(require("./functions/group-by-subscription"));
 const commitSha = github.context.sha.substr(0, 7);
+chalk_1.default.level = 1;
 const deployWebApp = async (pkg) => {
     var _a;
-    console.log(`Building webapp: ${pkg.name}`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(pkg.name)}`);
     const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
     const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
     if (stderr)
         console.log(stderr, stdout);
-    console.log(`Build finished, uploading webapp: ${pkg.name}`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
     await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
     await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`)
-        .then(() => console.log(`Deployed storage account ${pkg.id}`))
+        .then(() => console.log(`${chalk_1.default.bold.green('Success')}: Deployed storage account ${chalk_1.default.bold(pkg.id)}`))
         .catch((err) => {
         throw Error(err);
     });
@@ -46,7 +48,7 @@ const deployFuncApp = async (pkg) => {
     try {
         const pkgPathSplit = pkg.path.split('/');
         const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1];
-        console.log(`Deploying functionapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Deploying functionapp: ${chalk_1.default.bold(pkg.name)}`);
         await (0, child_process_promise_1.exec)(`
 		cd ${pkg.path} &&
 		yarn build ;
@@ -58,16 +60,17 @@ const deployFuncApp = async (pkg) => {
         const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
         if (uploadErr)
             console.log(uploadErr);
-        console.log(`Deployed functionapp: ${pkg.id}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp: ${chalk_1.default.bold(pkg.id)}`);
     }
     catch (err) {
-        console.log(`ERROR: could not deploy ${pkg.id} - ${String(err)}`);
+        console.log(`${chalk_1.default.bold.red('Error')}: Could not deploy ${pkg.id} - ${String(err)}`);
     }
 };
 const createMissingResources = async (localConfig, subscriptionId) => {
-    console.log('\nSetting the subscription for production deployment...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for production deployment...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
-    console.log(`subscription set to ${subscriptionId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     const allPackages = [...webPackages, ...funcPackages];

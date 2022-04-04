@@ -1,20 +1,28 @@
 import { exec } from 'child-process-promise'
+import chalk from 'chalk'
 import { Package, StorageAccount } from '../types'
 
+chalk.level = 1
 export default async (pkg: Package): Promise<void> => {
 	try {
 		const handleCreatedAccount = async ({ stdout }) => {
 			const newAccountData = JSON.parse(stdout) as StorageAccount
 
 			console.log(
-				`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`,
+				`${chalk.bold.green(
+					'Success',
+				)}: Created storage account for ${chalk.bold(
+					newAccountData.name,
+				)}: ${chalk.bold(newAccountData.primaryEndpoints.web)}`,
 			)
 
 			await exec(
 				`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`,
 			)
 			console.log(
-				`Enabled web container for storage account: ${newAccountData.name}`,
+				`${chalk.bold.blue(
+					'Info',
+				)}: Enabled web container for storage account: ${newAccountData.name}`,
 			)
 		}
 

@@ -26,20 +26,22 @@ const child_process_promise_1 = require("child-process-promise");
 const github = __importStar(require("@actions/github"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const chalk_1 = __importDefault(require("chalk"));
 const msgFile = path_1.default.join('github_message.txt');
 const commitSha = github.context.sha.substr(0, 7);
+chalk_1.default.level = 1;
 exports.default = async (pkg, pullNumber) => {
     var _a;
     try {
         if (!pullNumber)
-            throw Error('PR number is undefined');
+            throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
-        console.log(`Building webapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(pkg.name)}`);
         const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
-        console.log(`Build finished, uploading webapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
