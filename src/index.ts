@@ -19,11 +19,11 @@ const currentBranch = splitRef[splitRef.length - 1]
 
 const isPR = context.eventName === 'pull_request'
 const prNumber = payload.pull_request?.number ?? 0
+chalk.level = 1
 
 const run = async () => {
 	const startTime = new Date()
-	chalk.level = 1
-	console.log(`${chalk.bold.blue('Info')}Installing azure CLI...`)
+	console.log(`${chalk.bold.blue('Info')}: Installing azure CLI...`)
 
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 
