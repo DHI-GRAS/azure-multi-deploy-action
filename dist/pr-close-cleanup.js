@@ -4,8 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
+const chalk_1 = __importDefault(require("chalk"));
 const get_packages_1 = __importDefault(require("./functions/get-packages"));
 const group_by_subscription_1 = __importDefault(require("./functions/group-by-subscription"));
+chalk_1.default.level = 1;
 const removeWebStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
@@ -14,7 +16,7 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
         const stagName = `${pkg.id}stag`;
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         await (0, child_process_promise_1.exec)(`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`);
-        console.log(`Deleted web app: ${stagName}-${slotName}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}-${slotName}`)}`);
     }
     catch (err) {
         throw Error(err);
@@ -23,21 +25,22 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
 const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
-            throw Error('No PR number');
+            throw Error(`${chalk_1.default.bold.red('Error')}: No PR number`);
         const slotName = `stag-${pullNumber}`;
         const { stdout: deleteOut, stderr: deleteErr } = await (0, child_process_promise_1.exec)(`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         if (deleteErr)
             console.log(deleteOut, deleteErr);
-        console.log(`Deleted function app: ${pkg.id}-${slotName}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deleted function app: ${chalk_1.default.bold(`${pkg.id}-${slotName}`)}`);
     }
     catch (err) {
         throw Error(err);
     }
 };
 const removeResources = async (localConfig, subsId, prNumber) => {
-    console.log('\nSetting the subscription for creating services...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for creating services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
-    console.log(`subscription set to ${subsId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Subscription set to ${chalk_1.default.bold(subsId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     for (const pkg of webPackages) {

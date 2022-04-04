@@ -68,7 +68,7 @@ const createMissingResources = async (localConfig, subscriptionId) => {
     for (const pkg of missingFunctionApps) {
         await (0, create_function_app_1.default)(pkg);
     }
-    console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${subscriptionId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subscriptionId)}`);
 };
 const createServices = async () => {
     const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
@@ -111,20 +111,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const github = __importStar(__nccwpck_require__(5438));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
 const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
 const commitSha = github.context.sha.substr(0, 7);
+chalk_1.default.level = 1;
 const deployWebApp = async (pkg) => {
     var _a;
-    console.log(`Building webapp: ${pkg.name}`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(pkg.name)}`);
     const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
     const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
     if (stderr)
         console.log(stderr, stdout);
-    console.log(`Build finished, uploading webapp: ${pkg.name}`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
     await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
     await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`)
-        .then(() => console.log(`Deployed storage account ${pkg.id}`))
+        .then(() => console.log(`${chalk_1.default.bold.green('Success')}: Deployed storage account ${chalk_1.default.bold(pkg.id)}`))
         .catch((err) => {
         throw Error(err);
     });
@@ -133,7 +135,7 @@ const deployFuncApp = async (pkg) => {
     try {
         const pkgPathSplit = pkg.path.split('/');
         const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1];
-        console.log(`Deploying functionapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Deploying functionapp: ${chalk_1.default.bold(pkg.name)}`);
         await (0, child_process_promise_1.exec)(`
 		cd ${pkg.path} &&
 		yarn build ;
@@ -145,16 +147,17 @@ const deployFuncApp = async (pkg) => {
         const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
         if (uploadErr)
             console.log(uploadErr);
-        console.log(`Deployed functionapp: ${pkg.id}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp: ${chalk_1.default.bold(pkg.id)}`);
     }
     catch (err) {
-        console.log(`ERROR: could not deploy ${pkg.id} - ${String(err)}`);
+        console.log(`${chalk_1.default.bold.red('Error')}: Could not deploy ${pkg.id} - ${String(err)}`);
     }
 };
 const createMissingResources = async (localConfig, subscriptionId) => {
-    console.log('\nSetting the subscription for production deployment...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for production deployment...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
-    console.log(`subscription set to ${subscriptionId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     const allPackages = [...webPackages, ...funcPackages];
@@ -189,18 +192,21 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const get_changed_packages_1 = __importDefault(__nccwpck_require__(8902));
 const deploy_web_to_staging_1 = __importDefault(__nccwpck_require__(811));
 const deploy_func_to_staging_1 = __importDefault(__nccwpck_require__(8363));
 const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
+chalk_1.default.level = 1;
 const createMissingResources = async (localConfig, subsId, prNumber) => {
-    console.log('\nSetting the subscription for PR deployment...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for PR deployment...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
-    console.log(`subscription set to ${subsId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subsId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     if (webPackages.length + funcPackages.length === 0) {
-        const deployMsg = `ℹ️ No changed packages were detected`;
+        const deployMsg = `${chalk_1.default.bold.yellow('Warning')}: No changed packages were detected`;
         console.log(deployMsg);
         const msgFile = path_1.default.join('github_message.txt');
         fs_1.default.appendFileSync(msgFile, `\n${deployMsg}  `);
@@ -209,7 +215,7 @@ const createMissingResources = async (localConfig, subsId, prNumber) => {
         await (0, deploy_web_to_staging_1.default)(webApp, prNumber);
     for (const funcApp of funcPackages)
         await (0, deploy_func_to_staging_1.default)(funcApp, prNumber);
-    console.log(`Completed for subscriptionID ${subsId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subsId)}`);
 };
 const deployToStag = async (prNumber) => {
     const changedPackages = await (0, get_changed_packages_1.default)();
@@ -265,21 +271,26 @@ exports.default = async () => {
 /***/ }),
 
 /***/ 2237:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
+chalk_1.default.level = 1;
 exports.default = async (pkg) => {
     try {
         if (!pkg.storageAccount) {
-            throw Error(`${pkg.id} needs to specify storageAccount`);
+            throw Error(`${chalk_1.default.bold.red('Error')}: ${chalk_1.default.bold(pkg.id)} needs to specify storageAccount`);
         }
         await (0, child_process_promise_1.exec)(`az functionapp create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --storage-account ${pkg.storageAccount} --runtime node --consumption-plan-location northeurope --functions-version 3 --disable-app-insights true`)
             .then(({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
-            console.log(`Created function app: ${pkg.id}: ${newAccountData.defaultHostName}`);
+            console.log(`${chalk_1.default.bold.green('Success')}: Created function app: ${chalk_1.default.bold(pkg.id)}: ${chalk_1.default.bold(newAccountData.defaultHostName)}`);
         })
             .catch((err) => {
             throw Error(err);
@@ -294,19 +305,24 @@ exports.default = async (pkg) => {
 /***/ }),
 
 /***/ 9753:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
+chalk_1.default.level = 1;
 exports.default = async (pkg) => {
     try {
         const handleCreatedAccount = async ({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
-            console.log(`Created storage account for ${newAccountData.name}: ${newAccountData.primaryEndpoints.web}`);
+            console.log(`${chalk_1.default.bold.green('Success')}: Created storage account for ${chalk_1.default.bold(newAccountData.name)}: ${chalk_1.default.bold(newAccountData.primaryEndpoints.web)}`);
             await (0, child_process_promise_1.exec)(`az storage blob service-properties update --account-name ${newAccountData.name} --static-website --404-document index.html --index-document index.html`);
-            console.log(`Enabled web container for storage account: ${newAccountData.name}`);
+            console.log(`${chalk_1.default.bold.blue('Info')}: Enabled web container for storage account: ${newAccountData.name}`);
         };
         await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`)
             .then(handleCreatedAccount)
@@ -339,6 +355,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
+chalk_1.default.level = 1;
 const msgFile = path_1.default.join('github_message.txt');
 exports.default = async (pkg, pullNumber) => {
     try {
@@ -347,7 +365,7 @@ exports.default = async (pkg, pullNumber) => {
             throw Error(listErr);
         const slots = JSON.parse(listOut);
         if (!pullNumber)
-            throw Error('The environment variable GITHUB_PR_NUMBER must be defined');
+            throw Error(`${chalk_1.default.bold.red('Error')}: The environment variable GITHUB_PR_NUMBER must be defined`);
         const slotName = `stag-${pullNumber}`;
         const slotNames = slots.map((slot) => slot.name);
         const slotExists = slotNames.includes(slotName);
@@ -370,8 +388,8 @@ exports.default = async (pkg, pullNumber) => {
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
-        console.log(`Deployed functionapp ${pkg.id}-${slotName}`);
-        // Don't think the deployment url gets returned from upload - hopefully this stays static?
+        console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp ${chalk_1.default.bold(`${pkg.id}-${slotName}`)}`);
+        // I don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed functions app **${pkg.id}** on: https://${pkg.id}-${slotName}.azurewebsites.net/api/`;
         console.log(deployMsg);
         fs_1.default.appendFileSync(msgFile, deployMsg);
@@ -418,20 +436,22 @@ const child_process_promise_1 = __nccwpck_require__(4858);
 const github = __importStar(__nccwpck_require__(5438));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const msgFile = path_1.default.join('github_message.txt');
 const commitSha = github.context.sha.substr(0, 7);
+chalk_1.default.level = 1;
 exports.default = async (pkg, pullNumber) => {
     var _a;
     try {
         if (!pullNumber)
-            throw Error('PR number is undefined');
+            throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
         const slotName = pullNumber;
         const stagName = `${pkg.id}stag`;
-        console.log(`Building webapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(pkg.name)}`);
         const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
-        console.log(`Build finished, uploading webapp: ${pkg.name}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
@@ -466,7 +486,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
+chalk_1.default.level = 1;
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
 exports.default = async () => {
     try {
@@ -478,10 +500,10 @@ exports.default = async () => {
             return deployablePkgs;
         await (0, child_process_promise_1.exec)('git fetch --all');
         const checkChanged = async (pkg) => {
-            const { stdout: diffOut, stdout: diffErr } = await (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo changed`);
+            const { stdout: diffOut, stdout: diffErr } = await (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo ${pkg.id} changed`);
             if (diffErr)
                 console.log(diffErr);
-            return diffOut.includes('changed') ? pkg : null;
+            return diffOut.includes(`${pkg.id} changed`) ? pkg : null;
         };
         const changedPromises = get_packages_1.default.map(checkChanged);
         const changedDiffPackages = (await Promise.all(changedPromises)).filter((item) => item);
@@ -504,7 +526,7 @@ exports.default = async () => {
         const changedPackageIdString = changedPackages
             .map((pkg) => pkg.id)
             .join(', ');
-        console.log(`Changed packages: ${changedPackageIdString}`);
+        console.log(`${chalk_1.default.bold.blue('Info')}: Changed packages: ${chalk_1.default.bold(changedPackageIdString)}`);
         return changedPackages;
     }
     catch (err) {
@@ -524,6 +546,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const packageTypes = ['apps', 'func-apis', 'libs'];
@@ -535,6 +558,7 @@ const pkgTypeRequiredFieldMap = {
     'func-apis': apiRequiredFields,
     libs: [],
 };
+chalk_1.default.level = 1;
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
     const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '.' : pkgType, pkgDir));
@@ -545,7 +569,7 @@ const getPackageObject = (pkgDir, pkgType) => {
         var _a;
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
-            throw Error(`"${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
+            throw Error(`${chalk_1.default.bold.red('Error')}: "${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
     const notReqPropertiesFromPckJson = appNotRequiredFields.reduce((fieldAcc, field) => {
@@ -564,7 +588,7 @@ const getPackageObject = (pkgDir, pkgType) => {
     if (pkgType === 'apps' &&
         ((_a = lowercaseRe.exec(pkgObj.azureDeployConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !==
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
-        throw Error(`"id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
+        throw Error(`${chalk_1.default.bold.red('Error')}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
     return {
         ...propertiesFromPckJson,
         type: pkgType.substring(0, pkgType.length - 1),
@@ -584,7 +608,7 @@ const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
 const isMonorepo = packageTypes
     .map((pkg) => fs_1.default.existsSync(path_1.default.join(pkg)))
     .includes(true);
-console.log(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app');
+console.log(`${chalk_1.default.bold.blue('Info')}: ${chalk_1.default.bold(isMonorepo ? 'Repository is monorepo' : 'Repository is single web app')}`);
 const packages = isMonorepo
     ? getMonorepoPackages()
     : [getPackageObject('.', 'apps')];
@@ -786,8 +810,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
+const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const get_packages_1 = __importDefault(__nccwpck_require__(5635));
 const group_by_subscription_1 = __importDefault(__nccwpck_require__(5229));
+chalk_1.default.level = 1;
 const removeWebStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
@@ -796,7 +822,7 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
         const stagName = `${pkg.id}stag`;
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         await (0, child_process_promise_1.exec)(`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`);
-        console.log(`Deleted web app: ${stagName}-${slotName}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}-${slotName}`)}`);
     }
     catch (err) {
         throw Error(err);
@@ -805,21 +831,22 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
 const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
-            throw Error('No PR number');
+            throw Error(`${chalk_1.default.bold.red('Error')}: No PR number`);
         const slotName = `stag-${pullNumber}`;
         const { stdout: deleteOut, stderr: deleteErr } = await (0, child_process_promise_1.exec)(`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         if (deleteErr)
             console.log(deleteOut, deleteErr);
-        console.log(`Deleted function app: ${pkg.id}-${slotName}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deleted function app: ${chalk_1.default.bold(`${pkg.id}-${slotName}`)}`);
     }
     catch (err) {
         throw Error(err);
     }
 };
 const removeResources = async (localConfig, subsId, prNumber) => {
-    console.log('\nSetting the subscription for creating services...');
+    console.log('\n');
+    console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for creating services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
-    console.log(`subscription set to ${subsId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Subscription set to ${chalk_1.default.bold(subsId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     for (const pkg of webPackages) {

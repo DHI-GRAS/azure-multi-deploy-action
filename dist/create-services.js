@@ -61,7 +61,7 @@ const createMissingResources = async (localConfig, subscriptionId) => {
     for (const pkg of missingFunctionApps) {
         await (0, create_function_app_1.default)(pkg);
     }
-    console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${subscriptionId}`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subscriptionId)}`);
 };
 const createServices = async () => {
     const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
