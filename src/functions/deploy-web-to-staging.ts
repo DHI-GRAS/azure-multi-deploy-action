@@ -17,7 +17,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const stagName = `${pkg.id}stag${pullNumber}`
 
 		console.log(
-			`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(pkg.name)}`,
+			`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(stagName)}`,
 		)
 		const { stdout, stderr } = await exec(
 			`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
@@ -27,7 +27,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		console.log(
 			`${chalk.bold.blue(
 				'Info',
-			)}: Build finished, uploading webapp: ${chalk.bold(pkg.name)}`,
+			)}: Build finished, uploading webapp: ${chalk.bold(stagName)}`,
 		)
 
 		await exec('az extension add --name storage-preview').catch()
