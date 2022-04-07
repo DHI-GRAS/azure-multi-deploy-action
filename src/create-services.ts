@@ -58,7 +58,7 @@ const getMissingFunctionApps = async (
 
 	const apps = JSON.parse(stdout) as FunctionApps
 	console.log(
-		`${chalk.bold.yellow('Warning')}: Retrieved ${chalk.bold(
+		`${chalk.bold.blue('Info')}: Retrieved ${chalk.bold(
 			apps.length,
 		)} function apps`,
 	)
@@ -92,7 +92,12 @@ const createMissingResources = async (
 	console.log(
 		missingStorageAccounts.length > 0
 			? `${chalk.bold.blue('Info')}: Creating storage accounts: ${chalk.bold(
-					missingStorageAccounts.map((pkg) => pkg.id).join(),
+					missingStorageAccounts
+						.reduce(
+							(acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`],
+							[],
+						)
+						.join(),
 			  )}`
 			: `${chalk.bold.yellow('Warning')}: No storage accounts to create`,
 	)
