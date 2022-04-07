@@ -3,7 +3,7 @@ import chalk from 'chalk'
 import { Package, StorageAccount } from '../types'
 
 chalk.level = 1
-export default async (pkg: Package): Promise<void> => {
+export default async (pkg: Package, prNumber: number): Promise<void> => {
 	try {
 		const handleCreatedAccount = async ({ stdout }) => {
 			const newAccountData = JSON.parse(stdout) as StorageAccount
@@ -35,7 +35,7 @@ export default async (pkg: Package): Promise<void> => {
 			})
 
 		await exec(
-			`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`,
+			`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag${prNumber} --location northeurope --kind StorageV2 --sku Standard_LRS`,
 		)
 			.then(async ({ stdout }) => handleCreatedAccount({ stdout }))
 			.catch((err) => {

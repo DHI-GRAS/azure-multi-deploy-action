@@ -43,12 +43,10 @@ const run = async () => {
 	// 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
 
 	// `)
-	console.log('\n')
 
 	await azLogin()
-	console.log('\n')
 
-	await createServices()
+	await createServices(prNumber)
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
 		console.log(`${chalk.bold.blue('Info')}: Deploying to staging...`)

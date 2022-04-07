@@ -72,6 +72,7 @@ const getMissingFunctionApps = async (
 const createMissingResources = async (
 	localConfig: Package[],
 	subscriptionId: string,
+	prNumber: number,
 ) => {
 	console.log('\n')
 	console.log(
@@ -105,7 +106,7 @@ const createMissingResources = async (
 	)
 
 	for (const pkg of missingStorageAccounts) {
-		await createStorageAccount(pkg)
+		await createStorageAccount(pkg, prNumber)
 	}
 
 	for (const pkg of missingFunctionApps) {
@@ -119,11 +120,15 @@ const createMissingResources = async (
 	)
 }
 
-const createServices = async (): Promise<void> => {
+const createServices = async (prNumber: number): Promise<void> => {
 	const azureResourcesBySubId = groupBySubscription(packages)
 
 	for (const subsId of Object.keys(azureResourcesBySubId)) {
-		await createMissingResources(azureResourcesBySubId[subsId], subsId)
+		await createMissingResources(
+			azureResourcesBySubId[subsId],
+			subsId,
+			prNumber,
+		)
 	}
 }
 
