@@ -53,7 +53,7 @@ const run = async () => {
 	console.log(
 		`${chalk.bold.cyan('3. Creating missing services...'.toUpperCase())}`,
 	)
-	await createServices(prNumber)
+	if (payload.pull_request?.state !== 'closed') await createServices(prNumber)
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
 		console.log('\n')

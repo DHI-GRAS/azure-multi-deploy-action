@@ -13,14 +13,13 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 	try {
 		if (!pullNumber)
 			throw Error(`${chalk.bold.red('Error')}: PR number is undefined`)
-		const slotName = pullNumber
 		const stagName = `${pkg.id}stag${pullNumber}`
 
 		console.log(
 			`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(stagName)}`,
 		)
 		const { stdout, stderr } = await exec(
-			`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
+			`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 		)
 		if (stderr) console.log(stderr, stdout)
 

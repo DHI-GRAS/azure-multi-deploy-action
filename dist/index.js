@@ -460,10 +460,9 @@ exports.default = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
             throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
-        const slotName = pullNumber;
         const stagName = `${pkg.id}stag${pullNumber}`;
         console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(stagName)}`);
-        const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
+        const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
         console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(stagName)}`);
@@ -768,7 +767,7 @@ const isPR = context.eventName === 'pull_request';
 const prNumber = (_c = (_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.number) !== null && _c !== void 0 ? _c : 0;
 chalk_1.default.level = 1;
 const run = async () => {
-    var _a, _b;
+    var _a, _b, _c;
     const startTime = new Date();
     console.log(`${chalk_1.default.bold.cyan('1. Installing azure CLI...'.toUpperCase())}`);
     await (0, child_process_promise_1.exec)('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
@@ -787,9 +786,10 @@ const run = async () => {
     await (0, az_login_1.default)();
     console.log('\n');
     console.log(`${chalk_1.default.bold.cyan('3. Creating missing services...'.toUpperCase())}`);
-    await (0, create_services_1.default)(prNumber);
+    if (((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) !== 'closed')
+        await (0, create_services_1.default)(prNumber);
     // Deploy to stag
-    if (isPR && ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
+    if (isPR && ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'open') {
         console.log('\n');
         console.log(`${chalk_1.default.bold.cyan('4. Deploying to staging...'.toUpperCase())}`);
         await (0, deploy_pr_staging_1.default)(prNumber);
@@ -808,7 +808,7 @@ const run = async () => {
         console.log(`${chalk_1.default.bold.cyan('4. Deploying to production...').toUpperCase()}`);
         await (0, deploy_main_1.default)();
     }
-    if (isPR && ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'closed') {
+    if (isPR && ((_c = payload.pull_request) === null || _c === void 0 ? void 0 : _c.state) === 'closed') {
         console.log(`${chalk_1.default.bold
             .cyan('5. PR closed. Cleaning up deployments...')
             .toUpperCase()}`);
