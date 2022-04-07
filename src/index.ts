@@ -80,7 +80,7 @@ const run = async () => {
 	) {
 		console.log('\n')
 		console.log(
-			`${chalk.bold.cyan('Deploying to production...').toUpperCase()}`,
+			`${chalk.bold.cyan('4. Deploying to production...').toUpperCase()}`,
 		)
 		await deployToProd()
 	}
@@ -88,7 +88,7 @@ const run = async () => {
 	if (isPR && payload.pull_request?.state === 'closed') {
 		console.log(
 			`${chalk.bold
-				.cyan('PR closed. Cleaning up deployments...')
+				.cyan('5. PR closed. Cleaning up deployments...')
 				.toUpperCase()}`,
 		)
 		await cleanDeployments(prNumber)

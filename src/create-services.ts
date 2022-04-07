@@ -1,6 +1,12 @@
 import { exec } from 'child-process-promise'
 import chalk from 'chalk'
-import { Packages, StorageAccounts, FunctionApps, Package } from './types'
+import {
+	Packages,
+	StorageAccounts,
+	FunctionApps,
+	Package,
+	PackageWithMissingStorage,
+} from './types'
 import createFunctionApp from './functions/create-function-app'
 import createStorageAccount from './functions/create-storage-account'
 import packages from './functions/get-packages'
@@ -10,7 +16,8 @@ chalk.level = 1
 
 const getMissingStorageAccounts = async (
 	localPackages: Packages,
-): Promise<Packages> => {
+	prNumber: number,
+): Promise<PackageWithMissingStorage[]> => {
 	const webAppPackages = localPackages.filter((item) => item.type === 'app')
 	if (webAppPackages.length === 0) {
 		console.log(
@@ -25,16 +32,38 @@ const getMissingStorageAccounts = async (
 		throw Error(stderr)
 	}
 
-	const accounts = JSON.parse(stdout) as StorageAccounts
+	const accounts = (JSON.parse(stdout) as StorageAccounts).map(
+		(account) => account.name,
+	)
 	console.log(
 		`${chalk.bold.blue('Info')}: Retrieved ${chalk.bold(
 			accounts.length,
 		)} storage accounts`,
 	)
 
-	return webAppPackages.filter(
-		(item) => !accounts.map((account) => account.name).includes(item.id),
+	const allStorageApps = webAppPackages.reduce(
+		(acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`],
+		[],
 	)
+
+	const missingStorageAccounts = allStorageApps.filter(
+		(storageApp) => !accounts.includes(storageApp),
+	)
+
+	return webAppPackages
+		.filter((webApp) => missingStorageAccounts.includes(webApp.id))
+		.reduce(
+			(acc, pkg) => [
+				...acc,
+				{
+					...pkg,
+					mssingAccounts: missingStorageAccounts.filter((storageAcc) =>
+						storageAcc.includes(pkg.id),
+					),
+				},
+			],
+			[],
+		)
 }
 
 const getMissingFunctionApps = async (
@@ -87,16 +116,18 @@ const createMissingResources = async (
 			subscriptionId,
 		)}`,
 	)
-	const missingStorageAccounts = await getMissingStorageAccounts(localConfig)
+	const pkgMissingStorageAccounts = await getMissingStorageAccounts(
+		localConfig,
+		prNumber,
+	)
+
 	const missingFunctionApps = await getMissingFunctionApps(localConfig)
+
 	console.log(
-		missingStorageAccounts.length > 0
+		pkgMissingStorageAccounts.length > 0
 			? `${chalk.bold.blue('Info')}: Creating storage accounts: ${chalk.bold(
-					missingStorageAccounts
-						.reduce(
-							(acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`],
-							[],
-						)
+					pkgMissingStorageAccounts
+						.reduce((acc, pkg) => [...acc, ...pkg.mssingAccounts], [])
 						.join(),
 			  )}`
 			: `${chalk.bold.yellow('Warning')}: No storage accounts to create`,
@@ -110,8 +141,8 @@ const createMissingResources = async (
 			: `${chalk.bold.yellow('Warning')}: No function apps to create`,
 	)
 
-	for (const pkg of missingStorageAccounts) {
-		await createStorageAccount(pkg, prNumber)
+	for (const pkg of pkgMissingStorageAccounts) {
+		await createStorageAccount(pkg)
 	}
 
 	for (const pkg of missingFunctionApps) {

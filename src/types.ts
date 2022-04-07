@@ -40,3 +40,7 @@ export interface PackageJSON {
 		outputDir?: string
 	}
 }
+
+export interface PackageWithMissingStorage extends Package {
+	mssingAccounts: string[]
+}
