@@ -9,7 +9,7 @@ import {
 } from './types'
 import createFunctionApp from './functions/create-function-app'
 import createStorageAccount from './functions/create-storage-account'
-import packages from './functions/get-packages'
+import getChangedPackages from './functions/get-changed-packages'
 import groupBySubscription from './functions/group-by-subscription'
 
 chalk.level = 1
@@ -156,7 +156,8 @@ const createMissingResources = async (
 }
 
 const createServices = async (prNumber: number): Promise<void> => {
-	const azureResourcesBySubId = groupBySubscription(packages)
+	const localPackages = await getChangedPackages()
+	const azureResourcesBySubId = groupBySubscription(localPackages)
 
 	for (const subsId of Object.keys(azureResourcesBySubId)) {
 		await createMissingResources(

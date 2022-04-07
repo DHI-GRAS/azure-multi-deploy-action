@@ -7,7 +7,7 @@ const child_process_promise_1 = require("child-process-promise");
 const chalk_1 = __importDefault(require("chalk"));
 const create_function_app_1 = __importDefault(require("./functions/create-function-app"));
 const create_storage_account_1 = __importDefault(require("./functions/create-storage-account"));
-const get_packages_1 = __importDefault(require("./functions/get-packages"));
+const get_changed_packages_1 = __importDefault(require("./functions/get-changed-packages"));
 const group_by_subscription_1 = __importDefault(require("./functions/group-by-subscription"));
 chalk_1.default.level = 1;
 const getMissingStorageAccounts = async (localPackages, prNumber) => {
@@ -77,7 +77,8 @@ const createMissingResources = async (localConfig, subscriptionId, prNumber) => 
     console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subscriptionId)}`);
 };
 const createServices = async (prNumber) => {
-    const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
+    const localPackages = await (0, get_changed_packages_1.default)();
+    const azureResourcesBySubId = (0, group_by_subscription_1.default)(localPackages);
     for (const subsId of Object.keys(azureResourcesBySubId)) {
         await createMissingResources(azureResourcesBySubId[subsId], subsId, prNumber);
     }
