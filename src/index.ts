@@ -23,7 +23,7 @@ chalk.level = 1
 
 const run = async () => {
 	const startTime = new Date()
-	console.log(`${chalk.bold.bgCyan('Installing azure CLI...')}`)
+	console.log(`${chalk.bold.cyan('1. Installing azure CLI...'.toUpperCase())}`)
 
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 
@@ -44,16 +44,22 @@ const run = async () => {
 
 	// `)
 	console.log('\n')
-	console.log(`${chalk.bold.bgCyan('Logging into Azure CLI...')}`)
+	console.log(
+		`${chalk.bold.cyan('2. Logging into Azure CLI...'.toUpperCase())}`,
+	)
 	await azLogin()
 
 	console.log('\n')
-	console.log(`${chalk.bold.bgCyan('Logging into Azure CLI...')}`)
+	console.log(
+		`${chalk.bold.cyan('3. Creating missing services...'.toUpperCase())}`,
+	)
 	await createServices(prNumber)
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
 		console.log('\n')
-		console.log(`${chalk.bold.bgCyan('Deploying to staging...')}`)
+		console.log(
+			`${chalk.bold.cyan('4. Deploying to staging...'.toUpperCase())}`,
+		)
 		await deployToStag(prNumber)
 	}
 
@@ -73,12 +79,18 @@ const run = async () => {
 		!preventProdDeploy
 	) {
 		console.log('\n')
-		console.log(`${chalk.bold.bgCyan('Deploying to production...')}`)
+		console.log(
+			`${chalk.bold.cyan('Deploying to production...').toUpperCase()}`,
+		)
 		await deployToProd()
 	}
 
 	if (isPR && payload.pull_request?.state === 'closed') {
-		console.log(`${chalk.bold.bgCyan('PR closed. Cleaning up deployments...')}`)
+		console.log(
+			`${chalk.bold
+				.cyan('PR closed. Cleaning up deployments...')
+				.toUpperCase()}`,
+		)
 		await cleanDeployments(prNumber)
 	}
 

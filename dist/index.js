@@ -760,7 +760,7 @@ chalk_1.default.level = 1;
 const run = async () => {
     var _a, _b;
     const startTime = new Date();
-    console.log(`${chalk_1.default.bold.bgCyan('Installing azure CLI...')}`);
+    console.log(`${chalk_1.default.bold.cyan('1. Installing azure CLI...'.toUpperCase())}`);
     await (0, child_process_promise_1.exec)('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
     // Use the below version in case specific version has to be installed
     // await exec(`
@@ -773,15 +773,15 @@ const run = async () => {
     // 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
     // `)
     console.log('\n');
-    console.log(`${chalk_1.default.bold.bgCyan('Logging into Azure CLI...')}`);
+    console.log(`${chalk_1.default.bold.cyan('2. Logging into Azure CLI...'.toUpperCase())}`);
     await (0, az_login_1.default)();
     console.log('\n');
-    console.log(`${chalk_1.default.bold.bgCyan('Logging into Azure CLI...')}`);
+    console.log(`${chalk_1.default.bold.cyan('3. Creating missing services...'.toUpperCase())}`);
     await (0, create_services_1.default)(prNumber);
     // Deploy to stag
     if (isPR && ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
         console.log('\n');
-        console.log(`${chalk_1.default.bold.bgCyan('Deploying to staging...')}`);
+        console.log(`${chalk_1.default.bold.cyan('4. Deploying to staging...'.toUpperCase())}`);
         await (0, deploy_pr_staging_1.default)(prNumber);
     }
     // Deploy to prod
@@ -795,11 +795,13 @@ const run = async () => {
         currentBranch === defaultBranch &&
         !preventProdDeploy) {
         console.log('\n');
-        console.log(`${chalk_1.default.bold.bgCyan('Deploying to production...')}`);
+        console.log(`${chalk_1.default.bold.cyan('Deploying to production...').toUpperCase()}`);
         await (0, deploy_main_1.default)();
     }
     if (isPR && ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'closed') {
-        console.log(`${chalk_1.default.bold.bgCyan('PR closed. Cleaning up deployments...')}`);
+        console.log(`${chalk_1.default.bold
+            .cyan('PR closed. Cleaning up deployments...')
+            .toUpperCase()}`);
         await (0, pr_close_cleanup_1.default)(prNumber);
     }
     console.log(`${chalk_1.default.bold.green('Success')}: You are lucky, the action finished! 🍀`);
