@@ -16,6 +16,7 @@ const getMissingStorageAccounts = async (localPackages, prNumber) => {
         console.log(`${chalk_1.default.bold.yellow('Warning')}: No web app packages in project`);
         return [];
     }
+    const isPr = prNumber !== 0;
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az storage account list');
     if (stderr) {
         throw Error(stderr);
@@ -23,7 +24,7 @@ const getMissingStorageAccounts = async (localPackages, prNumber) => {
     const accounts = JSON.parse(stdout).map((account) => account.name);
     console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(accounts.length)} storage accounts`);
     const missingStorageAccounts = webAppPackages
-        .reduce((acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`], [])
+        .reduce((acc, pkg) => isPr ? [...acc, pkg.id, `${pkg.id}stag${prNumber}`] : [...acc, pkg.id], [])
         .filter((storageApp) => !accounts.includes(storageApp));
     return webAppPackages
         .filter((webApp) => missingStorageAccounts.includes(webApp.id) ||

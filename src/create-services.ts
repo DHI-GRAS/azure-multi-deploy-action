@@ -25,7 +25,7 @@ const getMissingStorageAccounts = async (
 		)
 		return []
 	}
-
+	const isPr = prNumber !== 0
 	const { stdout, stderr } = await exec('az storage account list')
 
 	if (stderr) {
@@ -42,7 +42,11 @@ const getMissingStorageAccounts = async (
 	)
 
 	const missingStorageAccounts = webAppPackages
-		.reduce((acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`], [])
+		.reduce(
+			(acc, pkg) =>
+				isPr ? [...acc, pkg.id, `${pkg.id}stag${prNumber}`] : [...acc, pkg.id],
+			[],
+		)
 		.filter((storageApp) => !accounts.includes(storageApp))
 
 	return webAppPackages
