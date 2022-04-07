@@ -14,7 +14,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		if (!pullNumber)
 			throw Error(`${chalk.bold.red('Error')}: PR number is undefined`)
 		const slotName = pullNumber
-		const stagName = `${pkg.id}stag`
+		const stagName = `${pkg.id}stag${pullNumber}`
 
 		console.log(
 			`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(pkg.name)}`,
@@ -35,7 +35,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const outputDir = pkg.outputDir ?? './dist'
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
-			`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`,
+			`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`,
 		).catch((err) => {
 			throw Error(err)
 		})
