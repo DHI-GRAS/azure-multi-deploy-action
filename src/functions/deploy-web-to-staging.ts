@@ -42,7 +42,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		if (stdout) console.log(uploadOut, uploadErr)
 
 		// Don't think the deployment url gets returned from upload - hopefully this stays static?
-		const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName}  `
+		const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net  `
 		fs.appendFileSync(msgFile, deployMsg)
 
 		console.log(deployMsg)
