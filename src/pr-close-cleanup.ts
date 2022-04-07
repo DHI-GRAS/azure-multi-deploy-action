@@ -12,7 +12,7 @@ const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 
 		await exec('az extension add --name storage-preview').catch()
 		await exec(
-			`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup}`,
+			`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup} --yes`,
 		)
 		console.log(
 			`${chalk.bold.green('Success')}: Deleted web app: ${chalk.bold(
