@@ -27,8 +27,6 @@ const child_process_promise_1 = require("child-process-promise");
 const chalk_1 = __importDefault(require("chalk"));
 chalk_1.default.level = 1;
 exports.default = async () => {
-    console.log('\n');
-    console.log(`${chalk_1.default.bold.blue('Info')}: Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });

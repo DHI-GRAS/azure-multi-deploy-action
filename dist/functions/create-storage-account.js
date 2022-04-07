@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_promise_1 = require("child-process-promise");
 const chalk_1 = __importDefault(require("chalk"));
 chalk_1.default.level = 1;
-exports.default = async (pkg) => {
+exports.default = async (pkg, prNumber) => {
     try {
         const handleCreatedAccount = async ({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
@@ -19,7 +19,7 @@ exports.default = async (pkg) => {
             .catch((err) => {
             throw Error(err);
         });
-        await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`)
+        await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag${prNumber} --location northeurope --kind StorageV2 --sku Standard_LRS`)
             .then(async ({ stdout }) => handleCreatedAccount({ stdout }))
             .catch((err) => {
             throw Error(err);

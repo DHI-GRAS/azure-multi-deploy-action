@@ -35,38 +35,39 @@ const getMissingFunctionApps = async (localPackages) => {
         throw Error(stderr);
     }
     const apps = JSON.parse(stdout);
-    console.log(`${chalk_1.default.bold.yellow('Warning')}: Retrieved ${chalk_1.default.bold(apps.length)} function apps`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(apps.length)} function apps`);
     return configFuncApps.filter((configApp) => {
         const appIds = apps.map((app) => app.name);
         return !appIds.includes(configApp.id);
     });
 };
-const createMissingResources = async (localConfig, subscriptionId) => {
+const createMissingResources = async (localConfig, subscriptionId, prNumber) => {
     console.log('\n');
     console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for creating services...`);
-    console.log(`${chalk_1.default.bold.blue('Info')}: Creating missing Azure services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
     console.log(`${chalk_1.default.bold.green('Success')}: Subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
     const missingFunctionApps = await getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0
-        ? `${chalk_1.default.bold.blue('Info')}: Creating storage accounts: ${chalk_1.default.bold(missingStorageAccounts.map((pkg) => pkg.id).join())}`
+        ? `${chalk_1.default.bold.blue('Info')}: Creating storage accounts: ${chalk_1.default.bold(missingStorageAccounts
+            .reduce((acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`], [])
+            .join())}`
         : `${chalk_1.default.bold.yellow('Warning')}: No storage accounts to create`);
     console.log(missingFunctionApps.length > 0
         ? `${chalk_1.default.bold.blue('Info')}: Creating function apps: ${chalk_1.default.bold(missingFunctionApps.map((pkg) => pkg.id).join())}`
         : `${chalk_1.default.bold.yellow('Warning')}: No function apps to create`);
     for (const pkg of missingStorageAccounts) {
-        await (0, create_storage_account_1.default)(pkg);
+        await (0, create_storage_account_1.default)(pkg, prNumber);
     }
     for (const pkg of missingFunctionApps) {
         await (0, create_function_app_1.default)(pkg);
     }
     console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subscriptionId)}`);
 };
-const createServices = async () => {
+const createServices = async (prNumber) => {
     const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
     for (const subsId of Object.keys(azureResourcesBySubId)) {
-        await createMissingResources(azureResourcesBySubId[subsId], subsId);
+        await createMissingResources(azureResourcesBySubId[subsId], subsId, prNumber);
     }
 };
 exports.default = createServices;

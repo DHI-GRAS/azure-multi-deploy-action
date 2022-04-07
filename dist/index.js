@@ -42,38 +42,39 @@ const getMissingFunctionApps = async (localPackages) => {
         throw Error(stderr);
     }
     const apps = JSON.parse(stdout);
-    console.log(`${chalk_1.default.bold.yellow('Warning')}: Retrieved ${chalk_1.default.bold(apps.length)} function apps`);
+    console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(apps.length)} function apps`);
     return configFuncApps.filter((configApp) => {
         const appIds = apps.map((app) => app.name);
         return !appIds.includes(configApp.id);
     });
 };
-const createMissingResources = async (localConfig, subscriptionId) => {
+const createMissingResources = async (localConfig, subscriptionId, prNumber) => {
     console.log('\n');
     console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for creating services...`);
-    console.log(`${chalk_1.default.bold.blue('Info')}: Creating missing Azure services...`);
     await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
     console.log(`${chalk_1.default.bold.green('Success')}: Subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const missingStorageAccounts = await getMissingStorageAccounts(localConfig);
     const missingFunctionApps = await getMissingFunctionApps(localConfig);
     console.log(missingStorageAccounts.length > 0
-        ? `${chalk_1.default.bold.blue('Info')}: Creating storage accounts: ${chalk_1.default.bold(missingStorageAccounts.map((pkg) => pkg.id).join())}`
+        ? `${chalk_1.default.bold.blue('Info')}: Creating storage accounts: ${chalk_1.default.bold(missingStorageAccounts
+            .reduce((acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`], [])
+            .join())}`
         : `${chalk_1.default.bold.yellow('Warning')}: No storage accounts to create`);
     console.log(missingFunctionApps.length > 0
         ? `${chalk_1.default.bold.blue('Info')}: Creating function apps: ${chalk_1.default.bold(missingFunctionApps.map((pkg) => pkg.id).join())}`
         : `${chalk_1.default.bold.yellow('Warning')}: No function apps to create`);
     for (const pkg of missingStorageAccounts) {
-        await (0, create_storage_account_1.default)(pkg);
+        await (0, create_storage_account_1.default)(pkg, prNumber);
     }
     for (const pkg of missingFunctionApps) {
         await (0, create_function_app_1.default)(pkg);
     }
     console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subscriptionId)}`);
 };
-const createServices = async () => {
+const createServices = async (prNumber) => {
     const azureResourcesBySubId = (0, group_by_subscription_1.default)(get_packages_1.default);
     for (const subsId of Object.keys(azureResourcesBySubId)) {
-        await createMissingResources(azureResourcesBySubId[subsId], subsId);
+        await createMissingResources(azureResourcesBySubId[subsId], subsId, prNumber);
     }
 };
 exports.default = createServices;
@@ -262,8 +263,6 @@ const child_process_promise_1 = __nccwpck_require__(4858);
 const chalk_1 = __importDefault(__nccwpck_require__(8818));
 chalk_1.default.level = 1;
 exports.default = async () => {
-    console.log('\n');
-    console.log(`${chalk_1.default.bold.blue('Info')}: Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });
@@ -322,7 +321,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const chalk_1 = __importDefault(__nccwpck_require__(8818));
 chalk_1.default.level = 1;
-exports.default = async (pkg) => {
+exports.default = async (pkg, prNumber) => {
     try {
         const handleCreatedAccount = async ({ stdout }) => {
             const newAccountData = JSON.parse(stdout);
@@ -335,7 +334,7 @@ exports.default = async (pkg) => {
             .catch((err) => {
             throw Error(err);
         });
-        await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`)
+        await (0, child_process_promise_1.exec)(`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag${prNumber} --location northeurope --kind StorageV2 --sku Standard_LRS`)
             .then(async ({ stdout }) => handleCreatedAccount({ stdout }))
             .catch((err) => {
             throw Error(err);
@@ -452,7 +451,7 @@ exports.default = async (pkg, pullNumber) => {
         if (!pullNumber)
             throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
         const slotName = pullNumber;
-        const stagName = `${pkg.id}stag`;
+        const stagName = `${pkg.id}stag${pullNumber}`;
         console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(pkg.name)}`);
         const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
@@ -460,13 +459,13 @@ exports.default = async (pkg, pullNumber) => {
         console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
+        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
             throw Error(err);
         });
         if (stdout)
             console.log(uploadOut, uploadErr);
         // Don't think the deployment url gets returned from upload - hopefully this stays static?
-        const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName}  `;
+        const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net  `;
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.log(deployMsg);
     }
@@ -761,7 +760,7 @@ chalk_1.default.level = 1;
 const run = async () => {
     var _a, _b;
     const startTime = new Date();
-    console.log(`${chalk_1.default.bold.blue('Info')}: Installing azure CLI...`);
+    console.log(`${chalk_1.default.bold.bgCyan('Installing azure CLI...')}`);
     await (0, child_process_promise_1.exec)('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash');
     // Use the below version in case specific version has to be installed
     // await exec(`
@@ -774,12 +773,15 @@ const run = async () => {
     // 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
     // `)
     console.log('\n');
+    console.log(`${chalk_1.default.bold.bgCyan('Logging into Azure CLI...')}`);
     await (0, az_login_1.default)();
     console.log('\n');
-    await (0, create_services_1.default)();
+    console.log(`${chalk_1.default.bold.bgCyan('Logging into Azure CLI...')}`);
+    await (0, create_services_1.default)(prNumber);
     // Deploy to stag
     if (isPR && ((_a = payload.pull_request) === null || _a === void 0 ? void 0 : _a.state) === 'open') {
-        console.log(`${chalk_1.default.bold.blue('Info')}: Deploying to staging...`);
+        console.log('\n');
+        console.log(`${chalk_1.default.bold.bgCyan('Deploying to staging...')}`);
         await (0, deploy_pr_staging_1.default)(prNumber);
     }
     // Deploy to prod
@@ -792,14 +794,15 @@ const run = async () => {
     if (!payload.pull_request &&
         currentBranch === defaultBranch &&
         !preventProdDeploy) {
-        console.log(`${chalk_1.default.bold.blue('Info')}: Deploying to production...`);
+        console.log('\n');
+        console.log(`${chalk_1.default.bold.bgCyan('Deploying to production...')}`);
         await (0, deploy_main_1.default)();
     }
     if (isPR && ((_b = payload.pull_request) === null || _b === void 0 ? void 0 : _b.state) === 'closed') {
-        console.log(`${chalk_1.default.bold.blue('Info')}: PR closed. Cleaning up deployments...`);
+        console.log(`${chalk_1.default.bold.bgCyan('PR closed. Cleaning up deployments...')}`);
         await (0, pr_close_cleanup_1.default)(prNumber);
     }
-    console.log(`${chalk_1.default.bold.green('Success')}: You are lucky, the action finished!`);
+    console.log(`${chalk_1.default.bold.green('Success')}: You are lucky, the action finished! 🍀`);
     if (isPR)
         await (0, post_comment_1.default)(startTime);
 };
@@ -826,11 +829,10 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
             throw Error('No PR number');
-        const slotName = pullNumber;
-        const stagName = `${pkg.id}stag`;
+        const stagName = `${pkg.id}stag${pullNumber}`;
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-        await (0, child_process_promise_1.exec)(`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`);
-        console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}-${slotName}`)}`);
+        await (0, child_process_promise_1.exec)(`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup}`);
+        console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}`)}`);
     }
     catch (err) {
         throw Error(err);

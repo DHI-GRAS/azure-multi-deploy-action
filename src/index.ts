@@ -23,7 +23,7 @@ chalk.level = 1
 
 const run = async () => {
 	const startTime = new Date()
-	console.log(`${chalk.bold.blue('Info')}: Installing azure CLI...`)
+	console.log(`${chalk.bold.bgCyan('Installing azure CLI...')}`)
 
 	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 
@@ -43,13 +43,17 @@ const run = async () => {
 	// 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
 
 	// `)
-
+	console.log('\n')
+	console.log(`${chalk.bold.bgCyan('Logging into Azure CLI...')}`)
 	await azLogin()
 
+	console.log('\n')
+	console.log(`${chalk.bold.bgCyan('Logging into Azure CLI...')}`)
 	await createServices(prNumber)
 	// Deploy to stag
 	if (isPR && payload.pull_request?.state === 'open') {
-		console.log(`${chalk.bold.blue('Info')}: Deploying to staging...`)
+		console.log('\n')
+		console.log(`${chalk.bold.bgCyan('Deploying to staging...')}`)
 		await deployToStag(prNumber)
 	}
 
@@ -68,19 +72,18 @@ const run = async () => {
 		currentBranch === defaultBranch &&
 		!preventProdDeploy
 	) {
-		console.log(`${chalk.bold.blue('Info')}: Deploying to production...`)
+		console.log('\n')
+		console.log(`${chalk.bold.bgCyan('Deploying to production...')}`)
 		await deployToProd()
 	}
 
 	if (isPR && payload.pull_request?.state === 'closed') {
-		console.log(
-			`${chalk.bold.blue('Info')}: PR closed. Cleaning up deployments...`,
-		)
+		console.log(`${chalk.bold.bgCyan('PR closed. Cleaning up deployments...')}`)
 		await cleanDeployments(prNumber)
 	}
 
 	console.log(
-		`${chalk.bold.green('Success')}: You are lucky, the action finished!`,
+		`${chalk.bold.green('Success')}: You are lucky, the action finished! 🍀`,
 	)
 
 	if (isPR) await postComment(startTime)
