@@ -843,7 +843,7 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
             throw Error('No PR number');
         const stagName = `${pkg.id}stag${pullNumber}`;
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-        await (0, child_process_promise_1.exec)(`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup}`);
+        await (0, child_process_promise_1.exec)(`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup} --yes`);
         console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}`)}`);
     }
     catch (err) {
