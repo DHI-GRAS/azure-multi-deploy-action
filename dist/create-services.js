@@ -22,10 +22,12 @@ const getMissingStorageAccounts = async (localPackages, prNumber) => {
     }
     const accounts = JSON.parse(stdout).map((account) => account.name);
     console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(accounts.length)} storage accounts`);
-    const allStorageApps = webAppPackages.reduce((acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`], []);
-    const missingStorageAccounts = allStorageApps.filter((storageApp) => !accounts.includes(storageApp));
+    const missingStorageAccounts = webAppPackages
+        .reduce((acc, pkg) => [...acc, pkg.id, `${pkg.id}stag${prNumber}`], [])
+        .filter((storageApp) => !accounts.includes(storageApp));
     return webAppPackages
-        .filter((webApp) => missingStorageAccounts.includes(webApp.id))
+        .filter((webApp) => missingStorageAccounts.includes(webApp.id) ||
+        missingStorageAccounts.includes(`${webApp.id}stag${prNumber}`))
         .reduce((acc, pkg) => [
         ...acc,
         {
