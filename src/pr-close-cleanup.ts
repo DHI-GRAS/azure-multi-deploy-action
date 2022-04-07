@@ -8,16 +8,15 @@ chalk.level = 1
 const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 	try {
 		if (!pullNumber) throw Error('No PR number')
-		const slotName = pullNumber
-		const stagName = `${pkg.id}stag`
+		const stagName = `${pkg.id}stag${pullNumber}`
 
 		await exec('az extension add --name storage-preview').catch()
 		await exec(
-			`az storage blob directory delete --account-name ${pkg.id}stag --container-name \\$web --directory-path ${slotName} --auth-mode key --recursive`,
+			`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup}`,
 		)
 		console.log(
 			`${chalk.bold.green('Success')}: Deleted web app: ${chalk.bold(
-				`${stagName}-${slotName}`,
+				`${stagName}`,
 			)}`,
 		)
 	} catch (err) {
