@@ -5,7 +5,7 @@
 		"outDir": "dist",
 		"module": "CommonJS",
 		"lib": ["ESNext", "DOM"],
-		"target": "es6",
+		"target": "es2019",
 		"moduleResolution": "node",
 		"esModuleInterop": true,
 		"strictNullChecks": true,

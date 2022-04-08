@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -19,23 +10,23 @@ const chalk_1 = __importDefault(require("chalk"));
 const get_packages_1 = __importDefault(require("./get-packages"));
 chalk_1.default.level = 1;
 // Would be better to determine changed packages by imports, not changed dirs - to be implemented
-exports.default = () => __awaiter(void 0, void 0, void 0, function* () {
+exports.default = async () => {
     try {
-        const { stdout: branchName, stderr: branchErr } = yield (0, child_process_promise_1.exec)(`git branch --show-current`);
+        const { stdout: branchName, stderr: branchErr } = await (0, child_process_promise_1.exec)(`git branch --show-current`);
         if (branchErr)
             throw Error(branchErr);
         const deployablePkgs = get_packages_1.default.filter((pkg) => pkg.type === 'app' || pkg.type === 'func-api');
         if (branchName.trim() === 'main')
             return deployablePkgs;
-        yield (0, child_process_promise_1.exec)('git fetch --all');
-        const checkChanged = (pkg) => __awaiter(void 0, void 0, void 0, function* () {
-            const { stdout: diffOut, stdout: diffErr } = yield (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo ${pkg.id} changed`);
+        await (0, child_process_promise_1.exec)('git fetch --all');
+        const checkChanged = async (pkg) => {
+            const { stdout: diffOut, stdout: diffErr } = await (0, child_process_promise_1.exec)(`git diff --quiet origin/main HEAD -- ${path_1.default.join(pkg.path)} || echo ${pkg.id} changed`);
             if (diffErr)
                 console.log(diffErr);
             return diffOut.includes(`${pkg.id} changed`) ? pkg : null;
-        });
+        };
         const changedPromises = get_packages_1.default.map(checkChanged);
-        const changedDiffPackages = (yield Promise.all(changedPromises)).filter((item) => item);
+        const changedDiffPackages = (await Promise.all(changedPromises)).filter((item) => item);
         const changedLibPackeges = changedDiffPackages.filter((pkg) => pkg.type === 'lib');
         const libDepPackages = get_packages_1.default.filter((pkg) => pkg.type === 'app');
         const changedPackagesWithLibDeps = libDepPackages.filter((pkg) => {
@@ -61,4 +52,4 @@ exports.default = () => __awaiter(void 0, void 0, void 0, function* () {
     catch (err) {
         throw Error(err);
     }
-});
+};
