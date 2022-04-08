@@ -14,6 +14,12 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
             throw Error('No PR number');
         const stagName = `${pkg.id}stag${pullNumber}`;
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
+        if (pkg.enableCorsApiIds) {
+            for (const apiId of pkg.enableCorsApiIds) {
+                await (0, child_process_promise_1.exec)(`az functionapp cors remove --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`);
+                console.log(`${chalk_1.default.bold.blue('Info')}: Removed CORS on ${chalk_1.default.underline(apiId)} for ${chalk_1.default.underline(`https://${stagName}.z16.web.core.windows.net`)}`);
+            }
+        }
         await (0, child_process_promise_1.exec)(`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup} --yes`);
         console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}`)}`);
     }

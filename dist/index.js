@@ -486,8 +486,13 @@ exports.default = async (pkg, pullNumber) => {
         });
         if (stdout)
             console.log(uploadOut, uploadErr);
-        // Don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net  `;
+        if (pkg.enableCorsApiIds) {
+            for (const apiId of pkg.enableCorsApiIds) {
+                await (0, child_process_promise_1.exec)(`az functionapp cors add --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`);
+                console.log(`${chalk_1.default.bold.blue('Info')}: Enabled CORS on ${chalk_1.default.underline(apiId)} for ${chalk_1.default.underline(`https://${stagName}.z16.web.core.windows.net`)}`);
+            }
+        }
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.log(deployMsg);
     }
@@ -578,7 +583,7 @@ const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup', 'subscriptionId'];
-const appNotRequiredFields = ['outputDir'];
+const appNotRequiredFields = ['outputDir', 'enableCorsApiIds'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const pkgTypeRequiredFieldMap = {
     apps: appRequiredFields,
@@ -867,6 +872,12 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
             throw Error('No PR number');
         const stagName = `${pkg.id}stag${pullNumber}`;
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
+        if (pkg.enableCorsApiIds) {
+            for (const apiId of pkg.enableCorsApiIds) {
+                await (0, child_process_promise_1.exec)(`az functionapp cors remove --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`);
+                console.log(`${chalk_1.default.bold.blue('Info')}: Removed CORS on ${chalk_1.default.underline(apiId)} for ${chalk_1.default.underline(`https://${stagName}.z16.web.core.windows.net`)}`);
+            }
+        }
         await (0, child_process_promise_1.exec)(`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup} --yes`);
         console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}`)}`);
     }

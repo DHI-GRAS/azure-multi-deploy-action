@@ -11,6 +11,20 @@ const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 		const stagName = `${pkg.id}stag${pullNumber}`
 
 		await exec('az extension add --name storage-preview').catch()
+		if (pkg.enableCorsApiIds) {
+			for (const apiId of pkg.enableCorsApiIds) {
+				await exec(
+					`az functionapp cors remove --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`,
+				)
+				console.log(
+					`${chalk.bold.blue('Info')}: Removed CORS on ${chalk.underline(
+						apiId,
+					)} for ${chalk.underline(
+						`https://${stagName}.z16.web.core.windows.net`,
+					)}`,
+				)
+			}
+		}
 		await exec(
 			`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup} --yes`,
 		)

@@ -52,8 +52,13 @@ exports.default = async (pkg, pullNumber) => {
         });
         if (stdout)
             console.log(uploadOut, uploadErr);
-        // Don't think the deployment url gets returned from upload - hopefully this stays static?
         const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net  `;
+        if (pkg.enableCorsApiIds) {
+            for (const apiId of pkg.enableCorsApiIds) {
+                await (0, child_process_promise_1.exec)(`az functionapp cors add --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`);
+                console.log(`${chalk_1.default.bold.blue('Info')}: Enabled CORS on ${chalk_1.default.underline(apiId)} for ${chalk_1.default.underline(`https://${stagName}.z16.web.core.windows.net`)}`);
+            }
+        }
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.log(deployMsg);
     }
