@@ -18,6 +18,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -30,20 +39,20 @@ const chalk_1 = __importDefault(require("chalk"));
 const msgFile = path_1.default.join('github_message.txt');
 const commitSha = github.context.sha.substr(0, 7);
 chalk_1.default.level = 1;
-exports.default = async (pkg, pullNumber) => {
+exports.default = (pkg, pullNumber) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         if (!pullNumber)
             throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
         const stagName = `${pkg.id}stag${pullNumber}`;
         console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(stagName)}`);
-        const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
+        const { stdout, stderr } = yield (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
         console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(stagName)}`);
-        await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
+        yield (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
+        const { stdout: uploadOut, stderr: uploadErr } = yield (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
             throw Error(err);
         });
         if (stdout)
@@ -58,4 +67,4 @@ exports.default = async (pkg, pullNumber) => {
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.log(deployMsg, err);
     }
-};
+});

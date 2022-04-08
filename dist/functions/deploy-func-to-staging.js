@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -9,9 +18,9 @@ const fs_1 = __importDefault(require("fs"));
 const chalk_1 = __importDefault(require("chalk"));
 chalk_1.default.level = 1;
 const msgFile = path_1.default.join('github_message.txt');
-exports.default = async (pkg, pullNumber) => {
+exports.default = (pkg, pullNumber) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { stdout: listOut, stderr: listErr } = await (0, child_process_promise_1.exec)(`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`);
+        const { stdout: listOut, stderr: listErr } = yield (0, child_process_promise_1.exec)(`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`);
         if (listErr)
             throw Error(listErr);
         const slots = JSON.parse(listOut);
@@ -21,12 +30,12 @@ exports.default = async (pkg, pullNumber) => {
         const slotNames = slots.map((slot) => slot.name);
         const slotExists = slotNames.includes(slotName);
         if (!slotExists) {
-            await (0, child_process_promise_1.exec)(`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
+            yield (0, child_process_promise_1.exec)(`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         }
         const pkgPathSplit = pkg.path.split('/');
         const pkgDirname = pkgPathSplit[pkgPathSplit.length - 1];
         // Has to be built with dev deps, then zipped with unhoisted prod deps
-        const { stderr: buildErr } = await (0, child_process_promise_1.exec)(`
+        const { stderr: buildErr } = yield (0, child_process_promise_1.exec)(`
 		cd ${pkg.path} &&
 		yarn build ;
 		cp -r -L ../${pkgDirname} ../../../ &&
@@ -36,7 +45,7 @@ exports.default = async (pkg, pullNumber) => {
 		zip -r -b ../ ${pkg.path}/dist.zip . > /dev/null ; echo "zipped to ${pkg.path}/dist.zip"`);
         if (buildErr)
             console.log(buildErr);
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
+        const { stdout: uploadOut, stderr: uploadErr } = yield (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`);
         if (uploadErr)
             console.log(uploadErr, uploadOut);
         console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp ${chalk_1.default.bold(`${pkg.id}-${slotName}`)}`);
@@ -50,4 +59,4 @@ exports.default = async (pkg, pullNumber) => {
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.error(err);
     }
-};
+});

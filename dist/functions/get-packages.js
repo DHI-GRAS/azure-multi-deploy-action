@@ -27,30 +27,23 @@ const getPackageObject = (pkgDir, pkgType) => {
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
             throw Error(`${chalk_1.default.bold.red('Error')}: "${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
-        return { ...fieldAcc, [field]: fieldValue };
+        return Object.assign(Object.assign({}, fieldAcc), { [field]: fieldValue });
     }, {});
     const notReqPropertiesFromPckJson = appNotRequiredFields.reduce((fieldAcc, field) => {
         var _a;
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
-            return { ...fieldAcc };
-        return { ...fieldAcc, [field]: fieldValue };
+            return Object.assign({}, fieldAcc);
+        return Object.assign(Object.assign({}, fieldAcc), { [field]: fieldValue });
     }, {});
-    const propertiesFromPckJson = {
-        ...requiredPropertiesFromPkgJson,
-        ...notReqPropertiesFromPckJson,
-    };
+    const propertiesFromPckJson = Object.assign(Object.assign({}, requiredPropertiesFromPkgJson), notReqPropertiesFromPckJson);
     // Enforce only lowecase letters for storage account syntax
     const lowercaseRe = /^[a-z0-9]{1,20}$/;
     if (pkgType === 'apps' &&
         ((_a = lowercaseRe.exec(pkgObj.azureDeployConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !==
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
         throw Error(`${chalk_1.default.bold.red('Error')}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
-    return {
-        ...propertiesFromPckJson,
-        type: pkgType.substring(0, pkgType.length - 1),
-        path: fullPath,
-    };
+    return Object.assign(Object.assign({}, propertiesFromPckJson), { type: pkgType.substring(0, pkgType.length - 1), path: fullPath });
 };
 const getMonorepoPackages = () => packageTypes.reduce((acc, pkgType) => {
     if (!fs_1.default.existsSync(path_1.default.join(pkgType)))
