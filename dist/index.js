@@ -772,7 +772,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const child_process_promise_1 = __nccwpck_require__(4858);
 const chalk_1 = __importDefault(__nccwpck_require__(8818));
-const ora_1 = __importDefault(__nccwpck_require__(5156));
+const ora_1 = __importDefault(__nccwpck_require__(970));
 const deploy_pr_staging_1 = __importDefault(__nccwpck_require__(9151));
 const deploy_main_1 = __importDefault(__nccwpck_require__(9607));
 const pr_close_cleanup_1 = __importDefault(__nccwpck_require__(1986));
@@ -4698,6 +4698,24 @@ exports.request = request;
 
 /***/ }),
 
+/***/ 5063:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = ({onlyFirst = false} = {}) => {
+	const pattern = [
+		'[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
+		'(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))'
+	].join('|');
+
+	return new RegExp(pattern, onlyFirst ? undefined : 'g');
+};
+
+
+/***/ }),
+
 /***/ 2068:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -7899,6 +7917,49 @@ function Node (value, prev, next, list) {
     this.next = null
   }
 }
+
+
+/***/ }),
+
+/***/ 9482:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+const restoreCursor = __nccwpck_require__(5847);
+
+let isHidden = false;
+
+exports.show = (writableStream = process.stderr) => {
+	if (!writableStream.isTTY) {
+		return;
+	}
+
+	isHidden = false;
+	writableStream.write('\u001B[?25h');
+};
+
+exports.hide = (writableStream = process.stderr) => {
+	if (!writableStream.isTTY) {
+		return;
+	}
+
+	restoreCursor();
+	isHidden = true;
+	writableStream.write('\u001B[?25l');
+};
+
+exports.toggle = (force, writableStream) => {
+	if (force !== undefined) {
+		isHidden = force;
+	}
+
+	if (isHidden) {
+		exports.show(writableStream);
+	} else {
+		exports.hide(writableStream);
+	}
+};
 
 
 /***/ }),
@@ -18637,7 +18698,7 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 9482:
+/***/ 142:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -20733,7 +20794,7 @@ var _index95 = _interopRequireDefault(__nccwpck_require__(9229));
 
 var _index96 = _interopRequireDefault(__nccwpck_require__(3494));
 
-var _index97 = _interopRequireDefault(__nccwpck_require__(9482));
+var _index97 = _interopRequireDefault(__nccwpck_require__(142));
 
 var _index98 = _interopRequireDefault(__nccwpck_require__(5714));
 
@@ -20985,7 +21046,7 @@ var _index221 = _interopRequireDefault(__nccwpck_require__(3875));
 
 var _index222 = _interopRequireDefault(__nccwpck_require__(1952));
 
-var _index223 = _interopRequireDefault(__nccwpck_require__(970));
+var _index223 = _interopRequireDefault(__nccwpck_require__(5369));
 
 var _index224 = _interopRequireDefault(__nccwpck_require__(2481));
 
@@ -23781,7 +23842,7 @@ exports.default = isYesterday;
 
 var _index = _interopRequireDefault(__nccwpck_require__(2154));
 
-var _index2 = _interopRequireDefault(__nccwpck_require__(970));
+var _index2 = _interopRequireDefault(__nccwpck_require__(5369));
 
 var _index3 = _interopRequireDefault(__nccwpck_require__(2063));
 
@@ -28542,7 +28603,7 @@ var _index = _interopRequireDefault(__nccwpck_require__(2063));
 
 var _index2 = _interopRequireDefault(__nccwpck_require__(9361));
 
-var _index3 = _interopRequireDefault(__nccwpck_require__(970));
+var _index3 = _interopRequireDefault(__nccwpck_require__(5369));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -31059,7 +31120,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.default = sub;
 
-var _index = _interopRequireDefault(__nccwpck_require__(970));
+var _index = _interopRequireDefault(__nccwpck_require__(5369));
 
 var _index2 = _interopRequireDefault(__nccwpck_require__(6752));
 
@@ -31181,7 +31242,7 @@ module.exports = exports.default;
 
 /***/ }),
 
-/***/ 970:
+/***/ 5369:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -35060,6 +35121,23 @@ if (typeof Object.create === 'function') {
 
 /***/ }),
 
+/***/ 284:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = ({stream = process.stdout} = {}) => {
+	return Boolean(
+		stream && stream.isTTY &&
+		process.env.TERM !== 'dumb' &&
+		!('CI' in process.env)
+	);
+};
+
+
+/***/ }),
+
 /***/ 3287:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -35102,6 +35180,27 @@ function isPlainObject(o) {
 }
 
 exports.isPlainObject = isPlainObject;
+
+
+/***/ }),
+
+/***/ 9228:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = () => {
+	if (process.platform !== 'win32') {
+		return true;
+	}
+
+	return Boolean(process.env.CI) ||
+		Boolean(process.env.WT_SESSION) || // Windows Terminal
+		process.env.TERM_PROGRAM === 'vscode' ||
+		process.env.TERM === 'xterm-256color' ||
+		process.env.TERM === 'alacritty';
+};
 
 
 /***/ }),
@@ -35263,6 +35362,33 @@ function isexe (path, options, cb) {
 function sync (path, options) {
   return checkStat(fs.statSync(path), path, options)
 }
+
+
+/***/ }),
+
+/***/ 3479:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const chalk = __nccwpck_require__(8818);
+const isUnicodeSupported = __nccwpck_require__(9228);
+
+const main = {
+	info: chalk.blue('ℹ'),
+	success: chalk.green('✔'),
+	warning: chalk.yellow('⚠'),
+	error: chalk.red('✖')
+};
+
+const fallback = {
+	info: chalk.blue('i'),
+	success: chalk.green('√'),
+	warning: chalk.yellow('‼'),
+	error: chalk.red('×')
+};
+
+module.exports = isUnicodeSupported() ? main : fallback;
 
 
 /***/ }),
@@ -37121,765 +37247,106 @@ module.exports.callCount = function_ => {
 
 /***/ }),
 
-/***/ 5156:
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
+/***/ 970:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
-// ESM COMPAT FLAG
-__nccwpck_require__.r(__webpack_exports__);
 
-// EXPORTS
-__nccwpck_require__.d(__webpack_exports__, {
-  "default": () => (/* binding */ ora),
-  "oraPromise": () => (/* binding */ oraPromise)
-});
-
-;// CONCATENATED MODULE: external "node:process"
-const external_node_process_namespaceObject = require("node:process");
-// EXTERNAL MODULE: ./node_modules/@vercel/ncc/dist/ncc/@@notfound.js?#ansi-styles
-var _notfound_ansi_styles = __nccwpck_require__(16);
-// EXTERNAL MODULE: ./node_modules/@vercel/ncc/dist/ncc/@@notfound.js?#supports-color
-var _notfound_supports_color = __nccwpck_require__(5210);
-;// CONCATENATED MODULE: ./node_modules/ora/node_modules/chalk/source/utilities.js
-// TODO: When targeting Node.js 16, use `String.prototype.replaceAll`.
-function stringReplaceAll(string, substring, replacer) {
-	let index = string.indexOf(substring);
-	if (index === -1) {
-		return string;
-	}
-
-	const substringLength = substring.length;
-	let endIndex = 0;
-	let returnValue = '';
-	do {
-		returnValue += string.substr(endIndex, index - endIndex) + substring + replacer;
-		endIndex = index + substringLength;
-		index = string.indexOf(substring, endIndex);
-	} while (index !== -1);
-
-	returnValue += string.slice(endIndex);
-	return returnValue;
-}
-
-function stringEncaseCRLFWithFirstIndex(string, prefix, postfix, index) {
-	let endIndex = 0;
-	let returnValue = '';
-	do {
-		const gotCR = string[index - 1] === '\r';
-		returnValue += string.substr(endIndex, (gotCR ? index - 1 : index) - endIndex) + prefix + (gotCR ? '\r\n' : '\n') + postfix;
-		endIndex = index + 1;
-		index = string.indexOf('\n', endIndex);
-	} while (index !== -1);
-
-	returnValue += string.slice(endIndex);
-	return returnValue;
-}
-
-;// CONCATENATED MODULE: ./node_modules/ora/node_modules/chalk/source/index.js
-
-
-
-
-const {stdout: stdoutColor, stderr: stderrColor} = _notfound_supports_color;
-
-const GENERATOR = Symbol('GENERATOR');
-const STYLER = Symbol('STYLER');
-const IS_EMPTY = Symbol('IS_EMPTY');
-
-// `supportsColor.level` → `ansiStyles.color[name]` mapping
-const levelMapping = [
-	'ansi',
-	'ansi',
-	'ansi256',
-	'ansi16m',
-];
-
-const styles = Object.create(null);
-
-const applyOptions = (object, options = {}) => {
-	if (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {
-		throw new Error('The `level` option should be an integer from 0 to 3');
-	}
-
-	// Detect level if not set manually
-	const colorLevel = stdoutColor ? stdoutColor.level : 0;
-	object.level = options.level === undefined ? colorLevel : options.level;
-};
-
-class Chalk {
-	constructor(options) {
-		// eslint-disable-next-line no-constructor-return
-		return chalkFactory(options);
-	}
-}
-
-const chalkFactory = options => {
-	const chalk = (...strings) => strings.join(' ');
-	applyOptions(chalk, options);
-
-	Object.setPrototypeOf(chalk, createChalk.prototype);
-
-	return chalk;
-};
-
-function createChalk(options) {
-	return chalkFactory(options);
-}
-
-Object.setPrototypeOf(createChalk.prototype, Function.prototype);
-
-for (const [styleName, style] of Object.entries(_notfound_ansi_styles)) {
-	styles[styleName] = {
-		get() {
-			const builder = createBuilder(this, createStyler(style.open, style.close, this[STYLER]), this[IS_EMPTY]);
-			Object.defineProperty(this, styleName, {value: builder});
-			return builder;
-		},
-	};
-}
-
-styles.visible = {
-	get() {
-		const builder = createBuilder(this, this[STYLER], true);
-		Object.defineProperty(this, 'visible', {value: builder});
-		return builder;
-	},
-};
-
-const getModelAnsi = (model, level, type, ...arguments_) => {
-	if (model === 'rgb') {
-		if (level === 'ansi16m') {
-			return _notfound_ansi_styles[type].ansi16m(...arguments_);
-		}
-
-		if (level === 'ansi256') {
-			return _notfound_ansi_styles[type].ansi256(_notfound_ansi_styles.rgbToAnsi256(...arguments_));
-		}
-
-		return _notfound_ansi_styles[type].ansi(_notfound_ansi_styles.rgbToAnsi(...arguments_));
-	}
-
-	if (model === 'hex') {
-		return getModelAnsi('rgb', level, type, ..._notfound_ansi_styles.hexToRgb(...arguments_));
-	}
-
-	return _notfound_ansi_styles[type][model](...arguments_);
-};
-
-const usedModels = ['rgb', 'hex', 'ansi256'];
-
-for (const model of usedModels) {
-	styles[model] = {
-		get() {
-			const {level} = this;
-			return function (...arguments_) {
-				const styler = createStyler(getModelAnsi(model, levelMapping[level], 'color', ...arguments_), _notfound_ansi_styles.color.close, this[STYLER]);
-				return createBuilder(this, styler, this[IS_EMPTY]);
-			};
-		},
-	};
-
-	const bgModel = 'bg' + model[0].toUpperCase() + model.slice(1);
-	styles[bgModel] = {
-		get() {
-			const {level} = this;
-			return function (...arguments_) {
-				const styler = createStyler(getModelAnsi(model, levelMapping[level], 'bgColor', ...arguments_), _notfound_ansi_styles.bgColor.close, this[STYLER]);
-				return createBuilder(this, styler, this[IS_EMPTY]);
-			};
-		},
-	};
-}
-
-const proto = Object.defineProperties(() => {}, {
-	...styles,
-	level: {
-		enumerable: true,
-		get() {
-			return this[GENERATOR].level;
-		},
-		set(level) {
-			this[GENERATOR].level = level;
-		},
-	},
-});
-
-const createStyler = (open, close, parent) => {
-	let openAll;
-	let closeAll;
-	if (parent === undefined) {
-		openAll = open;
-		closeAll = close;
-	} else {
-		openAll = parent.openAll + open;
-		closeAll = close + parent.closeAll;
-	}
-
-	return {
-		open,
-		close,
-		openAll,
-		closeAll,
-		parent,
-	};
-};
-
-const createBuilder = (self, _styler, _isEmpty) => {
-	// Single argument is hot path, implicit coercion is faster than anything
-	// eslint-disable-next-line no-implicit-coercion
-	const builder = (...arguments_) => applyStyle(builder, (arguments_.length === 1) ? ('' + arguments_[0]) : arguments_.join(' '));
-
-	// We alter the prototype because we must return a function, but there is
-	// no way to create a function with a different prototype
-	Object.setPrototypeOf(builder, proto);
-
-	builder[GENERATOR] = self;
-	builder[STYLER] = _styler;
-	builder[IS_EMPTY] = _isEmpty;
-
-	return builder;
-};
-
-const applyStyle = (self, string) => {
-	if (self.level <= 0 || !string) {
-		return self[IS_EMPTY] ? '' : string;
-	}
-
-	let styler = self[STYLER];
-
-	if (styler === undefined) {
-		return string;
-	}
-
-	const {openAll, closeAll} = styler;
-	if (string.includes('\u001B')) {
-		while (styler !== undefined) {
-			// Replace any instances already present with a re-opening code
-			// otherwise only the part of the string until said closing code
-			// will be colored, and the rest will simply be 'plain'.
-			string = stringReplaceAll(string, styler.close, styler.open);
-
-			styler = styler.parent;
-		}
-	}
-
-	// We can move both next actions out of loop, because remaining actions in loop won't have
-	// any/visible effect on parts we add here. Close the styling before a linebreak and reopen
-	// after next line to fix a bleed issue on macOS: https://github.com/chalk/chalk/pull/92
-	const lfIndex = string.indexOf('\n');
-	if (lfIndex !== -1) {
-		string = stringEncaseCRLFWithFirstIndex(string, closeAll, openAll, lfIndex);
-	}
-
-	return openAll + string + closeAll;
-};
-
-Object.defineProperties(createChalk.prototype, styles);
-
-const chalk = createChalk();
-const chalkStderr = createChalk({level: stderrColor ? stderrColor.level : 0});
-
-
-
-/* harmony default export */ const source = (chalk);
-
-// EXTERNAL MODULE: ./node_modules/onetime/index.js
-var onetime = __nccwpck_require__(9082);
-// EXTERNAL MODULE: ./node_modules/signal-exit/index.js
-var signal_exit = __nccwpck_require__(4931);
-;// CONCATENATED MODULE: ./node_modules/restore-cursor/index.js
-
-
-
-
-const restoreCursor = onetime(() => {
-	signal_exit(() => {
-		external_node_process_namespaceObject.stderr.write('\u001B[?25h');
-	}, {alwaysLast: true});
-});
-
-/* harmony default export */ const restore_cursor = (restoreCursor);
-
-;// CONCATENATED MODULE: ./node_modules/cli-cursor/index.js
-
-
-
-let isHidden = false;
-
-const cliCursor = {};
-
-cliCursor.show = (writableStream = external_node_process_namespaceObject.stderr) => {
-	if (!writableStream.isTTY) {
-		return;
-	}
-
-	isHidden = false;
-	writableStream.write('\u001B[?25h');
-};
-
-cliCursor.hide = (writableStream = external_node_process_namespaceObject.stderr) => {
-	if (!writableStream.isTTY) {
-		return;
-	}
-
-	restore_cursor();
-	isHidden = true;
-	writableStream.write('\u001B[?25l');
-};
-
-cliCursor.toggle = (force, writableStream) => {
-	if (force !== undefined) {
-		isHidden = force;
-	}
-
-	if (isHidden) {
-		cliCursor.show(writableStream);
-	} else {
-		cliCursor.hide(writableStream);
-	}
-};
-
-/* harmony default export */ const cli_cursor = (cliCursor);
-
-// EXTERNAL MODULE: ./node_modules/cli-spinners/index.js
-var cli_spinners = __nccwpck_require__(2031);
-;// CONCATENATED MODULE: ./node_modules/log-symbols/node_modules/chalk/source/utilities.js
-// TODO: When targeting Node.js 16, use `String.prototype.replaceAll`.
-function utilities_stringReplaceAll(string, substring, replacer) {
-	let index = string.indexOf(substring);
-	if (index === -1) {
-		return string;
-	}
-
-	const substringLength = substring.length;
-	let endIndex = 0;
-	let returnValue = '';
-	do {
-		returnValue += string.substr(endIndex, index - endIndex) + substring + replacer;
-		endIndex = index + substringLength;
-		index = string.indexOf(substring, endIndex);
-	} while (index !== -1);
-
-	returnValue += string.slice(endIndex);
-	return returnValue;
-}
-
-function utilities_stringEncaseCRLFWithFirstIndex(string, prefix, postfix, index) {
-	let endIndex = 0;
-	let returnValue = '';
-	do {
-		const gotCR = string[index - 1] === '\r';
-		returnValue += string.substr(endIndex, (gotCR ? index - 1 : index) - endIndex) + prefix + (gotCR ? '\r\n' : '\n') + postfix;
-		endIndex = index + 1;
-		index = string.indexOf('\n', endIndex);
-	} while (index !== -1);
-
-	returnValue += string.slice(endIndex);
-	return returnValue;
-}
-
-;// CONCATENATED MODULE: ./node_modules/log-symbols/node_modules/chalk/source/index.js
-
-
-
-
-const {stdout: source_stdoutColor, stderr: source_stderrColor} = _notfound_supports_color;
-
-const source_GENERATOR = Symbol('GENERATOR');
-const source_STYLER = Symbol('STYLER');
-const source_IS_EMPTY = Symbol('IS_EMPTY');
-
-// `supportsColor.level` → `ansiStyles.color[name]` mapping
-const source_levelMapping = [
-	'ansi',
-	'ansi',
-	'ansi256',
-	'ansi16m',
-];
-
-const source_styles = Object.create(null);
-
-const source_applyOptions = (object, options = {}) => {
-	if (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {
-		throw new Error('The `level` option should be an integer from 0 to 3');
-	}
-
-	// Detect level if not set manually
-	const colorLevel = source_stdoutColor ? source_stdoutColor.level : 0;
-	object.level = options.level === undefined ? colorLevel : options.level;
-};
-
-class source_Chalk {
-	constructor(options) {
-		// eslint-disable-next-line no-constructor-return
-		return source_chalkFactory(options);
-	}
-}
-
-const source_chalkFactory = options => {
-	const chalk = (...strings) => strings.join(' ');
-	source_applyOptions(chalk, options);
-
-	Object.setPrototypeOf(chalk, source_createChalk.prototype);
-
-	return chalk;
-};
-
-function source_createChalk(options) {
-	return source_chalkFactory(options);
-}
-
-Object.setPrototypeOf(source_createChalk.prototype, Function.prototype);
-
-for (const [styleName, style] of Object.entries(_notfound_ansi_styles)) {
-	source_styles[styleName] = {
-		get() {
-			const builder = source_createBuilder(this, source_createStyler(style.open, style.close, this[source_STYLER]), this[source_IS_EMPTY]);
-			Object.defineProperty(this, styleName, {value: builder});
-			return builder;
-		},
-	};
-}
-
-source_styles.visible = {
-	get() {
-		const builder = source_createBuilder(this, this[source_STYLER], true);
-		Object.defineProperty(this, 'visible', {value: builder});
-		return builder;
-	},
-};
-
-const source_getModelAnsi = (model, level, type, ...arguments_) => {
-	if (model === 'rgb') {
-		if (level === 'ansi16m') {
-			return _notfound_ansi_styles[type].ansi16m(...arguments_);
-		}
-
-		if (level === 'ansi256') {
-			return _notfound_ansi_styles[type].ansi256(_notfound_ansi_styles.rgbToAnsi256(...arguments_));
-		}
-
-		return _notfound_ansi_styles[type].ansi(_notfound_ansi_styles.rgbToAnsi(...arguments_));
-	}
-
-	if (model === 'hex') {
-		return source_getModelAnsi('rgb', level, type, ..._notfound_ansi_styles.hexToRgb(...arguments_));
-	}
-
-	return _notfound_ansi_styles[type][model](...arguments_);
-};
-
-const source_usedModels = ['rgb', 'hex', 'ansi256'];
-
-for (const model of source_usedModels) {
-	source_styles[model] = {
-		get() {
-			const {level} = this;
-			return function (...arguments_) {
-				const styler = source_createStyler(source_getModelAnsi(model, source_levelMapping[level], 'color', ...arguments_), _notfound_ansi_styles.color.close, this[source_STYLER]);
-				return source_createBuilder(this, styler, this[source_IS_EMPTY]);
-			};
-		},
-	};
-
-	const bgModel = 'bg' + model[0].toUpperCase() + model.slice(1);
-	source_styles[bgModel] = {
-		get() {
-			const {level} = this;
-			return function (...arguments_) {
-				const styler = source_createStyler(source_getModelAnsi(model, source_levelMapping[level], 'bgColor', ...arguments_), _notfound_ansi_styles.bgColor.close, this[source_STYLER]);
-				return source_createBuilder(this, styler, this[source_IS_EMPTY]);
-			};
-		},
-	};
-}
-
-const source_proto = Object.defineProperties(() => {}, {
-	...source_styles,
-	level: {
-		enumerable: true,
-		get() {
-			return this[source_GENERATOR].level;
-		},
-		set(level) {
-			this[source_GENERATOR].level = level;
-		},
-	},
-});
-
-const source_createStyler = (open, close, parent) => {
-	let openAll;
-	let closeAll;
-	if (parent === undefined) {
-		openAll = open;
-		closeAll = close;
-	} else {
-		openAll = parent.openAll + open;
-		closeAll = close + parent.closeAll;
-	}
-
-	return {
-		open,
-		close,
-		openAll,
-		closeAll,
-		parent,
-	};
-};
-
-const source_createBuilder = (self, _styler, _isEmpty) => {
-	// Single argument is hot path, implicit coercion is faster than anything
-	// eslint-disable-next-line no-implicit-coercion
-	const builder = (...arguments_) => source_applyStyle(builder, (arguments_.length === 1) ? ('' + arguments_[0]) : arguments_.join(' '));
-
-	// We alter the prototype because we must return a function, but there is
-	// no way to create a function with a different prototype
-	Object.setPrototypeOf(builder, source_proto);
-
-	builder[source_GENERATOR] = self;
-	builder[source_STYLER] = _styler;
-	builder[source_IS_EMPTY] = _isEmpty;
-
-	return builder;
-};
-
-const source_applyStyle = (self, string) => {
-	if (self.level <= 0 || !string) {
-		return self[source_IS_EMPTY] ? '' : string;
-	}
-
-	let styler = self[source_STYLER];
-
-	if (styler === undefined) {
-		return string;
-	}
-
-	const {openAll, closeAll} = styler;
-	if (string.includes('\u001B')) {
-		while (styler !== undefined) {
-			// Replace any instances already present with a re-opening code
-			// otherwise only the part of the string until said closing code
-			// will be colored, and the rest will simply be 'plain'.
-			string = utilities_stringReplaceAll(string, styler.close, styler.open);
-
-			styler = styler.parent;
-		}
-	}
-
-	// We can move both next actions out of loop, because remaining actions in loop won't have
-	// any/visible effect on parts we add here. Close the styling before a linebreak and reopen
-	// after next line to fix a bleed issue on macOS: https://github.com/chalk/chalk/pull/92
-	const lfIndex = string.indexOf('\n');
-	if (lfIndex !== -1) {
-		string = utilities_stringEncaseCRLFWithFirstIndex(string, closeAll, openAll, lfIndex);
-	}
-
-	return openAll + string + closeAll;
-};
-
-Object.defineProperties(source_createChalk.prototype, source_styles);
-
-const source_chalk = source_createChalk();
-const source_chalkStderr = source_createChalk({level: source_stderrColor ? source_stderrColor.level : 0});
-
-
-
-/* harmony default export */ const chalk_source = (source_chalk);
-
-;// CONCATENATED MODULE: ./node_modules/is-unicode-supported/index.js
-
-
-function isUnicodeSupported() {
-	if (external_node_process_namespaceObject.platform !== 'win32') {
-		return external_node_process_namespaceObject.env.TERM !== 'linux'; // Linux console (kernel)
-	}
-
-	return Boolean(external_node_process_namespaceObject.env.CI)
-		|| Boolean(external_node_process_namespaceObject.env.WT_SESSION) // Windows Terminal
-		|| external_node_process_namespaceObject.env.ConEmuTask === '{cmd::Cmder}' // ConEmu and cmder
-		|| external_node_process_namespaceObject.env.TERM_PROGRAM === 'vscode'
-		|| external_node_process_namespaceObject.env.TERM === 'xterm-256color'
-		|| external_node_process_namespaceObject.env.TERM === 'alacritty'
-		|| external_node_process_namespaceObject.env.TERMINAL_EMULATOR === 'JetBrains-JediTerm';
-}
-
-;// CONCATENATED MODULE: ./node_modules/log-symbols/index.js
-
-
-
-const main = {
-	info: chalk_source.blue('ℹ'),
-	success: chalk_source.green('✔'),
-	warning: chalk_source.yellow('⚠'),
-	error: chalk_source.red('✖'),
-};
-
-const fallback = {
-	info: chalk_source.blue('i'),
-	success: chalk_source.green('√'),
-	warning: chalk_source.yellow('‼'),
-	error: chalk_source.red('×'),
-};
-
-const logSymbols = isUnicodeSupported() ? main : fallback;
-
-/* harmony default export */ const log_symbols = (logSymbols);
-
-;// CONCATENATED MODULE: ./node_modules/ora/node_modules/ansi-regex/index.js
-function ansiRegex({onlyFirst = false} = {}) {
-	const pattern = [
-	    '[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
-		'(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))'
-	].join('|');
-
-	return new RegExp(pattern, onlyFirst ? undefined : 'g');
-}
-
-;// CONCATENATED MODULE: ./node_modules/ora/node_modules/strip-ansi/index.js
-
-
-function stripAnsi(string) {
-	if (typeof string !== 'string') {
-		throw new TypeError(`Expected a \`string\`, got \`${typeof string}\``);
-	}
-
-	return string.replace(ansiRegex(), '');
-}
-
-// EXTERNAL MODULE: ./node_modules/wcwidth/index.js
-var wcwidth = __nccwpck_require__(5917);
-;// CONCATENATED MODULE: ./node_modules/is-interactive/index.js
-function isInteractive({stream = process.stdout} = {}) {
-	return Boolean(
-		stream && stream.isTTY &&
-		process.env.TERM !== 'dumb' &&
-		!('CI' in process.env)
-	);
-}
-
-;// CONCATENATED MODULE: external "node:readline"
-const external_node_readline_namespaceObject = require("node:readline");
-// EXTERNAL MODULE: ./node_modules/bl/bl.js
-var bl = __nccwpck_require__(336);
-;// CONCATENATED MODULE: ./node_modules/ora/utilities.js
-
-
-
-
+const readline = __nccwpck_require__(1058);
+const chalk = __nccwpck_require__(8818);
+const cliCursor = __nccwpck_require__(9482);
+const cliSpinners = __nccwpck_require__(2031);
+const logSymbols = __nccwpck_require__(3479);
+const stripAnsi = __nccwpck_require__(5591);
+const wcwidth = __nccwpck_require__(5917);
+const isInteractive = __nccwpck_require__(284);
+const isUnicodeSupported = __nccwpck_require__(9228);
+const {BufferListStream} = __nccwpck_require__(336);
+
+const TEXT = Symbol('text');
+const PREFIX_TEXT = Symbol('prefixText');
 const ASCII_ETX_CODE = 0x03; // Ctrl+C emits this code
 
 class StdinDiscarder {
-	#requests = 0;
-	#mutedStream = new bl.BufferListStream();
-	#ourEmit;
-	#rl;
-
 	constructor() {
-		this.#mutedStream.pipe(external_node_process_namespaceObject.stdout);
+		this.requests = 0;
+
+		this.mutedStream = new BufferListStream();
+		this.mutedStream.pipe(process.stdout);
 
 		const self = this; // eslint-disable-line unicorn/no-this-assignment
-		this.#ourEmit = function (event, data, ...args) {
-			const {stdin} = external_node_process_namespaceObject;
-			if (self.#requests > 0 || stdin.emit === self.#ourEmit) {
+		this.ourEmit = function (event, data, ...args) {
+			const {stdin} = process;
+			if (self.requests > 0 || stdin.emit === self.ourEmit) {
 				if (event === 'keypress') { // Fixes readline behavior
 					return;
 				}
 
 				if (event === 'data' && data.includes(ASCII_ETX_CODE)) {
-					external_node_process_namespaceObject.emit('SIGINT');
+					process.emit('SIGINT');
 				}
 
-				Reflect.apply(self.#ourEmit, this, [event, data, ...args]);
+				Reflect.apply(self.oldEmit, this, [event, data, ...args]);
 			} else {
-				Reflect.apply(external_node_process_namespaceObject.stdin.emit, this, [event, data, ...args]);
+				Reflect.apply(process.stdin.emit, this, [event, data, ...args]);
 			}
 		};
 	}
 
 	start() {
-		this.#requests++;
+		this.requests++;
 
-		if (this.#requests === 1) {
-			this._realStart();
+		if (this.requests === 1) {
+			this.realStart();
 		}
 	}
 
 	stop() {
-		if (this.#requests <= 0) {
+		if (this.requests <= 0) {
 			throw new Error('`stop` called more times than `start`');
 		}
 
-		this.#requests--;
+		this.requests--;
 
-		if (this.#requests === 0) {
-			this._realStop();
+		if (this.requests === 0) {
+			this.realStop();
 		}
 	}
 
-	// TODO: Use private methods when targeting Node.js 14.
-	_realStart() {
+	realStart() {
 		// No known way to make it work reliably on Windows
-		if (external_node_process_namespaceObject.platform === 'win32') {
+		if (process.platform === 'win32') {
 			return;
 		}
 
-		this.#rl = external_node_readline_namespaceObject.createInterface({
-			input: external_node_process_namespaceObject.stdin,
-			output: this.#mutedStream,
+		this.rl = readline.createInterface({
+			input: process.stdin,
+			output: this.mutedStream
 		});
 
-		this.#rl.on('SIGINT', () => {
-			if (external_node_process_namespaceObject.listenerCount('SIGINT') === 0) {
-				external_node_process_namespaceObject.emit('SIGINT');
+		this.rl.on('SIGINT', () => {
+			if (process.listenerCount('SIGINT') === 0) {
+				process.emit('SIGINT');
 			} else {
-				this.#rl.close();
-				external_node_process_namespaceObject.kill(external_node_process_namespaceObject.pid, 'SIGINT');
+				this.rl.close();
+				process.kill(process.pid, 'SIGINT');
 			}
 		});
 	}
 
-	_realStop() {
-		if (external_node_process_namespaceObject.platform === 'win32') {
+	realStop() {
+		if (process.platform === 'win32') {
 			return;
 		}
 
-		this.#rl.close();
-		this.#rl = undefined;
+		this.rl.close();
+		this.rl = undefined;
 	}
 }
-
-;// CONCATENATED MODULE: ./node_modules/ora/index.js
-
-
-
-
-
-
-
-
-
-
 
 let stdinDiscarder;
 
 class Ora {
-	#linesToClear = 0;
-	#isDiscardingStdin = false;
-	#lineCount = 0;
-	#frameIndex = 0;
-	#options;
-	#spinner;
-	#stream;
-	#id;
-	#initialInterval;
-	#isEnabled;
-	#isSilent;
-	#indent;
-	#text;
-	#prefixText;
-
-	color;
-
 	constructor(options) {
 		if (!stdinDiscarder) {
 			stdinDiscarder = new StdinDiscarder();
@@ -37887,64 +37354,39 @@ class Ora {
 
 		if (typeof options === 'string') {
 			options = {
-				text: options,
+				text: options
 			};
 		}
 
-		this.#options = {
+		this.options = {
+			text: '',
 			color: 'cyan',
-			stream: external_node_process_namespaceObject.stderr,
+			stream: process.stderr,
 			discardStdin: true,
-			hideCursor: true,
-			...options,
+			...options
 		};
 
-		// Public
-		this.color = this.#options.color;
+		this.spinner = this.options.spinner;
 
-		// It's important that these use the public setters.
-		this.spinner = this.#options.spinner;
+		this.color = this.options.color;
+		this.hideCursor = this.options.hideCursor !== false;
+		this.interval = this.options.interval || this.spinner.interval || 100;
+		this.stream = this.options.stream;
+		this.id = undefined;
+		this.isEnabled = typeof this.options.isEnabled === 'boolean' ? this.options.isEnabled : isInteractive({stream: this.stream});
+		this.isSilent = typeof this.options.isSilent === 'boolean' ? this.options.isSilent : false;
 
-		this.#initialInterval = this.#options.interval;
-		this.#stream = this.#options.stream;
-		this.#isEnabled = typeof this.#options.isEnabled === 'boolean' ? this.#options.isEnabled : isInteractive({stream: this.#stream});
-		this.#isSilent = typeof this.#options.isSilent === 'boolean' ? this.#options.isSilent : false;
-
-		// Set *after* `this.#stream`.
-		// It's important that these use the public setters.
-		this.text = this.#options.text;
-		this.prefixText = this.#options.prefixText;
-		this.indent = this.#options.indent;
-
-		if (external_node_process_namespaceObject.env.NODE_ENV === 'test') {
-			this._stream = this.#stream;
-			this._isEnabled = this.#isEnabled;
-
-			Object.defineProperty(this, '_linesToClear', {
-				get() {
-					return this.#linesToClear;
-				},
-				set(newValue) {
-					this.#linesToClear = newValue;
-				},
-			});
-
-			Object.defineProperty(this, '_frameIndex', {
-				get() {
-					return this.#frameIndex;
-				},
-			});
-
-			Object.defineProperty(this, '_lineCount', {
-				get() {
-					return this.#lineCount;
-				},
-			});
-		}
+		// Set *after* `this.stream`
+		this.text = this.options.text;
+		this.prefixText = this.options.prefixText;
+		this.linesToClear = 0;
+		this.indent = this.options.indent;
+		this.discardStdin = this.options.discardStdin;
+		this.isDiscardingStdin = false;
 	}
 
 	get indent() {
-		return this.#indent;
+		return this._indent;
 	}
 
 	set indent(indent = 0) {
@@ -37952,65 +37394,66 @@ class Ora {
 			throw new Error('The `indent` option must be an integer from 0 and up');
 		}
 
-		this.#indent = indent;
-		this.updateLineCount();
+		this._indent = indent;
 	}
 
-	get interval() {
-		return this.#initialInterval || this.#spinner.interval || 100;
+	_updateInterval(interval) {
+		if (interval !== undefined) {
+			this.interval = interval;
+		}
 	}
 
 	get spinner() {
-		return this.#spinner;
+		return this._spinner;
 	}
 
 	set spinner(spinner) {
-		this.#frameIndex = 0;
-		this.#initialInterval = undefined;
+		this.frameIndex = 0;
 
 		if (typeof spinner === 'object') {
 			if (spinner.frames === undefined) {
 				throw new Error('The given spinner must have a `frames` property');
 			}
 
-			this.#spinner = spinner;
+			this._spinner = spinner;
 		} else if (!isUnicodeSupported()) {
-			this.#spinner = cli_spinners.line;
+			this._spinner = cliSpinners.line;
 		} else if (spinner === undefined) {
 			// Set default spinner
-			this.#spinner = cli_spinners.dots;
-		} else if (spinner !== 'default' && cli_spinners[spinner]) {
-			this.#spinner = cli_spinners[spinner];
+			this._spinner = cliSpinners.dots;
+		} else if (spinner !== 'default' && cliSpinners[spinner]) {
+			this._spinner = cliSpinners[spinner];
 		} else {
 			throw new Error(`There is no built-in spinner named '${spinner}'. See https://github.com/sindresorhus/cli-spinners/blob/main/spinners.json for a full list.`);
 		}
+
+		this._updateInterval(this._spinner.interval);
 	}
 
 	get text() {
-		return this.#text;
+		return this[TEXT];
 	}
 
 	set text(value) {
-		this.#text = value || '';
+		this[TEXT] = value;
 		this.updateLineCount();
 	}
 
 	get prefixText() {
-		return this.#prefixText;
+		return this[PREFIX_TEXT];
 	}
 
 	set prefixText(value) {
-		this.#prefixText = value || '';
+		this[PREFIX_TEXT] = value;
 		this.updateLineCount();
 	}
 
 	get isSpinning() {
-		return this.#id !== undefined;
+		return this.id !== undefined;
 	}
 
-	// TODO: Use private methods when targeting Node.js 14.
-	getFullPrefixText(prefixText = this.#prefixText, postfix = ' ') {
-		if (typeof prefixText === 'string' && prefixText !== '') {
+	getFullPrefixText(prefixText = this[PREFIX_TEXT], postfix = ' ') {
+		if (typeof prefixText === 'string') {
 			return prefixText + postfix;
 		}
 
@@ -38022,17 +37465,16 @@ class Ora {
 	}
 
 	updateLineCount() {
-		const columns = this.#stream.columns || 80;
-		const fullPrefixText = this.getFullPrefixText(this.#prefixText, '-');
-
-		this.#lineCount = 0;
-		for (const line of stripAnsi(' '.repeat(this.#indent) + fullPrefixText + '--' + this.#text).split('\n')) {
-			this.#lineCount += Math.max(1, Math.ceil(wcwidth(line) / columns));
+		const columns = this.stream.columns || 80;
+		const fullPrefixText = this.getFullPrefixText(this.prefixText, '-');
+		this.lineCount = 0;
+		for (const line of stripAnsi(fullPrefixText + '--' + this[TEXT]).split('\n')) {
+			this.lineCount += Math.max(1, Math.ceil(wcwidth(line) / columns));
 		}
 	}
 
 	get isEnabled() {
-		return this.#isEnabled && !this.#isSilent;
+		return this._isEnabled && !this.isSilent;
 	}
 
 	set isEnabled(value) {
@@ -38040,11 +37482,11 @@ class Ora {
 			throw new TypeError('The `isEnabled` option must be a boolean');
 		}
 
-		this.#isEnabled = value;
+		this._isEnabled = value;
 	}
 
 	get isSilent() {
-		return this.#isSilent;
+		return this._isSilent;
 	}
 
 	set isSilent(value) {
@@ -38052,57 +37494,51 @@ class Ora {
 			throw new TypeError('The `isSilent` option must be a boolean');
 		}
 
-		this.#isSilent = value;
+		this._isSilent = value;
 	}
 
 	frame() {
-		const {frames} = this.#spinner;
-		let frame = frames[this.#frameIndex];
+		const {frames} = this.spinner;
+		let frame = frames[this.frameIndex];
 
 		if (this.color) {
-			frame = source[this.color](frame);
+			frame = chalk[this.color](frame);
 		}
 
-		this.#frameIndex = ++this.#frameIndex % frames.length;
-		const fullPrefixText = (typeof this.#prefixText === 'string' && this.#prefixText !== '') ? this.#prefixText + ' ' : '';
+		this.frameIndex = ++this.frameIndex % frames.length;
+		const fullPrefixText = (typeof this.prefixText === 'string' && this.prefixText !== '') ? this.prefixText + ' ' : '';
 		const fullText = typeof this.text === 'string' ? ' ' + this.text : '';
 
 		return fullPrefixText + frame + fullText;
 	}
 
 	clear() {
-		if (!this.#isEnabled || !this.#stream.isTTY) {
+		if (!this.isEnabled || !this.stream.isTTY) {
 			return this;
 		}
 
-		this.#stream.cursorTo(0);
-
-		for (let index = 0; index < this.#linesToClear; index++) {
-			if (index > 0) {
-				this.#stream.moveCursor(0, -1);
+		for (let i = 0; i < this.linesToClear; i++) {
+			if (i > 0) {
+				this.stream.moveCursor(0, -1);
 			}
 
-			this.#stream.clearLine(1);
+			this.stream.clearLine();
+			this.stream.cursorTo(this.indent);
 		}
 
-		if (this.#indent || this.lastIndent !== this.#indent) {
-			this.#stream.cursorTo(this.#indent);
-		}
-
-		this.lastIndent = this.#indent;
-		this.#linesToClear = 0;
+		this.linesToClear = 0;
 
 		return this;
 	}
 
 	render() {
-		if (this.#isSilent) {
+		if (this.isSilent) {
 			return this;
 		}
 
 		this.clear();
-		this.#stream.write(this.frame());
-		this.#linesToClear = this.#lineCount;
+		this.stream.write(this.frame());
+		this.linesToClear = this.lineCount;
 
 		return this;
 	}
@@ -38112,13 +37548,13 @@ class Ora {
 			this.text = text;
 		}
 
-		if (this.#isSilent) {
+		if (this.isSilent) {
 			return this;
 		}
 
-		if (!this.#isEnabled) {
+		if (!this.isEnabled) {
 			if (this.text) {
-				this.#stream.write(`- ${this.text}\n`);
+				this.stream.write(`- ${this.text}\n`);
 			}
 
 			return this;
@@ -38128,113 +37564,100 @@ class Ora {
 			return this;
 		}
 
-		if (this.#options.hideCursor) {
-			cli_cursor.hide(this.#stream);
+		if (this.hideCursor) {
+			cliCursor.hide(this.stream);
 		}
 
-		if (this.#options.discardStdin && external_node_process_namespaceObject.stdin.isTTY) {
-			this.#isDiscardingStdin = true;
+		if (this.discardStdin && process.stdin.isTTY) {
+			this.isDiscardingStdin = true;
 			stdinDiscarder.start();
 		}
 
 		this.render();
-		this.#id = setInterval(this.render.bind(this), this.interval);
+		this.id = setInterval(this.render.bind(this), this.interval);
 
 		return this;
 	}
 
 	stop() {
-		if (!this.#isEnabled) {
+		if (!this.isEnabled) {
 			return this;
 		}
 
-		clearInterval(this.#id);
-		this.#id = undefined;
-		this.#frameIndex = 0;
+		clearInterval(this.id);
+		this.id = undefined;
+		this.frameIndex = 0;
 		this.clear();
-		if (this.#options.hideCursor) {
-			cli_cursor.show(this.#stream);
+		if (this.hideCursor) {
+			cliCursor.show(this.stream);
 		}
 
-		if (this.#options.discardStdin && external_node_process_namespaceObject.stdin.isTTY && this.#isDiscardingStdin) {
+		if (this.discardStdin && process.stdin.isTTY && this.isDiscardingStdin) {
 			stdinDiscarder.stop();
-			this.#isDiscardingStdin = false;
+			this.isDiscardingStdin = false;
 		}
 
 		return this;
 	}
 
 	succeed(text) {
-		return this.stopAndPersist({symbol: log_symbols.success, text});
+		return this.stopAndPersist({symbol: logSymbols.success, text});
 	}
 
 	fail(text) {
-		return this.stopAndPersist({symbol: log_symbols.error, text});
+		return this.stopAndPersist({symbol: logSymbols.error, text});
 	}
 
 	warn(text) {
-		return this.stopAndPersist({symbol: log_symbols.warning, text});
+		return this.stopAndPersist({symbol: logSymbols.warning, text});
 	}
 
 	info(text) {
-		return this.stopAndPersist({symbol: log_symbols.info, text});
+		return this.stopAndPersist({symbol: logSymbols.info, text});
 	}
 
 	stopAndPersist(options = {}) {
-		if (this.#isSilent) {
+		if (this.isSilent) {
 			return this;
 		}
 
-		const prefixText = options.prefixText || this.#prefixText;
+		const prefixText = options.prefixText || this.prefixText;
 		const text = options.text || this.text;
 		const fullText = (typeof text === 'string') ? ' ' + text : '';
 
 		this.stop();
-		this.#stream.write(`${this.getFullPrefixText(prefixText, ' ')}${options.symbol || ' '}${fullText}\n`);
+		this.stream.write(`${this.getFullPrefixText(prefixText, ' ')}${options.symbol || ' '}${fullText}\n`);
 
 		return this;
 	}
 }
 
-function ora(options) {
+const oraFactory = function (options) {
 	return new Ora(options);
-}
+};
 
-async function oraPromise(action, options) {
-	const actionIsFunction = typeof action === 'function';
-	const actionIsPromise = typeof action.then === 'function';
+module.exports = oraFactory;
 
-	if (!actionIsFunction && !actionIsPromise) {
-		throw new TypeError('Parameter `action` must be a Function or a Promise');
+module.exports.promise = (action, options) => {
+	// eslint-disable-next-line promise/prefer-await-to-then
+	if (typeof action.then !== 'function') {
+		throw new TypeError('Parameter `action` must be a Promise');
 	}
 
-	const {successText, failText} = typeof options === 'object'
-		? options
-		: {successText: undefined, failText: undefined};
+	const spinner = new Ora(options);
+	spinner.start();
 
-	const spinner = ora(options).start();
+	(async () => {
+		try {
+			await action;
+			spinner.succeed();
+		} catch {
+			spinner.fail();
+		}
+	})();
 
-	try {
-		const promise = actionIsFunction ? action(spinner) : action;
-		const result = await promise;
-
-		spinner.succeed(
-			successText === undefined
-				? undefined
-				: (typeof successText === 'string' ? successText : successText(result)),
-		);
-
-		return result;
-	} catch (error) {
-		spinner.fail(
-			failText === undefined
-				? undefined
-				: (typeof failText === 'string' ? failText : failText(error)),
-		);
-
-		throw error;
-	}
-}
+	return spinner;
+};
 
 
 /***/ }),
@@ -41868,6 +41291,23 @@ if (process.env.READABLE_STREAM === 'disable' && Stream) {
 
 /***/ }),
 
+/***/ 5847:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const onetime = __nccwpck_require__(9082);
+const signalExit = __nccwpck_require__(4931);
+
+module.exports = onetime(() => {
+	signalExit(() => {
+		process.stderr.write('\u001B[?25h');
+	}, {alwaysLast: true});
+});
+
+
+/***/ }),
+
 /***/ 1867:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -42594,6 +42034,18 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
+
+/***/ }),
+
+/***/ 5591:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const ansiRegex = __nccwpck_require__(5063);
+
+module.exports = string => typeof string === 'string' ? string.replace(ansiRegex(), '') : string;
+
 
 /***/ }),
 
@@ -45425,22 +44877,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 16:
-/***/ ((module) => {
-
-module.exports = eval("require")("");
-
-
-/***/ }),
-
-/***/ 5210:
-/***/ ((module) => {
-
-module.exports = eval("require")("");
-
-
-/***/ }),
-
 /***/ 5500:
 /***/ ((module) => {
 
@@ -45617,6 +45053,14 @@ module.exports = require("punycode");
 
 /***/ }),
 
+/***/ 1058:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("readline");
+
+/***/ }),
+
 /***/ 2413:
 /***/ ((module) => {
 
@@ -45709,34 +45153,6 @@ module.exports = require("zlib");
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/node module decorator */
 /******/ 	(() => {
 /******/ 		__nccwpck_require__.nmd = (module) => {
