@@ -3,7 +3,7 @@ description: Creates instances, builds, deploys web & function apps to azure. Su
 author: DHI-GRAS
 inputs:
   azureCredentials:
-    description: Azure credentials in JSON format
+    description: Azure credentials in JSON format including "clientId", "tenantId" and "clientSecret" of your service principal.
     required: true
   githubToken:
     description: Token used for getting PR info and posting deployment stats comment, recommended to use GITHUB_TOKEN var

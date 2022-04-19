@@ -13,21 +13,20 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 	try {
 		if (!pullNumber)
 			throw Error(`${chalk.bold.red('Error')}: PR number is undefined`)
-		const slotName = pullNumber
-		const stagName = `${pkg.id}stag`
+		const stagName = `${pkg.id}stag${pullNumber}`
 
 		console.log(
-			`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(pkg.name)}`,
+			`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(stagName)}`,
 		)
 		const { stdout, stderr } = await exec(
-			`cd ${pkg.path} && STAG_SLOT=${slotName} COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
+			`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 		)
 		if (stderr) console.log(stderr, stdout)
 
 		console.log(
 			`${chalk.bold.blue(
 				'Info',
-			)}: Build finished, uploading webapp: ${chalk.bold(pkg.name)}`,
+			)}: Build finished, uploading webapp: ${chalk.bold(stagName)}`,
 		)
 
 		await exec('az extension add --name storage-preview').catch()
@@ -35,14 +34,29 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const outputDir = pkg.outputDir ?? './dist'
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
-			`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web/${slotName} --account-name ${stagName} --auth-mode key --overwrite`,
+			`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`,
 		).catch((err) => {
 			throw Error(err)
 		})
 		if (stdout) console.log(uploadOut, uploadErr)
 
-		// Don't think the deployment url gets returned from upload - hopefully this stays static?
-		const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net/${slotName}  `
+		const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net  `
+
+		if (pkg.enableCorsApiIds) {
+			for (const apiId of pkg.enableCorsApiIds) {
+				await exec(
+					`az functionapp cors add --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`,
+				)
+				console.log(
+					`${chalk.bold.blue('Info')}: Enabled CORS on ${chalk.underline(
+						apiId,
+					)} for ${chalk.underline(
+						`https://${stagName}.z16.web.core.windows.net`,
+					)}`,
+				)
+			}
+		}
+
 		fs.appendFileSync(msgFile, deployMsg)
 
 		console.log(deployMsg)

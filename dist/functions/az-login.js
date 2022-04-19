@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -27,8 +31,6 @@ const child_process_promise_1 = require("child-process-promise");
 const chalk_1 = __importDefault(require("chalk"));
 chalk_1.default.level = 1;
 exports.default = async () => {
-    console.log('\n');
-    console.log(`${chalk_1.default.bold.blue('Info')}: Logging into Azure CLI...`);
     const azureCredentialsInput = core.getInput('azureCredentials', {
         required: true,
     });

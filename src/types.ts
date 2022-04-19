@@ -3,10 +3,11 @@ export interface Package {
 	id: string
 	resourceGroup: string
 	type: 'app' | 'func-api' | 'lib'
-	storageAccount?: string
-	outputDir?: string
 	path: string
 	subscriptionId: string
+	storageAccount?: string
+	outputDir?: string
+	enableCorsApiIds?: string[]
 }
 
 export type Packages = Package[]
@@ -38,5 +39,10 @@ export interface PackageJSON {
 		storageAccount: string
 		subscriptionId: string
 		outputDir?: string
+		enableCorsApiIds?: string[]
 	}
+}
+
+export interface PackageWithMissingStorage extends Package {
+	mssingAccounts: string[]
 }

@@ -31,7 +31,7 @@ const deployWebApp = async (pkg: Package) => {
 			console.log(
 				`${chalk.bold.green('Success')}: Deployed storage account ${chalk.bold(
 					pkg.id,
-				)}`,
+				)} on https://${pkg.id}.z16.web.core.windows.net`,
 			),
 		)
 		.catch((err) => {

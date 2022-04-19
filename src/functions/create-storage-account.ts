@@ -1,9 +1,9 @@
 import { exec } from 'child-process-promise'
 import chalk from 'chalk'
-import { Package, StorageAccount } from '../types'
+import { StorageAccount, PackageWithMissingStorage } from '../types'
 
 chalk.level = 1
-export default async (pkg: Package): Promise<void> => {
+export default async (pkg: PackageWithMissingStorage): Promise<void> => {
 	try {
 		const handleCreatedAccount = async ({ stdout }) => {
 			const newAccountData = JSON.parse(stdout) as StorageAccount
@@ -26,21 +26,15 @@ export default async (pkg: Package): Promise<void> => {
 			)
 		}
 
-		await exec(
-			`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id} --location northeurope --kind StorageV2`,
-		)
-			.then(handleCreatedAccount)
-			.catch((err) => {
-				throw Error(err)
-			})
-
-		await exec(
-			`az storage account create --resource-group ${pkg.resourceGroup} --name ${pkg.id}stag --location northeurope --kind StorageV2`,
-		)
-			.then(async ({ stdout }) => handleCreatedAccount({ stdout }))
-			.catch((err) => {
-				throw Error(err)
-			})
+		for (const storageAccount of pkg.mssingAccounts) {
+			await exec(
+				`az storage account create --resource-group ${pkg.resourceGroup} --name ${storageAccount} --location northeurope --kind StorageV2 --sku Standard_LRS`,
+			)
+				.then(async ({ stdout }) => handleCreatedAccount({ stdout }))
+				.catch((err) => {
+					throw Error(err)
+				})
+		}
 	} catch (err) {
 		throw Error(err)
 	}

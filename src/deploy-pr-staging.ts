@@ -15,7 +15,6 @@ const createMissingResources = async (
 	prNumber: number,
 ) => {
 	console.log('\n')
-
 	console.log(
 		`${chalk.bold.blue('Info')}: Setting the subscription for PR deployment...`,
 	)
