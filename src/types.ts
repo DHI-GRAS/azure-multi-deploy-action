@@ -3,9 +3,9 @@ export interface Package {
 	id: string
 	resourceGroup: string
 	type: 'app' | 'func-api' | 'lib'
-	storageAccount?: string
 	path: string
 	subscriptionId: string
+	storageAccount?: string
 	outputDir?: string
 	enableCorsApiIds?: string[]
 }
