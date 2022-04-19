@@ -15,7 +15,10 @@ See the example recommended workflow in [workflow-template.yml](https://github.c
 - Linux must be used
 - The action will install Azure CLI
 - Action does not handle installation of dependencies - they must be installed in a step before the action is run
-- `clientId`, `tenantId`, `clientSecret`, `subscriptionId` are required in the `azureCredentials` input, formatted as JSON
+
+### azureCredentials in package.json 
+
+- `clientId`, `tenantId`, `clientSecret`, `subscriptionId` are required and formatted as JSON
 - `outputDir` is optional and represents the location of your output directory with default set to `./dist`.
 ` `enableCorsApiIds` is optional and represents an array of Function Apps resourceIds that need to enable cors for the staging storage accounts.
 - For other inputs, see `action.yml`
