@@ -15,7 +15,7 @@ export default async (): Promise<Packages> => {
 		if (branchErr) throw Error(branchErr)
 
 		const deployablePkgs = packages.filter(
-			(pkg) => pkg.type === 'app' || pkg.type === 'func-api',
+			(pkg) => pkg.type === 'app' || pkg.type === 'func-api' || !pkg.ignore,
 		)
 		if (branchName.trim() === 'main') return deployablePkgs
 

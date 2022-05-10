@@ -8,6 +8,7 @@ export interface Package {
 	storageAccount?: string
 	outputDir?: string
 	enableCorsApiIds?: string[]
+	ignore?: boolean
 }
 
 export type Packages = Package[]
@@ -40,6 +41,7 @@ export interface PackageJSON {
 		subscriptionId: string
 		outputDir?: string
 		enableCorsApiIds?: string[]
+		ignore?: boolean
 	}
 }
 
