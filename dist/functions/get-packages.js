@@ -8,7 +8,7 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup', 'subscriptionId'];
-const appNotRequiredFields = ['outputDir', 'enableCorsApiIds'];
+const appNotRequiredFields = ['outputDir', 'enableCorsApiIds', 'ignore'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const pkgTypeRequiredFieldMap = {
     apps: appRequiredFields,

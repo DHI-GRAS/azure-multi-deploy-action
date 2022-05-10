@@ -583,7 +583,7 @@ const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
 const packageTypes = ['apps', 'func-apis', 'libs'];
 const appRequiredFields = ['name', 'id', 'resourceGroup', 'subscriptionId'];
-const appNotRequiredFields = ['outputDir', 'enableCorsApiIds'];
+const appNotRequiredFields = ['outputDir', 'enableCorsApiIds', 'ignore'];
 const apiRequiredFields = [...appRequiredFields, 'storageAccount'];
 const pkgTypeRequiredFieldMap = {
     apps: appRequiredFields,
