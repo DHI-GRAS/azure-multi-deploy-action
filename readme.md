@@ -21,6 +21,7 @@ See the example recommended workflow in [workflow-template.yml](https://github.c
 - `clientId`, `tenantId`, `clientSecret`, `subscriptionId` are required and formatted as JSON
 - `outputDir` is optional and represents the location of your output directory with default set to `./dist`.
 - `enableCorsApiIds` is optional and represents an array of Function Apps resourceIds that need to enable cors for the staging storage accounts.
+- `ignore` is optional and represents and if passed with value `true`, then the app/func-app deployment for staging and production will be ignored.
 - For other inputs, see `action.yml`
 
 
