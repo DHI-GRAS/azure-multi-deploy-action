@@ -15,7 +15,7 @@ exports.default = async () => {
         const { stdout: branchName, stderr: branchErr } = await (0, child_process_promise_1.exec)(`git branch --show-current`);
         if (branchErr)
             throw Error(branchErr);
-        const deployablePkgs = get_packages_1.default.filter((pkg) => pkg.type === 'app' || pkg.type === 'func-api' || !pkg.ignore);
+        const deployablePkgs = get_packages_1.default.filter((pkg) => (pkg.type === 'app' || pkg.type === 'func-api') && !pkg.ignore);
         if (branchName.trim() === 'main')
             return deployablePkgs;
         await (0, child_process_promise_1.exec)('git fetch --all');
