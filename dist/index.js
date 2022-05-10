@@ -537,7 +537,9 @@ exports.default = async () => {
                 console.log(diffErr);
             return diffOut.includes(`${pkg.id} changed`) ? pkg : null;
         };
-        const changedPromises = get_packages_1.default.map(checkChanged);
+        const changedPromises = get_packages_1.default
+            .filter((pckg) => !pckg.ignore)
+            .map(checkChanged);
         const changedDiffPackages = (await Promise.all(changedPromises)).filter((item) => item);
         const changedLibPackeges = changedDiffPackages.filter((pkg) => pkg.type === 'lib');
         const libDepPackages = get_packages_1.default.filter((pkg) => pkg.type === 'app');

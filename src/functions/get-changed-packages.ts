@@ -13,7 +13,6 @@ export default async (): Promise<Packages> => {
 			`git branch --show-current`,
 		)
 		if (branchErr) throw Error(branchErr)
-
 		const deployablePkgs = packages.filter(
 			(pkg) => (pkg.type === 'app' || pkg.type === 'func-api') && !pkg.ignore,
 		)
@@ -32,7 +31,9 @@ export default async (): Promise<Packages> => {
 			return diffOut.includes(`${pkg.id} changed`) ? pkg : null
 		}
 
-		const changedPromises = packages.map(checkChanged)
+		const changedPromises = packages
+			.filter((pckg) => !pckg.ignore)
+			.map(checkChanged)
 		const changedDiffPackages = (await Promise.all(changedPromises)).filter(
 			(item) => item,
 		) as Packages
