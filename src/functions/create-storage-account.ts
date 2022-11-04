@@ -28,7 +28,7 @@ export default async (pkg: PackageWithMissingStorage): Promise<void> => {
 
 		for (const storageAccount of pkg.mssingAccounts) {
 			await exec(
-				`az storage account create --min-tls-version TLS1_2 --resource-group ${pkg.resourceGroup} --name ${storageAccount} --location northeurope --kind StorageV2 --sku Standard_LRS`,
+				`az storage account create --min-tls-version TLS1_2 --https-only true --resource-group ${pkg.resourceGroup} --name ${storageAccount} --location northeurope --kind StorageV2 --sku Standard_LRS`,
 			)
 				.then(async ({ stdout }) => handleCreatedAccount({ stdout }))
 				.catch((err) => {

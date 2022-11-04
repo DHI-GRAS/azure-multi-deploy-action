@@ -15,7 +15,7 @@ exports.default = async (pkg) => {
             console.log(`${chalk_1.default.bold.blue('Info')}: Enabled web container for storage account: ${newAccountData.name}`);
         };
         for (const storageAccount of pkg.mssingAccounts) {
-            await (0, child_process_promise_1.exec)(`az storage account create --min-tls-version TLS1_2 --resource-group ${pkg.resourceGroup} --name ${storageAccount} --location northeurope --kind StorageV2 --sku Standard_LRS`)
+            await (0, child_process_promise_1.exec)(`az storage account create --min-tls-version TLS1_2 --https-only true --resource-group ${pkg.resourceGroup} --name ${storageAccount} --location northeurope --kind StorageV2 --sku Standard_LRS`)
                 .then(async ({ stdout }) => handleCreatedAccount({ stdout }))
                 .catch((err) => {
                 throw Error(err);
