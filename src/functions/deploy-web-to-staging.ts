@@ -18,7 +18,6 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		console.log(
 			`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(stagName)}`,
 		)
-		console.log(pkg)
 		const { stdout, stderr } = await exec(
 			`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 		)

@@ -475,7 +475,6 @@ exports.default = async (pkg, pullNumber) => {
             throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
         const stagName = `${pkg.id}stag${pullNumber}`;
         console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(stagName)}`);
-        console.log(pkg);
         const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
@@ -597,7 +596,9 @@ chalk_1.default.level = 1;
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
     const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '.' : pkgType, pkgDir));
+    console.log('fullPathInitial', fullPath);
     const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
+    console.log('fullPathAfterAnotherJoin', fullPath);
     const pkgObj = JSON.parse(packageFile);
     const pkgRequiredFields = pkgTypeRequiredFieldMap[pkgType];
     const requiredPropertiesFromPkgJson = pkgRequiredFields.reduce((fieldAcc, field) => {
@@ -624,6 +625,7 @@ const getPackageObject = (pkgDir, pkgType) => {
         ((_a = lowercaseRe.exec(pkgObj.azureDeployConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !==
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
         throw Error(`${chalk_1.default.bold.red('Error')}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
+    console.log('PathByFinal', fullPath);
     return {
         ...propertiesFromPckJson,
         type: pkgType.substring(0, pkgType.length - 1),

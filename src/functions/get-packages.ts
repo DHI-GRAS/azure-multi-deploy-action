@@ -22,11 +22,14 @@ const getPackageObject = (
 	const fullPath = path.resolve(
 		path.join(pkgDir === '.' ? '.' : pkgType, pkgDir),
 	)
+	console.log('fullPathInitial', fullPath)
 
 	const packageFile = fs.readFileSync(
 		path.join(fullPath, 'package.json'),
 		'utf8',
 	)
+	console.log('fullPathAfterAnotherJoin', fullPath)
+
 	const pkgObj = JSON.parse(packageFile) as PackageJSON
 
 	const pkgRequiredFields: string[] = pkgTypeRequiredFieldMap[pkgType]
@@ -71,6 +74,8 @@ const getPackageObject = (
 				'Error',
 			)}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`,
 		)
+
+	console.log('PathByFinal', fullPath)
 	return {
 		...propertiesFromPckJson,
 		type: pkgType.substring(0, pkgType.length - 1) as Package['type'],
