@@ -20,7 +20,7 @@ const getPackageObject = (
 	pkgType: typeof packageTypes[number],
 ): Package => {
 	const fullPath = path.resolve(
-		path.join(pkgDir === '.' ? '.' : pkgType, pkgDir),
+		path.join(pkgDir === '.' ? '..' : pkgType, pkgDir),
 	)
 	console.log('fullPathInitial', fullPath)
 

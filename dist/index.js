@@ -595,7 +595,7 @@ const pkgTypeRequiredFieldMap = {
 chalk_1.default.level = 1;
 const getPackageObject = (pkgDir, pkgType) => {
     var _a, _b;
-    const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '.' : pkgType, pkgDir));
+    const fullPath = path_1.default.resolve(path_1.default.join(pkgDir === '.' ? '..' : pkgType, pkgDir));
     console.log('fullPathInitial', fullPath);
     const packageFile = fs_1.default.readFileSync(path_1.default.join(fullPath, 'package.json'), 'utf8');
     console.log('fullPathAfterAnotherJoin', fullPath);
