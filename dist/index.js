@@ -475,6 +475,7 @@ exports.default = async (pkg, pullNumber) => {
             throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
         const stagName = `${pkg.id}stag${pullNumber}`;
         console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(stagName)}`);
+        console.log(pkg);
         const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
         if (stderr)
             console.log(stderr, stdout);
