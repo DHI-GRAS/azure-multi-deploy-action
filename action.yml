@@ -11,5 +11,5 @@ inputs:
   preventProdDeploy:
     description: If defined, skips production deployment. If in PR, appends line to comment that code quality checks have failed and will not deploy to production if merged.
 runs:
-  using: 'node12'
+  using: 'node16'
   main: dist/index.js
