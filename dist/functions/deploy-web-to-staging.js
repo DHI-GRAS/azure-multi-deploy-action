@@ -69,8 +69,9 @@ exports.default = async (pkg, pullNumber) => {
         console.log(deployMsg);
     }
     catch (err) {
-        const deployMsg = `\n❌ Deployment of web app **${pkg.id}** failed. See CI output for details  `;
+        const deployMsg = `\n❌ Deployment of web app **${pkg.id}** failed. See CI output for details. \n`;
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.log(deployMsg, err);
+        throw err;
     }
 };
