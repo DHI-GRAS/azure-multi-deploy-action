@@ -11,6 +11,7 @@ const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 		const stagName = `${pkg.id}stag${pullNumber}`
 
 		await exec('az extension add --name storage-preview').catch()
+
 		if (pkg.enableCorsApiIds) {
 			for (const apiId of pkg.enableCorsApiIds) {
 				await exec(
@@ -25,9 +26,11 @@ const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 				)
 			}
 		}
+
 		await exec(
 			`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup} --yes`,
 		)
+
 		console.log(
 			`${chalk.bold.green('Success')}: Deleted web app: ${chalk.bold(
 				`${stagName}`,
