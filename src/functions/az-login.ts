@@ -23,15 +23,9 @@ export default async (): Promise<void> => {
 
 	const { clientId, tenantId, clientSecret } = azureCredentials
 
-	console.log('DEBUG: Logging in to Azure...')
-
 	const { stdout, stderr } = await exec(
 		`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`,
 	)
-
-	console.log('az-login stdout: ', stdout)
-	console.log('az-login stderr: ', stderr)
-
 	if (stderr) {
 		console.log('Throwing error now..')
 		throw new Error(stderr)
