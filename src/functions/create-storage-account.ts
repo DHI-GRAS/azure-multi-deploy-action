@@ -18,16 +18,17 @@ export default async (pkg: PackageWithMissingStorage): Promise<void> => {
 		)
 
 		console.log(
-			`${chalk.bold.blue('Info')}: Enabled web container for storage account: ${newAccountData.name}`,
+			`${chalk.bold.blue('Info')}: Enabled web container for storage account: ${newAccountData.name
+			}`,
 		)
 	}
 
 	for (const storageAccount of pkg.mssingAccounts) {
 		const { stderr, stdout } = await exec(
-			`az storage account create --min-tls-version TLS1_2 --https-only true --resource-group ${pkg.resourceGroup} --name ${storageAccount} --location northeurope --kind StorageV2 --sku Standard_LRS`,
+			`az storage account create --min-tls-version TLS1_2 --https-only true --resource-group ${pkg.resourceGroup} --name ${storageAccount} --location northeurope --kind StorageV2 --sku Standard_LRS --allow-blob-public-access false`,
 		)
 
-		if (stderr) {
+		if (stderr && !stderr.toLowerCase().includes('warning')) {
 			throw new Error(stderr)
 		}
 
