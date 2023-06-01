@@ -82,8 +82,9 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		console.log(deployMsg)
 		fs.appendFileSync(msgFile, deployMsg)
 	} catch (err) {
-		const deployMsg = `\n❌ Deployment of functions app **${pkg.id}** failed. See CI output for details  `
+		const deployMsg = `\n❌ Deployment of functions app **${pkg.id}** failed. See CI output for details. \n`
 		fs.appendFileSync(msgFile, deployMsg)
 		console.error(err)
+		throw err
 	}
 }
