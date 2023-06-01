@@ -154,10 +154,7 @@ const deployWebApp = async (pkg) => {
     if (extensionErr) {
         throw new Error(extensionErr);
     }
-    const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode login --overwrite`);
-    if (uploadErr) {
-        throw new Error(uploadErr);
-    }
+    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`);
     console.log(`${chalk_1.default.bold.green('Success')}: Deployed storage account ${chalk_1.default.bold(pkg.id)} on https://${pkg.id}.z16.web.core.windows.net`);
 };
 const deployFuncApp = async (pkg) => {
@@ -506,12 +503,11 @@ exports.default = async (pkg, pullNumber) => {
         console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(stagName)}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
-        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode login --overwrite`).catch((err) => {
+        const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
             throw new Error(err);
         });
         if (uploadErr) {
             console.log(uploadOut, uploadErr);
-            throw new Error(uploadErr);
         }
         const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net  `;
         if (pkg.enableCorsApiIds) {

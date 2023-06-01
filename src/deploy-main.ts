@@ -34,13 +34,9 @@ const deployWebApp = async (pkg: Package) => {
 		throw new Error(extensionErr)
 	}
 
-	const { stderr: uploadErr } = await exec(
-		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode login --overwrite`,
+	await exec(
+		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`,
 	)
-
-	if (uploadErr) {
-		throw new Error(uploadErr)
-	}
 
 	console.log(
 		`${chalk.bold.green('Success')}: Deployed storage account ${chalk.bold(
