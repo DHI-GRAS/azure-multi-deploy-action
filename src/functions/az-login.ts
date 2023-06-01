@@ -22,11 +22,15 @@ export default async (): Promise<void> => {
 	)
 
 	const { clientId, tenantId, clientSecret } = azureCredentials
-	const { stderr } = await exec(
+	const { stdout, stderr } = await exec(
 		`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`,
 	)
 
+	console.log('az-login stdout: ', stdout)
+	console.log('az-login stderr: ', stderr)
+
 	if (stderr) {
+		console.log('Throwing error now..')
 		throw new Error(stderr)
 	}
 }
