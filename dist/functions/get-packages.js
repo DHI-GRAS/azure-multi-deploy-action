@@ -26,7 +26,7 @@ const getPackageObject = (pkgDir, pkgType) => {
         var _a;
         const fieldValue = (_a = pkgObj.azureDeployConfig) === null || _a === void 0 ? void 0 : _a[field];
         if (!fieldValue)
-            throw Error(`${chalk_1.default.bold.red('Error')}: "${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
+            throw new Error(`${chalk_1.default.bold.red('Error')}: "${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`);
         return { ...fieldAcc, [field]: fieldValue };
     }, {});
     const notReqPropertiesFromPckJson = appNotRequiredFields.reduce((fieldAcc, field) => {
@@ -45,7 +45,7 @@ const getPackageObject = (pkgDir, pkgType) => {
     if (pkgType === 'apps' &&
         ((_a = lowercaseRe.exec(pkgObj.azureDeployConfig.id)) === null || _a === void 0 ? void 0 : _a[0].length) !==
             ((_b = pkgObj.azureDeployConfig.id) === null || _b === void 0 ? void 0 : _b.length))
-        throw Error(`${chalk_1.default.bold.red('Error')}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
+        throw new Error(`${chalk_1.default.bold.red('Error')}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`);
     return {
         ...propertiesFromPckJson,
         type: pkgType.substring(0, pkgType.length - 1),

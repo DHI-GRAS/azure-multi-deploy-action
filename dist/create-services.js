@@ -19,7 +19,7 @@ const getMissingStorageAccounts = async (localPackages, prNumber) => {
     const isPr = prNumber !== 0;
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az storage account list');
     if (stderr) {
-        throw Error(stderr);
+        throw new Error(stderr);
     }
     const accounts = JSON.parse(stdout).map((account) => account.name);
     console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(accounts.length)} storage accounts`);
@@ -45,7 +45,7 @@ const getMissingFunctionApps = async (localPackages) => {
     }
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az functionapp list');
     if (stderr) {
-        throw Error(stderr);
+        throw new Error(stderr);
     }
     const apps = JSON.parse(stdout);
     console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(apps.length)} function apps`);

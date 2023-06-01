@@ -37,5 +37,12 @@ exports.default = async () => {
     const azureCredentials = JSON.parse(azureCredentialsInput);
     Object.keys(azureCredentials).forEach((key) => core.setSecret(azureCredentials[key]));
     const { clientId, tenantId, clientSecret } = azureCredentials;
-    await (0, child_process_promise_1.exec)(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
+    console.log('DEBUG: Logging in to Azure...');
+    const { stdout, stderr } = await (0, child_process_promise_1.exec)(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
+    console.log('az-login stdout: ', stdout);
+    console.log('az-login stderr: ', stderr);
+    if (stderr) {
+        console.log('Throwing error now..');
+        throw new Error(stderr);
+    }
 };

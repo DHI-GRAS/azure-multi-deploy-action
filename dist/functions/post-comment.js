@@ -60,6 +60,6 @@ exports.default = async (startTime) => {
         });
     }
     catch (err) {
-        throw Error(err);
+        throw new Error(err);
     }
 };

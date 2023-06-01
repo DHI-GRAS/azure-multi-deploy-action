@@ -46,8 +46,7 @@ const deployWebApp = async (pkg: Package) => {
 		`${chalk.bold.green('Success')}: Deployed storage account ${chalk.bold(
 			pkg.id,
 		)} on https://${pkg.id}.z16.web.core.windows.net`,
-	),
-
+	)
 }
 
 const deployFuncApp = async (pkg: Package) => {
@@ -100,7 +99,9 @@ const createMissingResources = async (
 			'Info',
 		)}: Setting the subscription for production deployment...`,
 	)
-	const { stderr } = await exec(`az account set --subscription ${subscriptionId}`)
+	const { stderr } = await exec(
+		`az account set --subscription ${subscriptionId}`,
+	)
 
 	if (stderr) {
 		throw new Error(stderr)

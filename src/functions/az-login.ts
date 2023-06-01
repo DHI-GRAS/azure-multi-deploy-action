@@ -22,6 +22,9 @@ export default async (): Promise<void> => {
 	)
 
 	const { clientId, tenantId, clientSecret } = azureCredentials
+
+	console.log('DEBUG: Logging in to Azure...')
+
 	const { stdout, stderr } = await exec(
 		`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`,
 	)
