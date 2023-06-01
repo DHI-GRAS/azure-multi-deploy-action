@@ -45,6 +45,6 @@ export default async (startTime: Date): Promise<void> => {
 			body,
 		})
 	} catch (err) {
-		throw Error(err)
+		throw new Error(err)
 	}
 }

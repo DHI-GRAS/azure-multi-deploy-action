@@ -12,7 +12,7 @@ chalk.level = 1
 export default async (pkg: Package, pullNumber: number): Promise<void> => {
 	try {
 		if (!pullNumber)
-			throw Error(`${chalk.bold.red('Error')}: PR number is undefined`)
+			throw new Error(`${chalk.bold.red('Error')}: PR number is undefined`)
 		const stagName = `${pkg.id}stag${pullNumber}`
 
 		console.log(
@@ -38,7 +38,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
 			`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`,
 		).catch((err) => {
-			throw Error(err)
+			throw new Error(err)
 		})
 
 		if (uploadErr) {

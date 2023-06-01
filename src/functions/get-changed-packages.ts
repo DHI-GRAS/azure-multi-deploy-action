@@ -13,7 +13,7 @@ export default async (): Promise<Packages> => {
 	)
 
 	if (branchErr) {
-		throw Error(branchErr)
+		throw new Error(branchErr)
 	}
 
 	const deployablePkgs = packages.filter(

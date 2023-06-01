@@ -18,13 +18,13 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 			`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`,
 		)
 		if (listErr) {
-			throw Error(listErr)
+			throw new Error(listErr)
 		}
 
 		const slots = JSON.parse(listOut) as DeploymentSlots
 
 		if (!pullNumber) {
-			throw Error(
+			throw new Error(
 				`${chalk.bold.red(
 					'Error',
 				)}: The environment variable GITHUB_PR_NUMBER must be defined`,
@@ -41,7 +41,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 			)
 
 			if (createErr) {
-				throw Error(createErr)
+				throw new Error(createErr)
 			}
 		}
 
@@ -68,7 +68,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		)
 		if (uploadErr) {
 			console.log(uploadErr, uploadOut)
-			throw Error(uploadErr)
+			throw new Error(uploadErr)
 		}
 
 		console.log(

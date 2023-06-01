@@ -5,7 +5,7 @@ import { Package, FunctionApp } from '../types'
 chalk.level = 1
 export default async (pkg: Package): Promise<void> => {
 	if (!pkg.storageAccount) {
-		throw Error(
+		throw new Error(
 			`${chalk.bold.red('Error')}: ${chalk.bold(
 				pkg.id,
 			)} needs to specify storageAccount`,

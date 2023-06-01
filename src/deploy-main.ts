@@ -31,7 +31,7 @@ const deployWebApp = async (pkg: Package) => {
 	)
 
 	if (extensionErr) {
-		throw Error(extensionErr)
+		throw new Error(extensionErr)
 	}
 
 	const { stderr: uploadErr } = await exec(
@@ -39,7 +39,7 @@ const deployWebApp = async (pkg: Package) => {
 	)
 
 	if (uploadErr) {
-		throw Error(uploadErr)
+		throw new Error(uploadErr)
 	}
 
 	console.log(
@@ -75,7 +75,7 @@ const deployFuncApp = async (pkg: Package) => {
 
 		if (uploadErr) {
 			console.log(uploadErr)
-			throw Error(uploadErr)
+			throw new Error(uploadErr)
 		}
 
 		console.log(
@@ -103,7 +103,7 @@ const createMissingResources = async (
 	const { stderr } = await exec(`az account set --subscription ${subscriptionId}`)
 
 	if (stderr) {
-		throw Error(stderr)
+		throw new Error(stderr)
 	}
 
 	console.log(

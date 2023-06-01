@@ -35,7 +35,7 @@ const getPackageObject = (
 		(fieldAcc, field) => {
 			const fieldValue = pkgObj.azureDeployConfig?.[field]
 			if (!fieldValue)
-				throw Error(
+				throw new Error(
 					`${chalk.bold.red(
 						'Error',
 					)}: "${field}" is required in ${fullPath}/package.json under the "azureDeployConfig" key`,
@@ -64,9 +64,9 @@ const getPackageObject = (
 	if (
 		pkgType === 'apps' &&
 		lowercaseRe.exec(pkgObj.azureDeployConfig.id)?.[0].length !==
-			pkgObj.azureDeployConfig.id?.length
+		pkgObj.azureDeployConfig.id?.length
 	)
-		throw Error(
+		throw new Error(
 			`${chalk.bold.red(
 				'Error',
 			)}: "id" field in ${fullPath}/package.json under the "azureDeployConfig" key must be all lowercase, max 20 charachters.`,
