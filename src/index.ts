@@ -108,6 +108,8 @@ const run = async () => {
 }
 
 void run().catch((err) => {
+	console.log('Global catch block', err)
+
 	const message: string = err.message || JSON.stringify(err)
 	core.setFailed(`Action failed, error: ${message}`)
 })
