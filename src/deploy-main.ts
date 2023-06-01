@@ -35,7 +35,7 @@ const deployWebApp = async (pkg: Package) => {
 	}
 
 	const { stderr: uploadErr } = await exec(
-		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`,
+		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode login --overwrite`,
 	)
 
 	if (uploadErr) {

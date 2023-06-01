@@ -36,7 +36,7 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const outputDir = pkg.outputDir ?? './dist'
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
-			`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`,
+			`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode login --overwrite`,
 		).catch((err) => {
 			throw new Error(err)
 		})

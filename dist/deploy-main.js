@@ -46,7 +46,7 @@ const deployWebApp = async (pkg) => {
     if (extensionErr) {
         throw new Error(extensionErr);
     }
-    const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`);
+    const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode login --overwrite`);
     if (uploadErr) {
         throw new Error(uploadErr);
     }
