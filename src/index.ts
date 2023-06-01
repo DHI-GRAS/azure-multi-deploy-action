@@ -107,4 +107,7 @@ const run = async () => {
 	if (isPR) await postComment(startTime)
 }
 
-void run()
+void run().catch((err) => {
+	const message: string = err.message || JSON.stringify(err)
+	core.setFailed(`Action failed, error: ${message}`)
+})
