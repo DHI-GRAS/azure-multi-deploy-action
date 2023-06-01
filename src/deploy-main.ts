@@ -7,6 +7,7 @@ import groupBySubscription from './functions/group-by-subscription'
 
 const commitSha = github.context.sha.substr(0, 7)
 chalk.level = 1
+
 const deployWebApp = async (pkg: Package) => {
 	console.log(
 		`${chalk.bold.blue('Info')}: Building webapp: ${chalk.bold(pkg.name)}`,
@@ -15,7 +16,9 @@ const deployWebApp = async (pkg: Package) => {
 		`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 	)
 	const outputDir = pkg.outputDir ?? './dist'
-	if (stderr) console.log(stderr, stdout)
+	if (stderr) {
+		console.log(stderr, stdout)
+	}
 
 	console.log(
 		`${chalk.bold.blue('Info')}: Build finished, uploading webapp: ${chalk.bold(
@@ -23,20 +26,28 @@ const deployWebApp = async (pkg: Package) => {
 		)}`,
 	)
 
-	await exec('az extension add --name storage-preview').catch()
-	await exec(
+	const { stderr: extensionErr } = await exec(
+		'az extension add --name storage-preview',
+	)
+
+	if (extensionErr) {
+		throw Error(extensionErr)
+	}
+
+	const { stderr: uploadErr } = await exec(
 		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`,
 	)
-		.then(() =>
-			console.log(
-				`${chalk.bold.green('Success')}: Deployed storage account ${chalk.bold(
-					pkg.id,
-				)} on https://${pkg.id}.z16.web.core.windows.net`,
-			),
-		)
-		.catch((err) => {
-			throw Error(err)
-		})
+
+	if (uploadErr) {
+		throw Error(uploadErr)
+	}
+
+	console.log(
+		`${chalk.bold.green('Success')}: Deployed storage account ${chalk.bold(
+			pkg.id,
+		)} on https://${pkg.id}.z16.web.core.windows.net`,
+	),
+
 }
 
 const deployFuncApp = async (pkg: Package) => {
@@ -62,7 +73,11 @@ const deployFuncApp = async (pkg: Package) => {
 			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`,
 		)
 
-		if (uploadErr) console.log(uploadErr)
+		if (uploadErr) {
+			console.log(uploadErr)
+			throw Error(uploadErr)
+		}
+
 		console.log(
 			`${chalk.bold.green('Success')}: Deployed functionapp: ${chalk.bold(
 				pkg.id,
@@ -85,20 +100,31 @@ const createMissingResources = async (
 			'Info',
 		)}: Setting the subscription for production deployment...`,
 	)
-	await exec(`az account set --subscription ${subscriptionId}`)
+	const { stderr } = await exec(`az account set --subscription ${subscriptionId}`)
+
+	if (stderr) {
+		throw Error(stderr)
+	}
+
 	console.log(
 		`${chalk.bold.green('Success')}: subscription set to ${chalk.bold(
 			subscriptionId,
 		)}`,
 	)
+
 	const webPackages = localConfig.filter((pkg) => pkg.type === 'app')
 	const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api')
 
 	const allPackages = [...webPackages, ...funcPackages]
 
 	for (const pkg of allPackages) {
-		if (pkg.type === 'app') await deployWebApp(pkg)
-		if (pkg.type === 'func-api') await deployFuncApp(pkg)
+		if (pkg.type === 'app') {
+			await deployWebApp(pkg)
+		}
+
+		if (pkg.type === 'func-api') {
+			await deployFuncApp(pkg)
+		}
 	}
 }
 
