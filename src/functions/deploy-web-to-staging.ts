@@ -12,7 +12,7 @@ chalk.level = 1
 export default async (pkg: Package, pullNumber: number): Promise<void> => {
 	try {
 		if (!pullNumber)
-			throw Error(`${chalk.bold.red('Error')}: PR number is undefined`)
+			throw new Error(`${chalk.bold.red('Error')}: PR number is undefined`)
 		const stagName = `${pkg.id}stag${pullNumber}`
 
 		console.log(
@@ -21,7 +21,9 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const { stdout, stderr } = await exec(
 			`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`,
 		)
-		if (stderr) console.log(stderr, stdout)
+		if (stderr) {
+			console.log(stderr, stdout)
+		}
 
 		console.log(
 			`${chalk.bold.blue(
@@ -36,17 +38,25 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
 			`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`,
 		).catch((err) => {
-			throw Error(err)
+			throw new Error(err)
 		})
-		if (stdout) console.log(uploadOut, uploadErr)
+
+		if (uploadErr) {
+			console.log(uploadOut, uploadErr)
+		}
 
 		const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net  `
 
 		if (pkg.enableCorsApiIds) {
 			for (const apiId of pkg.enableCorsApiIds) {
-				await exec(
+				const { stderr: addErr } = await exec(
 					`az functionapp cors add --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`,
 				)
+
+				if (addErr) {
+					throw new Error(addErr)
+				}
+
 				console.log(
 					`${chalk.bold.blue('Info')}: Enabled CORS on ${chalk.underline(
 						apiId,
@@ -58,11 +68,11 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		}
 
 		fs.appendFileSync(msgFile, deployMsg)
-
 		console.log(deployMsg)
 	} catch (err) {
-		const deployMsg = `\n❌ Deployment of web app **${pkg.id}** failed. See CI output for details  `
+		const deployMsg = `\n❌ Deployment of web app **${pkg.id}** failed. See CI output for details. \n`
 		fs.appendFileSync(msgFile, deployMsg)
 		console.log(deployMsg, err)
+		throw err
 	}
 }

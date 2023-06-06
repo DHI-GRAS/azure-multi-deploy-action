@@ -104,7 +104,14 @@ const run = async () => {
 		`${chalk.bold.green('Success')}: You are lucky, the action finished! 🍀`,
 	)
 
-	if (isPR) await postComment(startTime)
+	if (isPR) {
+		await postComment(startTime)
+	}
 }
 
-void run()
+void run().catch((err) => {
+	console.log('Global catch block', err)
+
+	const message: string = err.message || JSON.stringify(err)
+	core.setFailed(`Action failed, error: ${message}`)
+})

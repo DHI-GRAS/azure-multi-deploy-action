@@ -17,25 +17,32 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		const { stdout: listOut, stderr: listErr } = await exec(
 			`az functionapp deployment slot list -g ${pkg.resourceGroup} -n ${pkg.id}`,
 		)
-		if (listErr) throw Error(listErr)
+		if (listErr) {
+			throw new Error(listErr)
+		}
+
 		const slots = JSON.parse(listOut) as DeploymentSlots
 
-		if (!pullNumber)
-			throw Error(
+		if (!pullNumber) {
+			throw new Error(
 				`${chalk.bold.red(
 					'Error',
 				)}: The environment variable GITHUB_PR_NUMBER must be defined`,
 			)
+		}
 
 		const slotName = `stag-${pullNumber}`
-
 		const slotNames = slots.map((slot) => slot.name)
 		const slotExists = slotNames.includes(slotName)
 
 		if (!slotExists) {
-			await exec(
+			const { stderr: createErr } = await exec(
 				`az functionapp deployment slot create -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`,
 			)
+
+			if (createErr) {
+				throw new Error(createErr)
+			}
 		}
 
 		const pkgPathSplit = pkg.path.split('/')
@@ -51,12 +58,18 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		yarn install --production ;
 		zip -r -b ../ ${pkg.path}/dist.zip . > /dev/null ; echo "zipped to ${pkg.path}/dist.zip"`)
 
-		if (buildErr) console.log(buildErr)
+		// We don't throw error here because err could include warnings
+		if (buildErr) {
+			console.log(buildErr)
+		}
 
 		const { stdout: uploadOut, stderr: uploadErr } = await exec(
 			`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip --slot ${slotName}`,
 		)
-		if (uploadErr) console.log(uploadErr, uploadOut)
+		if (uploadErr) {
+			console.log(uploadErr, uploadOut)
+			throw new Error(uploadErr)
+		}
 
 		console.log(
 			`${chalk.bold.green('Success')}: Deployed functionapp ${chalk.bold(
@@ -69,8 +82,9 @@ export default async (pkg: Package, pullNumber: number): Promise<void> => {
 		console.log(deployMsg)
 		fs.appendFileSync(msgFile, deployMsg)
 	} catch (err) {
-		const deployMsg = `\n❌ Deployment of functions app **${pkg.id}** failed. See CI output for details  `
+		const deployMsg = `\n❌ Deployment of functions app **${pkg.id}** failed. See CI output for details. \n`
 		fs.appendFileSync(msgFile, deployMsg)
 		console.error(err)
+		throw err
 	}
 }

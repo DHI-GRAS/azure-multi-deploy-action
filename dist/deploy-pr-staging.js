@@ -15,7 +15,10 @@ chalk_1.default.level = 1;
 const createMissingResources = async (localConfig, subsId, prNumber) => {
     console.log('\n');
     console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for PR deployment...`);
-    await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
+    const { stderr } = await (0, child_process_promise_1.exec)(`az account set --subscription ${subsId}`);
+    if (stderr) {
+        throw new Error(stderr);
+    }
     console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subsId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
@@ -25,10 +28,12 @@ const createMissingResources = async (localConfig, subsId, prNumber) => {
         const msgFile = path_1.default.join('github_message.txt');
         fs_1.default.appendFileSync(msgFile, `\n${deployMsg}  `);
     }
-    for (const webApp of webPackages)
+    for (const webApp of webPackages) {
         await (0, deploy_web_to_staging_1.default)(webApp, prNumber);
-    for (const funcApp of funcPackages)
+    }
+    for (const funcApp of funcPackages) {
         await (0, deploy_func_to_staging_1.default)(funcApp, prNumber);
+    }
     console.log(`${chalk_1.default.bold.green('Success')}: Completed for subscriptionID ${chalk_1.default.bold(subsId)}`);
 };
 const deployToStag = async (prNumber) => {

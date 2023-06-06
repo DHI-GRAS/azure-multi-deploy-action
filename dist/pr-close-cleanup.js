@@ -11,7 +11,7 @@ chalk_1.default.level = 1;
 const removeWebStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
-            throw Error('No PR number');
+            throw new Error('No PR number');
         const stagName = `${pkg.id}stag${pullNumber}`;
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         if (pkg.enableCorsApiIds) {
@@ -24,13 +24,13 @@ const removeWebStagingDeployment = async (pkg, pullNumber) => {
         console.log(`${chalk_1.default.bold.green('Success')}: Deleted web app: ${chalk_1.default.bold(`${stagName}`)}`);
     }
     catch (err) {
-        throw Error(err);
+        throw new Error(err);
     }
 };
 const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
     try {
         if (!pullNumber)
-            throw Error(`${chalk_1.default.bold.red('Error')}: No PR number`);
+            throw new Error(`${chalk_1.default.bold.red('Error')}: No PR number`);
         const slotName = `stag-${pullNumber}`;
         const { stdout: deleteOut, stderr: deleteErr } = await (0, child_process_promise_1.exec)(`az functionapp deployment slot delete -g ${pkg.resourceGroup} -n ${pkg.id} --slot ${slotName}`);
         if (deleteErr)
@@ -38,7 +38,7 @@ const removeFuncAppStagingDeployment = async (pkg, pullNumber) => {
         console.log(`${chalk_1.default.bold.green('Success')}: Deleted function app: ${chalk_1.default.bold(`${pkg.id}-${slotName}`)}`);
     }
     catch (err) {
-        throw Error(err);
+        throw new Error(err);
     }
 };
 const removeResources = async (localConfig, subsId, prNumber) => {

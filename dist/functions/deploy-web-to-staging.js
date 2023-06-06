@@ -38,24 +38,29 @@ exports.default = async (pkg, pullNumber) => {
     var _a;
     try {
         if (!pullNumber)
-            throw Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
+            throw new Error(`${chalk_1.default.bold.red('Error')}: PR number is undefined`);
         const stagName = `${pkg.id}stag${pullNumber}`;
         console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(stagName)}`);
         const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
-        if (stderr)
+        if (stderr) {
             console.log(stderr, stdout);
+        }
         console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(stagName)}`);
         await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
         const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
         const { stdout: uploadOut, stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${stagName} --auth-mode key --overwrite`).catch((err) => {
-            throw Error(err);
+            throw new Error(err);
         });
-        if (stdout)
+        if (uploadErr) {
             console.log(uploadOut, uploadErr);
+        }
         const deployMsg = `\n✅ Deployed web app **${pkg.name}** on: https://${stagName}.z16.web.core.windows.net  `;
         if (pkg.enableCorsApiIds) {
             for (const apiId of pkg.enableCorsApiIds) {
-                await (0, child_process_promise_1.exec)(`az functionapp cors add --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`);
+                const { stderr: addErr } = await (0, child_process_promise_1.exec)(`az functionapp cors add --allowed-origins https://${stagName}.z16.web.core.windows.net --ids ${apiId}`);
+                if (addErr) {
+                    throw new Error(addErr);
+                }
                 console.log(`${chalk_1.default.bold.blue('Info')}: Enabled CORS on ${chalk_1.default.underline(apiId)} for ${chalk_1.default.underline(`https://${stagName}.z16.web.core.windows.net`)}`);
             }
         }
@@ -63,8 +68,9 @@ exports.default = async (pkg, pullNumber) => {
         console.log(deployMsg);
     }
     catch (err) {
-        const deployMsg = `\n❌ Deployment of web app **${pkg.id}** failed. See CI output for details  `;
+        const deployMsg = `\n❌ Deployment of web app **${pkg.id}** failed. See CI output for details. \n`;
         fs_1.default.appendFileSync(msgFile, deployMsg);
         console.log(deployMsg, err);
+        throw err;
     }
 };

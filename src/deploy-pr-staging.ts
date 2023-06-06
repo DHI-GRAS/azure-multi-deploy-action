@@ -18,7 +18,12 @@ const createMissingResources = async (
 	console.log(
 		`${chalk.bold.blue('Info')}: Setting the subscription for PR deployment...`,
 	)
-	await exec(`az account set --subscription ${subsId}`)
+	const { stderr } = await exec(`az account set --subscription ${subsId}`)
+
+	if (stderr) {
+		throw new Error(stderr)
+	}
+
 	console.log(
 		`${chalk.bold.green('Success')}: subscription set to ${chalk.bold(subsId)}`,
 	)
@@ -35,8 +40,13 @@ const createMissingResources = async (
 		fs.appendFileSync(msgFile, `\n${deployMsg}  `)
 	}
 
-	for (const webApp of webPackages) await deployWebApp(webApp, prNumber)
-	for (const funcApp of funcPackages) await deployFuncApp(funcApp, prNumber)
+	for (const webApp of webPackages) {
+		await deployWebApp(webApp, prNumber)
+	}
+
+	for (const funcApp of funcPackages) {
+		await deployFuncApp(funcApp, prNumber)
+	}
 
 	console.log(
 		`${chalk.bold.green('Success')}: Completed for subscriptionID ${chalk.bold(

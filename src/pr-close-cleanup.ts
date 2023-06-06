@@ -7,10 +7,11 @@ import groupBySubscription from './functions/group-by-subscription'
 chalk.level = 1
 const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 	try {
-		if (!pullNumber) throw Error('No PR number')
+		if (!pullNumber) throw new Error('No PR number')
 		const stagName = `${pkg.id}stag${pullNumber}`
 
 		await exec('az extension add --name storage-preview').catch()
+
 		if (pkg.enableCorsApiIds) {
 			for (const apiId of pkg.enableCorsApiIds) {
 				await exec(
@@ -25,16 +26,18 @@ const removeWebStagingDeployment = async (pkg: Package, pullNumber: number) => {
 				)
 			}
 		}
+
 		await exec(
 			`az storage account delete -n ${pkg.id}stag${pullNumber} -g ${pkg.resourceGroup} --yes`,
 		)
+
 		console.log(
 			`${chalk.bold.green('Success')}: Deleted web app: ${chalk.bold(
 				`${stagName}`,
 			)}`,
 		)
 	} catch (err) {
-		throw Error(err)
+		throw new Error(err)
 	}
 }
 
@@ -43,7 +46,7 @@ const removeFuncAppStagingDeployment = async (
 	pullNumber: number,
 ) => {
 	try {
-		if (!pullNumber) throw Error(`${chalk.bold.red('Error')}: No PR number`)
+		if (!pullNumber) throw new Error(`${chalk.bold.red('Error')}: No PR number`)
 		const slotName = `stag-${pullNumber}`
 
 		const { stdout: deleteOut, stderr: deleteErr } = await exec(
@@ -56,7 +59,7 @@ const removeFuncAppStagingDeployment = async (
 			)}`,
 		)
 	} catch (err) {
-		throw Error(err)
+		throw new Error(err)
 	}
 }
 

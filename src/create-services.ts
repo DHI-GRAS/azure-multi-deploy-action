@@ -29,7 +29,7 @@ const getMissingStorageAccounts = async (
 	const { stdout, stderr } = await exec('az storage account list')
 
 	if (stderr) {
-		throw Error(stderr)
+		throw new Error(stderr)
 	}
 
 	const accounts = (JSON.parse(stdout) as StorageAccounts).map(
@@ -85,7 +85,7 @@ const getMissingFunctionApps = async (
 
 	const { stdout, stderr } = await exec('az functionapp list')
 	if (stderr) {
-		throw Error(stderr)
+		throw new Error(stderr)
 	}
 
 	const apps = JSON.parse(stdout) as FunctionApps
@@ -129,18 +129,18 @@ const createMissingResources = async (
 	console.log(
 		pkgMissingStorageAccounts.length > 0
 			? `${chalk.bold.blue('Info')}: Creating storage accounts: ${chalk.bold(
-					pkgMissingStorageAccounts
-						.reduce((acc, pkg) => [...acc, ...pkg.mssingAccounts], [])
-						.join(),
-			  )}`
+				pkgMissingStorageAccounts
+					.reduce((acc, pkg) => [...acc, ...pkg.mssingAccounts], [])
+					.join(),
+			)}`
 			: `${chalk.bold.yellow('Warning')}: No storage accounts to create`,
 	)
 
 	console.log(
 		missingFunctionApps.length > 0
 			? `${chalk.bold.blue('Info')}: Creating function apps: ${chalk.bold(
-					missingFunctionApps.map((pkg) => pkg.id).join(),
-			  )}`
+				missingFunctionApps.map((pkg) => pkg.id).join(),
+			)}`
 			: `${chalk.bold.yellow('Warning')}: No function apps to create`,
 	)
 

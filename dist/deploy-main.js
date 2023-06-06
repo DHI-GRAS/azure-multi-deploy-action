@@ -38,15 +38,16 @@ const deployWebApp = async (pkg) => {
     console.log(`${chalk_1.default.bold.blue('Info')}: Building webapp: ${chalk_1.default.bold(pkg.name)}`);
     const { stdout, stderr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && COMMIT_SHA=${commitSha} yarn ${pkg.name}:build`);
     const outputDir = (_a = pkg.outputDir) !== null && _a !== void 0 ? _a : './dist';
-    if (stderr)
+    if (stderr) {
         console.log(stderr, stdout);
+    }
     console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
-    await (0, child_process_promise_1.exec)('az extension add --name storage-preview').catch();
-    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`)
-        .then(() => console.log(`${chalk_1.default.bold.green('Success')}: Deployed storage account ${chalk_1.default.bold(pkg.id)} on https://${pkg.id}.z16.web.core.windows.net`))
-        .catch((err) => {
-        throw Error(err);
-    });
+    const { stderr: extensionErr } = await (0, child_process_promise_1.exec)('az extension add --name storage-preview');
+    if (extensionErr) {
+        throw new Error(extensionErr);
+    }
+    await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`);
+    console.log(`${chalk_1.default.bold.green('Success')}: Deployed storage account ${chalk_1.default.bold(pkg.id)} on https://${pkg.id}.z16.web.core.windows.net`);
 };
 const deployFuncApp = async (pkg) => {
     try {
@@ -62,8 +63,10 @@ const deployFuncApp = async (pkg) => {
 		yarn install --production &&
 		zip -r ${pkg.path}/dist.zip . > /dev/null`);
         const { stderr: uploadErr } = await (0, child_process_promise_1.exec)(`cd ${pkg.path} && az functionapp deployment source config-zip -g ${pkg.resourceGroup} -n ${pkg.id} --src dist.zip`);
-        if (uploadErr)
+        if (uploadErr) {
             console.log(uploadErr);
+            throw new Error(uploadErr);
+        }
         console.log(`${chalk_1.default.bold.green('Success')}: Deployed functionapp: ${chalk_1.default.bold(pkg.id)}`);
     }
     catch (err) {
@@ -73,16 +76,21 @@ const deployFuncApp = async (pkg) => {
 const createMissingResources = async (localConfig, subscriptionId) => {
     console.log('\n');
     console.log(`${chalk_1.default.bold.blue('Info')}: Setting the subscription for production deployment...`);
-    await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
+    const { stderr } = await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
+    if (stderr) {
+        throw new Error(stderr);
+    }
     console.log(`${chalk_1.default.bold.green('Success')}: subscription set to ${chalk_1.default.bold(subscriptionId)}`);
     const webPackages = localConfig.filter((pkg) => pkg.type === 'app');
     const funcPackages = localConfig.filter((pkg) => pkg.type === 'func-api');
     const allPackages = [...webPackages, ...funcPackages];
     for (const pkg of allPackages) {
-        if (pkg.type === 'app')
+        if (pkg.type === 'app') {
             await deployWebApp(pkg);
-        if (pkg.type === 'func-api')
+        }
+        if (pkg.type === 'func-api') {
             await deployFuncApp(pkg);
+        }
     }
 };
 const deployToProd = async () => {
