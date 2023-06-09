@@ -26,13 +26,7 @@ const deployWebApp = async (pkg: Package) => {
 		)}`,
 	)
 
-	const { stderr: extensionErr } = await exec(
-		'az extension add --name storage-preview',
-	)
-
-	if (extensionErr) {
-		throw new Error(extensionErr)
-	}
+	await exec('az extension add --name storage-preview')
 
 	await exec(
 		`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`,

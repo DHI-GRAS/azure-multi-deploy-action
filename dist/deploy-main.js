@@ -42,10 +42,7 @@ const deployWebApp = async (pkg) => {
         console.log(stderr, stdout);
     }
     console.log(`${chalk_1.default.bold.blue('Info')}: Build finished, uploading webapp: ${chalk_1.default.bold(pkg.name)}`);
-    const { stderr: extensionErr } = await (0, child_process_promise_1.exec)('az extension add --name storage-preview');
-    if (extensionErr) {
-        throw new Error(extensionErr);
-    }
+    await (0, child_process_promise_1.exec)('az extension add --name storage-preview');
     await (0, child_process_promise_1.exec)(`cd ${pkg.path}/ && az storage blob upload-batch --source ${outputDir} --destination \\$web --account-name ${pkg.id} --auth-mode key --overwrite`);
     console.log(`${chalk_1.default.bold.green('Success')}: Deployed storage account ${chalk_1.default.bold(pkg.id)} on https://${pkg.id}.z16.web.core.windows.net`);
 };
