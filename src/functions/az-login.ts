@@ -23,11 +23,21 @@ export default async (): Promise<void> => {
 
 	const { clientId, tenantId, clientSecret } = azureCredentials
 
+
+
 	const { stdout, stderr } = await exec(
 		`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`,
 	)
-	if (stderr) {
+
+	// Remove any line containing “pkg_resources is deprecated as an API”
+const filteredStderr = stderr
+  .split('\n')
+  .filter(line => !line.includes('pkg_resources is deprecated as an API'))
+  .join('\n')
+  .trim()
+
+	if (filteredStderr) {
 		console.log('Throwing error now..')
-		throw new Error(stderr)
+		throw new Error(filteredStderr)
 	}
 }

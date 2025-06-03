@@ -38,7 +38,7 @@ const getMissingStorageAccounts = async (
     .join('\n')
     .trim()
 
-	if (stderr) {
+	if (filteredStderr) {
 		throw new Error(filteredStderr)
 	}
 
