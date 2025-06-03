@@ -18,8 +18,14 @@ const getMissingStorageAccounts = async (localPackages, prNumber) => {
     }
     const isPr = prNumber !== 0;
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az storage account list');
-    if (stderr) {
-        throw new Error(stderr);
+    // Remove any line containing “pkg_resources is deprecated”
+    const filteredStderr = stderr
+        .split('\n')
+        .filter((line) => !line.includes('pkg_resources is deprecated as an API'))
+        .join('\n')
+        .trim();
+    if (filteredStderr) {
+        throw new Error(filteredStderr);
     }
     const accounts = JSON.parse(stdout).map((account) => account.name);
     console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(accounts.length)} storage accounts`);
