@@ -28,8 +28,18 @@ const getMissingStorageAccounts = async (
 	const isPr = prNumber !== 0
 	const { stdout, stderr } = await exec('az storage account list')
 
+  // Remove any line containing “pkg_resources is deprecated”
+  const filteredStderr = stderr
+    .split('\n')
+    .filter(
+      (line) =>
+        !line.includes('pkg_resources is deprecated as an API'),
+    )
+    .join('\n')
+    .trim()
+
 	if (stderr) {
-		throw new Error(stderr)
+		throw new Error(filteredStderr)
 	}
 
 	const accounts = (JSON.parse(stdout) as StorageAccounts).map(
