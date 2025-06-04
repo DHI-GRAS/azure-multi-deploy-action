@@ -1,16 +1,16 @@
-import { exec } from 'child-process-promise'
 import chalk from 'chalk'
-import {
-	Packages,
-	StorageAccounts,
-	FunctionApps,
-	Package,
-	PackageWithMissingStorage,
-} from './types'
+import { exec } from 'child-process-promise'
 import createFunctionApp from './functions/create-function-app'
 import createStorageAccount from './functions/create-storage-account'
 import getChangedPackages from './functions/get-changed-packages'
 import groupBySubscription from './functions/group-by-subscription'
+import {
+	FunctionApps,
+	Package,
+	Packages,
+	PackageWithMissingStorage,
+	StorageAccounts,
+} from './types'
 
 chalk.level = 1
 
@@ -28,18 +28,8 @@ const getMissingStorageAccounts = async (
 	const isPr = prNumber !== 0
 	const { stdout, stderr } = await exec('az storage account list')
 
-  // Remove any line containing “pkg_resources is deprecated”
-  const filteredStderr = stderr
-    .split('\n')
-    .filter(
-      (line) =>
-        !line.includes('pkg_resources is deprecated as an API'),
-    )
-    .join('\n')
-    .trim()
-
-	if (filteredStderr) {
-		throw new Error(filteredStderr)
+	if (stderr) {
+		throw new Error(stderr)
 	}
 
 	const accounts = (JSON.parse(stdout) as StorageAccounts).map(

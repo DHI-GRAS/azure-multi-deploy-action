@@ -3,8 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const child_process_promise_1 = require("child-process-promise");
 const chalk_1 = __importDefault(require("chalk"));
+const child_process_promise_1 = require("child-process-promise");
 const create_function_app_1 = __importDefault(require("./functions/create-function-app"));
 const create_storage_account_1 = __importDefault(require("./functions/create-storage-account"));
 const get_changed_packages_1 = __importDefault(require("./functions/get-changed-packages"));
@@ -18,14 +18,8 @@ const getMissingStorageAccounts = async (localPackages, prNumber) => {
     }
     const isPr = prNumber !== 0;
     const { stdout, stderr } = await (0, child_process_promise_1.exec)('az storage account list');
-    // Remove any line containing “pkg_resources is deprecated”
-    const filteredStderr = stderr
-        .split('\n')
-        .filter((line) => !line.includes('pkg_resources is deprecated as an API'))
-        .join('\n')
-        .trim();
-    if (filteredStderr) {
-        throw new Error(filteredStderr);
+    if (stderr) {
+        throw new Error(stderr);
     }
     const accounts = JSON.parse(stdout).map((account) => account.name);
     console.log(`${chalk_1.default.bold.blue('Info')}: Retrieved ${chalk_1.default.bold(accounts.length)} storage accounts`);

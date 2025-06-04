@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import { exec } from 'child-process-promise'
 import chalk from 'chalk'
+import { exec } from 'child-process-promise'
 
 chalk.level = 1
 interface AzureCredentials {
@@ -29,15 +29,8 @@ export default async (): Promise<void> => {
 		`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`,
 	)
 
-	// Remove any line containing “pkg_resources is deprecated as an API”
-const filteredStderr = stderr
-  .split('\n')
-  .filter(line => !line.includes('pkg_resources is deprecated as an API'))
-  .join('\n')
-  .trim()
-
-	if (filteredStderr) {
+	if (stderr) {
 		console.log('Throwing error now..')
-		throw new Error(filteredStderr)
+		throw new Error(stderr)
 	}
 }

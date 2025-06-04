@@ -37,9 +37,10 @@ const run = async () => {
 		AZ_REPO=$(lsb_release -cs) ;
 		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list ;
 		sudo apt-get update ;
-		sudo apt-get install azure-cli=2.73.0-1~${AZ_REPO} --allow-downgrades
+		sudo apt-get install azure-cli=2.73.0-1~$AZ_REPO --allow-downgrades
 	`)
 	AzureCliInstallSpinner.succeed()
+	await exec('az version')
 	const AzureCliLoginSpinner = ora(
 		`${chalk.bold.cyan('2. Logging into Azure CLI...'.toUpperCase())}`,
 	).start()
