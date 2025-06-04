@@ -1,14 +1,14 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { exec } from 'child-process-promise'
 import chalk from 'chalk'
+import { exec } from 'child-process-promise'
 import ora from 'ora'
-import deployToStag from './deploy-pr-staging'
-import deployToProd from './deploy-main'
-import cleanDeployments from './pr-close-cleanup'
 import createServices from './create-services'
+import deployToProd from './deploy-main'
+import deployToStag from './deploy-pr-staging'
 import azLogin from './functions/az-login'
 import postComment from './functions/post-comment'
+import cleanDeployments from './pr-close-cleanup'
 
 const { context } = github
 const { payload } = context
@@ -28,25 +28,18 @@ const run = async () => {
 		`${chalk.bold.cyan('1. Installing azure CLI...'.toUpperCase())}`,
 	).start()
 
-	await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
-	AzureCliInstallSpinner.succeed()
-
+	// await exec('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash')
 	// Use the below version in case specific version has to be installed
-	// await exec(`
-	// 	sudo apt-get update ;
-
-	// 	sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg ;
-
-	// 	curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null ;
-
-	// 	AZ_REPO=$(lsb_release -cs) ;
-
-	// 	echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list ;
-
-	// 	sudo apt-get update ;
-	// 	sudo apt-get install azure-cli=2.28.0-1~focal --allow-downgrades
-
-	// `)
+	await exec(`
+		sudo apt-get update ;
+		sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg ;
+		curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null ;
+		AZ_REPO=$(lsb_release -cs) ;
+		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list ;
+		sudo apt-get update ;
+		sudo apt-get install azure-cli=2.73.0-1~${AZ_REPO} --allow-downgrades
+	`)
+	AzureCliInstallSpinner.succeed()
 	const AzureCliLoginSpinner = ora(
 		`${chalk.bold.cyan('2. Logging into Azure CLI...'.toUpperCase())}`,
 	).start()
