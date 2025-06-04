@@ -822,7 +822,7 @@ const run = async () => {
 		AZ_REPO=$(lsb_release -cs) ;
 		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list ;
 		sudo apt-get update ;
-		sudo apt-get install azure-cli=2.72.0-1~focal --allow-downgrades
+		sudo apt-get install azure-cli=2.72.0-1~noble --allow-downgrades
 	`);
     AzureCliInstallSpinner.succeed();
     const AzureCliLoginSpinner = (0, ora_1.default)(`${chalk_1.default.bold.cyan('2. Logging into Azure CLI...'.toUpperCase())}`).start();
