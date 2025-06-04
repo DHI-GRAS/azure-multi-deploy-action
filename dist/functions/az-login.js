@@ -27,8 +27,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(require("@actions/core"));
-const child_process_promise_1 = require("child-process-promise");
 const chalk_1 = __importDefault(require("chalk"));
+const child_process_promise_1 = require("child-process-promise");
 chalk_1.default.level = 1;
 exports.default = async () => {
     const azureCredentialsInput = core.getInput('azureCredentials', {

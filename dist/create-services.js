@@ -3,8 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const child_process_promise_1 = require("child-process-promise");
 const chalk_1 = __importDefault(require("chalk"));
+const child_process_promise_1 = require("child-process-promise");
 const create_function_app_1 = __importDefault(require("./functions/create-function-app"));
 const create_storage_account_1 = __importDefault(require("./functions/create-storage-account"));
 const get_changed_packages_1 = __importDefault(require("./functions/get-changed-packages"));
