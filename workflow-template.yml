@@ -35,7 +35,7 @@ jobs:
         run: yarn lint || echo "LINT_FAILED=true" >> $GITHUB_ENV
 
       - name: Azure multi-deploy
-        uses: DHI-GRAS/azure-multi-deploy-action@1.0.7
+        uses: DHI-GRAS/azure-multi-deploy-action@1.6.2
         with:
           azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
