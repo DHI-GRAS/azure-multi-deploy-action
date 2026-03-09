@@ -35,11 +35,11 @@ exports.default = async () => {
         required: true,
     });
     const azureCredentials = JSON.parse(azureCredentialsInput);
-    Object.keys(azureCredentials).forEach((key) => core.setSecret(azureCredentials[key]));
-    const { clientId, tenantId, clientSecret } = azureCredentials;
-    const { stdout, stderr } = await (0, child_process_promise_1.exec)(`az login --service-principal --username ${clientId} --tenant ${tenantId} --password ${clientSecret}`);
-    if (stderr) {
-        console.log('Throwing error now..');
-        throw new Error(stderr);
-    }
+    Object.values(azureCredentials).forEach((value) => core.setSecret(value));
+    const { clientId, tenantId, subscriptionId } = azureCredentials;
+    // Request GitHub OIDC token (same mechanism azure/login uses)
+    const oidcToken = await core.getIDToken('api://AzureADTokenExchange');
+    await (0, child_process_promise_1.exec)(`az login --service-principal --username ${clientId} --tenant ${tenantId} --federated-token "${oidcToken}"`);
+    await (0, child_process_promise_1.exec)(`az account set --subscription ${subscriptionId}`);
+    console.log(chalk_1.default.green('Azure login successful using federated credentials'));
 };
