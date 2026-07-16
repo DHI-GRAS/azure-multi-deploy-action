@@ -31,4 +31,6 @@ See the example recommended workflow in [workflow-template.yml](https://github.c
 - Add `id` and `resourceGroup` to "azureDeployConfig" key in package.json. (`id` is used as the storage account name)
 - Ensure that the `{name}:build` script is present in package.json, `name` being the package name in package.json
 - Add workflow file, recommended template [workflow-template.yml](https://github.com/DHI-GRAS/azure-multi-deploy-action/blob/main/action.yml) can be used
+- Add a set of Federated Credentials, linking to your Github Repo, to the App Registration [dhi-eocoe-frontend-deployment ](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Credentials/appId/e5dfbfe7-f4e2-4fff-9629-ef4083e854d1/isMSAApp~/false) ()
 - Add `AZURE_CREDENTIALS` to repository secrets
+

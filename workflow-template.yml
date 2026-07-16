@@ -7,6 +7,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
+permissions:
+  actions: read
+  id-token: write
+  contents: read
+  pull-requests: write
+
 concurrency: 
   group: ${{ github.ref }}
   cancel-in-progress: true
